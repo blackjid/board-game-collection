@@ -1,0 +1,1557 @@
+{
+  "username": "jidonoso",
+  "fetchedAt": "2025-12-26T03:18:30.690Z",
+  "totalGames": 91,
+  "games": [
+    {
+      "id": "432",
+      "name": "¡Toma 6!",
+      "yearPublished": 2023,
+      "image": "https://cf.geekdo-images.com/WuOY1XAIJQ-RGAmT_apW_w__itemrep/img/6Ed-INTd8Hitxi6gOJugeSBFHQE=/fit-in/246x300/filters:strip_icc()/pic8632998.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/WuOY1XAIJQ-RGAmT_apW_w__itemrep/img/6Ed-INTd8Hitxi6gOJugeSBFHQE=/fit-in/246x300/filters:strip_icc()/pic8632998.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/egJDFI0M5XmuDnPQGLumAA__original/img/Df9u81WhIYnw8D305kdRoSBswY0=/0x0/filters:format(jpeg)/pic2609839.jpg",
+        "https://cf.geekdo-images.com/qKTzIHNfbvPHMAuvZ8Gjxw__original/img/mXVyjESJim6vYHLq0c7iWEmdgYg=/0x0/filters:format(jpeg)/pic135246.jpg",
+        "https://cf.geekdo-images.com/cMSQdAXQF3DR3stIY6xGVg__original/img/0c0gNd62z5LSL_L62wsENzyK6S0=/0x0/filters:format(jpeg)/pic174072.jpg"
+      ],
+      "rating": 7,
+      "minPlayers": 2,
+      "maxPlayers": 10,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "68448",
+      "name": "7 Wonders",
+      "yearPublished": 2010,
+      "image": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__itemrep/img/EUlr4of74-i75S-jIrgNfaQ3M6Q=/fit-in/246x300/filters:strip_icc()/pic7149798.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__itemrep/img/EUlr4of74-i75S-jIrgNfaQ3M6Q=/fit-in/246x300/filters:strip_icc()/pic7149798.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/Jrolw9KXQtjYYaZ2_L07iA__original/img/-EoQfrgb9YMqud6gDpQ_1qza4Ys=/0x0/filters:format(jpeg)/pic893619.jpg",
+        "https://cf.geekdo-images.com/XO-hoFuoiRXvlhlErE-eUQ__original/img/BO2ndul3aBCeJFrPbWs1StnZ8Vk=/0x0/filters:format(jpeg)/pic1140092.jpg",
+        "https://cf.geekdo-images.com/MPBqc4xfRMHQFnXRBAR7uw__original/img/5DaAz8GjzlfqWunpGLdU_iq1xfw=/0x0/filters:format(jpeg)/pic969824.jpg"
+      ],
+      "rating": 7.7,
+      "minPlayers": 2,
+      "maxPlayers": 7,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "6472",
+      "name": "A Game of Thrones",
+      "yearPublished": 2003,
+      "image": "https://cf.geekdo-images.com/Gr3qfzoK-428kv1M9WUG1Q__itemrep/img/LkUDB9ISbVerrYmsug-HjyLvzY8=/fit-in/246x300/filters:strip_icc()/pic1222116.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/Gr3qfzoK-428kv1M9WUG1Q__itemrep/img/LkUDB9ISbVerrYmsug-HjyLvzY8=/fit-in/246x300/filters:strip_icc()/pic1222116.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/sxCybpidI-aQQ5AgCyTNng__original/img/-6TO-4lGGLfRkVYCdcF4GiVCtrA=/0x0/filters:format(jpeg)/pic1031375.jpg",
+        "https://cf.geekdo-images.com/0x50GN7Fr7ZNBhokZ9e9KQ__original/img/jk9CPQ9RijEi-W55evmsfU9nHYo=/0x0/filters:format(jpeg)/pic264612.jpg",
+        "https://cf.geekdo-images.com/XkItF01jc9MFv6azUoc6Mw__original/img/XX1Ook1BdT7rWuwUPzqeNfDN6rg=/0x0/filters:format(jpeg)/pic205744.jpg"
+      ],
+      "rating": 7.2,
+      "minPlayers": 3,
+      "maxPlayers": 5,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "230802",
+      "name": "Azul",
+      "yearPublished": 2017,
+      "image": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__itemrep/img/6oRLPDvy4zz3gOZM6e6NzIk8Seg=/fit-in/246x300/filters:strip_icc()/pic6973671.png",
+      "thumbnail": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__itemrep/img/6oRLPDvy4zz3gOZM6e6NzIk8Seg=/fit-in/246x300/filters:strip_icc()/pic6973671.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/jNRZOaq-Oikqu6v4ROt7wA__original/img/VH0QQDzBkJMHvMklSU6fWUFpuqk=/0x0/filters:format(jpeg)/pic4120687.jpg",
+        "https://cf.geekdo-images.com/iAwtWNv5QpbvJZRZQGGCaQ__original/img/M7LHbcruMjGZX-GgxmjZePKUUmg=/0x0/filters:format(jpeg)/pic4060863.jpg",
+        "https://cf.geekdo-images.com/zB_s21bFGCqUeMj0us7xwA__original/img/gQnJgQUfxRNCGvP2C9FIo1T-mKc=/0x0/filters:format(png)/pic3721303.png"
+      ],
+      "rating": 7.7,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": 30,
+      "maxPlaytime": 45,
+      "numPlays": 0
+    },
+    {
+      "id": "299571",
+      "name": "Bandida",
+      "yearPublished": 2020,
+      "image": "https://cf.geekdo-images.com/NxzxMSGrXnhZHEQc_1_zfQ__itemrep/img/DiKCs4PihsbvrJ8szaQSGITNlCo=/fit-in/246x300/filters:strip_icc()/pic5471628.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/NxzxMSGrXnhZHEQc_1_zfQ__itemrep/img/DiKCs4PihsbvrJ8szaQSGITNlCo=/fit-in/246x300/filters:strip_icc()/pic5471628.jpg",
+      "galleryImages": [],
+      "rating": 6.5,
+      "minPlayers": 1,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "28784",
+      "name": "Battlefield",
+      "yearPublished": null,
+      "image": "https://cf.geekdo-images.com/xAZbQgJwn63o28z28TgXBQ__itemrep/img/3-5IxYyLhR8yDibJWnZjDALFDoM=/fit-in/246x300/filters:strip_icc()/pic197429.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/xAZbQgJwn63o28z28TgXBQ__itemrep/img/3-5IxYyLhR8yDibJWnZjDALFDoM=/fit-in/246x300/filters:strip_icc()/pic197429.jpg",
+      "galleryImages": [],
+      "rating": 5.9,
+      "minPlayers": null,
+      "maxPlayers": null,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "2425",
+      "name": "Battleship",
+      "yearPublished": 1931,
+      "image": "https://cf.geekdo-images.com/oWcB33sfig9QF_KBEv7iLQ__itemrep/img/zcDS5maPgMDc_FwLaqHhmpqhAWE=/fit-in/246x300/filters:strip_icc()/pic2439783.png",
+      "thumbnail": "https://cf.geekdo-images.com/oWcB33sfig9QF_KBEv7iLQ__itemrep/img/zcDS5maPgMDc_FwLaqHhmpqhAWE=/fit-in/246x300/filters:strip_icc()/pic2439783.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/sE_MTGh8y8ueAcPEdodFBg__original/img/zo1sMaww6vcIlQjDT7cfkvfBVBU=/0x0/filters:format(jpeg)/pic416841.jpg",
+        "https://cf.geekdo-images.com/fQUVRLI176LiejTVMj89rw__original/img/wKEdu2bE088YXPtoUE4Hm2OAKOE=/0x0/filters:format(jpeg)/pic1851464.jpg",
+        "https://cf.geekdo-images.com/RL5-VFJnJcf6RObYZrdrpw__original/img/3yHRLDyF-Txt7Isby3tLGnTuW8U=/0x0/filters:format(jpeg)/pic160109.jpg"
+      ],
+      "rating": 4.7,
+      "minPlayers": null,
+      "maxPlayers": null,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "11",
+      "name": "Bohnanza",
+      "yearPublished": 1997,
+      "image": "https://cf.geekdo-images.com/8SADtu_4zBH_UJrCo935Iw__itemrep/img/Eg40fiS7D61bVhjp5qCnvEtfKfc=/fit-in/246x300/filters:strip_icc()/pic6348964.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/8SADtu_4zBH_UJrCo935Iw__itemrep/img/Eg40fiS7D61bVhjp5qCnvEtfKfc=/fit-in/246x300/filters:strip_icc()/pic6348964.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/O-5rOm6Ky5FQeDpZDBnLcg__original/img/2S0U2vI5CLMvnUOXHGCr77lqZwA=/0x0/filters:format(jpeg)/pic447348.jpg",
+        "https://cf.geekdo-images.com/Z6OxkYoJWbjzliQqlBSb1Q__original/img/jwfxzNjwKh-s3Shn-kr3J6TB8sE=/0x0/filters:format(jpeg)/pic41716.jpg",
+        "https://cf.geekdo-images.com/n8ju_8OT75JcfWZBsluKnQ__original/img/gxALpjnuSbPjperWl4hheR2ic78=/0x0/filters:format(jpeg)/pic934337.jpg"
+      ],
+      "rating": 7.1,
+      "minPlayers": 2,
+      "maxPlayers": 7,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "822",
+      "name": "Carcassonne",
+      "yearPublished": 2000,
+      "image": "https://cf.geekdo-images.com/peUgu3A20LRmAXAMyDQfpQ__itemrep/img/6TWoEvnQQe_sO--6WLd_PQOnEQg=/fit-in/246x300/filters:strip_icc()/pic8621446.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/peUgu3A20LRmAXAMyDQfpQ__itemrep/img/6TWoEvnQQe_sO--6WLd_PQOnEQg=/fit-in/246x300/filters:strip_icc()/pic8621446.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/ODoEP7PMJT-wvoTejN3X2g__original/img/5XZqP-Cfv54C3NM2TcdrwOfXfQE=/0x0/filters:format(jpeg)/pic69570.jpg",
+        "https://cf.geekdo-images.com/50dRUenpaIid-04AVc21Qg__original/img/JEawp_65axQZuiuvkmxhoNZDMwQ=/0x0/filters:format(jpeg)/pic554642.jpg",
+        "https://cf.geekdo-images.com/aYrurBK1Ht-KjrO50kcORA__original/img/pX_qxgXHo8UIlkQfR38LNzQ5Vwk=/0x0/filters:format(jpeg)/pic168238.jpg"
+      ],
+      "rating": 7.4,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": 30,
+      "maxPlaytime": 45,
+      "numPlays": 0
+    },
+    {
+      "id": "13",
+      "name": "Catan",
+      "yearPublished": 2015,
+      "image": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__itemrep/img/6Jf5G-bSvdOIMUSwxsJfZXl29B8=/fit-in/246x300/filters:strip_icc()/pic9156909.png",
+      "thumbnail": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__itemrep/img/6Jf5G-bSvdOIMUSwxsJfZXl29B8=/fit-in/246x300/filters:strip_icc()/pic9156909.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/ynqSVCjiY1RMzFVSoXoxiw__original/img/VzjwRv8z1PXbuSyA0Ht5AkPcnmc=/0x0/filters:format(jpeg)/pic309642.jpg",
+        "https://cf.geekdo-images.com/CuOs3kyk-UeKaKwVHmfSrg__original/img/kG_RlpOyFxr-CPK1XNG8_MFTk-E=/0x0/filters:format(jpeg)/pic514490.jpg",
+        "https://cf.geekdo-images.com/jsNsda9RzUL6kTpD4_Ignw__original/img/SE6Z357KXq3nT25RuH5Jum8orRw=/0x0/filters:format(jpeg)/pic627295.jpg"
+      ],
+      "rating": 7.1,
+      "minPlayers": 3,
+      "maxPlayers": 4,
+      "minPlaytime": 60,
+      "maxPlaytime": 120,
+      "numPlays": 0
+    },
+    {
+      "id": "2807",
+      "name": "CATAN: 5-6 Player Expansion",
+      "yearPublished": 1996,
+      "image": "https://cf.geekdo-images.com/tsDqjx3IqOl4r613Qh6-zQ__itemrep/img/mYxE-HHdsUsoZdXpilRQJJd1ZOI=/fit-in/246x300/filters:strip_icc()/pic8828033.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/tsDqjx3IqOl4r613Qh6-zQ__itemrep/img/mYxE-HHdsUsoZdXpilRQJJd1ZOI=/fit-in/246x300/filters:strip_icc()/pic8828033.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/c0HFOKw8hXNZMByuezYiXA__original/img/pG3Wr6rGh5_bJZlMv1xZ_UwHAzQ=/0x0/filters:format(jpeg)/pic896361.jpg",
+        "https://cf.geekdo-images.com/-IVQ9AySf34F3IUaPHHv2w__original/img/birD3godPlP05_65Be79gfPyBQQ=/0x0/filters:format(jpeg)/pic166709.jpg",
+        "https://cf.geekdo-images.com/M_atH-ydVV7AnwDovoQs1A__original/img/gaEs5YlXFlGY7gWbhfrczQ26mRM=/0x0/filters:format(jpeg)/pic142267.jpg"
+      ],
+      "rating": 7,
+      "minPlayers": 5,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "926",
+      "name": "CATAN: Cities & Knights",
+      "yearPublished": 1998,
+      "image": "https://cf.geekdo-images.com/CQHOCJI6EFUUsQiGXS9oHg__itemrep/img/cp_pm-1W59H9qbbAwhEg8Ycy1y4=/fit-in/246x300/filters:strip_icc()/pic8828016.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/CQHOCJI6EFUUsQiGXS9oHg__itemrep/img/cp_pm-1W59H9qbbAwhEg8Ycy1y4=/fit-in/246x300/filters:strip_icc()/pic8828016.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/2Eje_S7KeKZvrGRZg-vLvg__original/img/e-LM4S5mrz1KnXigtXQCsMDQO9M=/0x0/filters:format(jpeg)/pic407680.jpg",
+        "https://cf.geekdo-images.com/CxJU3huOWMufs39-_xIonQ__original/img/nWz6LXiIvgkKGfarNc---XVIhEs=/0x0/filters:format(jpeg)/pic408368.jpg",
+        "https://cf.geekdo-images.com/exBLnYdl1fBRzohNEKBbrQ__original/img/AMz3KAhDC-hl9r7aJyBtyCz8-bQ=/0x0/filters:format(jpeg)/pic112312.jpg"
+      ],
+      "rating": 7.4,
+      "minPlayers": 3,
+      "maxPlayers": 4,
+      "minPlaytime": 90,
+      "maxPlaytime": 150,
+      "numPlays": 0
+    },
+    {
+      "id": "4101",
+      "name": "CATAN: Cities & Knights – 5-6 Player Extension",
+      "yearPublished": 2000,
+      "image": "https://cf.geekdo-images.com/tecacLOKTtqHpIDEZAlYsg__itemrep/img/0jYbM8CSch2DND3e5uHDbORyaaM=/fit-in/246x300/filters:strip_icc()/pic2420316.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/tecacLOKTtqHpIDEZAlYsg__itemrep/img/0jYbM8CSch2DND3e5uHDbORyaaM=/fit-in/246x300/filters:strip_icc()/pic2420316.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/61VeqZi5X0ltbZmQRVD8mA__original/img/UFaXlCuH7OprdeAvaasr9qjGMfE=/0x0/filters:format(jpeg)/pic433652.jpg",
+        "https://cf.geekdo-images.com/X4W_FyW1dtdnMixcqhF-AA__original/img/KTh2menSRJLsEQ2dfJNucZc95iM=/0x0/filters:format(jpeg)/pic707223.jpg",
+        "https://cf.geekdo-images.com/0_YyjxvO2rs0ifWqCa3-CA__original/img/lHQzGlfkoedRQe3K84bLxrmmTuQ=/0x0/filters:format(jpeg)/pic707222.jpg"
+      ],
+      "rating": 7.1,
+      "minPlayers": 5,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "125921",
+      "name": "Catan: Junior",
+      "yearPublished": 2012,
+      "image": "https://cf.geekdo-images.com/t2L_dlodn04yyS7CmwnREQ__itemrep/img/QphSyFLAPYuyogVc2tmhzucw2h0=/fit-in/246x300/filters:strip_icc()/pic4741220.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/t2L_dlodn04yyS7CmwnREQ__itemrep/img/QphSyFLAPYuyogVc2tmhzucw2h0=/fit-in/246x300/filters:strip_icc()/pic4741220.jpg",
+      "galleryImages": [],
+      "rating": 6.6,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "325",
+      "name": "CATAN: Seafarers",
+      "yearPublished": 1997,
+      "image": "https://cf.geekdo-images.com/v8ll_1CxVGP-KN-NqkoQsg__itemrep/img/_Afku52eDoM-dvLisuOBVG5c9VQ=/fit-in/246x300/filters:strip_icc()/pic8828019.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/v8ll_1CxVGP-KN-NqkoQsg__itemrep/img/_Afku52eDoM-dvLisuOBVG5c9VQ=/fit-in/246x300/filters:strip_icc()/pic8828019.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/CwakRfGkeQ_XC_nxcHFnsQ__original/img/uaiZkH2jjXeddFOT0eBajTV5rXE=/0x0/filters:format(jpeg)/pic396734.jpg",
+        "https://cf.geekdo-images.com/M7WcnN_gvAywoRdMzpanRg__original/img/VsUHNpjsF1cCPTbmdFAuk25X9IE=/0x0/filters:format(jpeg)/pic128481.jpg",
+        "https://cf.geekdo-images.com/m_tnvLJnFm7Hs0QcJ8b6WA__original/img/5YRCPXO30xxYQEQYrB3VR5TEZIo=/0x0/filters:format(jpeg)/pic173347.jpg"
+      ],
+      "rating": 7.2,
+      "minPlayers": 3,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "4103",
+      "name": "CATAN: Seafarers – 5-6 Player Extension",
+      "yearPublished": 1999,
+      "image": "https://cf.geekdo-images.com/UgyarZ7iBTSDY3sAtfzf8A__itemrep/img/yFYas6kPk79n6AHffAFTSOdxp2c=/fit-in/246x300/filters:strip_icc()/pic2420305.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/UgyarZ7iBTSDY3sAtfzf8A__itemrep/img/yFYas6kPk79n6AHffAFTSOdxp2c=/fit-in/246x300/filters:strip_icc()/pic2420305.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/IM5S24YHf7gkyLIluQBuqQ__original/img/ruiczOtLlgC4HpPnstqe6p2KLjI=/0x0/filters:format(jpeg)/pic80512.jpg",
+        "https://cf.geekdo-images.com/E3EIQjZfQkYAXYQMabU2QQ__original/img/UvIw3XdBSQD4tEePyb7DFCfnHUk=/0x0/filters:format(jpeg)/pic80514.jpg",
+        "https://cf.geekdo-images.com/ZmvI4bDsPlNIglqCWcKw5g__original/img/wpe5-cTo2aocxt0adGCY_VPdv94=/0x0/filters:format(jpeg)/pic80509.jpg"
+      ],
+      "rating": 7,
+      "minPlayers": 5,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "27760",
+      "name": "CATAN: Traders & Barbarians",
+      "yearPublished": 2007,
+      "image": "https://cf.geekdo-images.com/gdQ16uSwcjrLTfK6CgUZ6g__itemrep/img/jM8BWRTufOYGKrygF0Ea_SBOLT0=/fit-in/246x300/filters:strip_icc()/pic8955011.png",
+      "thumbnail": "https://cf.geekdo-images.com/gdQ16uSwcjrLTfK6CgUZ6g__itemrep/img/jM8BWRTufOYGKrygF0Ea_SBOLT0=/fit-in/246x300/filters:strip_icc()/pic8955011.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/2--IpdBd4E9mNconLmQk5g__original/img/EB34lmw76ZzTLSftWyGXTt781cA=/0x0/filters:format(jpeg)/pic354473.jpg",
+        "https://cf.geekdo-images.com/TAKy-xLIlAxckKIecKlWxg__original/img/CIURelhTz3cEXsm6XQ26xYBmyGY=/0x0/filters:format(jpeg)/pic694501.jpg",
+        "https://cf.geekdo-images.com/T6WacN2l_CDIUkTF9S-ciQ__original/img/1vEk3-trtMCdhZ3yK2BzrRuH0WY=/0x0/filters:format(jpeg)/pic694498.jpg"
+      ],
+      "rating": 7,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "34691",
+      "name": "CATAN: Traders & Barbarians – 5-6 Player Expansion",
+      "yearPublished": 2008,
+      "image": "https://cf.geekdo-images.com/zwuiV_BR-70YJ_aHqInJXw__itemrep/img/1U0tKlNTL-QHduSW2HzQmyMNx7s=/fit-in/246x300/filters:strip_icc()/pic8955023.png",
+      "thumbnail": "https://cf.geekdo-images.com/zwuiV_BR-70YJ_aHqInJXw__itemrep/img/1U0tKlNTL-QHduSW2HzQmyMNx7s=/fit-in/246x300/filters:strip_icc()/pic8955023.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/4SwLfGxJki8UoGMSYv3a3Q__original/img/eDgnL1BSWWYqd6RBcNFj0ghEtAY=/0x0/filters:format(jpeg)/pic414353.jpg",
+        "https://cf.geekdo-images.com/kD9zenkJ_xpT-tOWHoFpQg__original/img/ecEPWhUVCO1I6tsFyHf6jsOs8dk=/0x0/filters:format(jpeg)/pic418126.jpg",
+        "https://cf.geekdo-images.com/1fZBKGLW9giSpCdcUaCmaA__original/img/SG8dwCxS5wU7FESHL3MJStn4QV0=/0x0/filters:format(jpeg)/pic418124.jpg"
+      ],
+      "rating": 6.9,
+      "minPlayers": 5,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "459885",
+      "name": "Chancho Inflado",
+      "yearPublished": 2023,
+      "image": "https://cf.geekdo-images.com/vraqPIva2AywN-KK5t-TGA__itemrep/img/_PvU5iFAEeFq4h6UPwGglNSo6qw=/fit-in/246x300/filters:strip_icc()/pic9275662.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/vraqPIva2AywN-KK5t-TGA__itemrep/img/_PvU5iFAEeFq4h6UPwGglNSo6qw=/fit-in/246x300/filters:strip_icc()/pic9275662.jpg",
+      "galleryImages": [],
+      "rating": null,
+      "minPlayers": 3,
+      "maxPlayers": 6,
+      "minPlaytime": 15,
+      "maxPlaytime": 30,
+      "numPlays": 0
+    },
+    {
+      "id": "178900",
+      "name": "Codenames",
+      "yearPublished": 2015,
+      "image": "https://cf.geekdo-images.com/nC6ifPCDnAItwoKSKXVrnw__itemrep/img/iM9m6bb1zTCzDzkXhiKE5V1gomc=/fit-in/246x300/filters:strip_icc()/pic8907965.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/nC6ifPCDnAItwoKSKXVrnw__itemrep/img/iM9m6bb1zTCzDzkXhiKE5V1gomc=/fit-in/246x300/filters:strip_icc()/pic8907965.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/8YmIAhM5OINwK99KFxsAug__original/img/UboZV1o3Mfpq6-k8CGfON_IFXdg=/0x0/filters:format(jpeg)/pic2602399.jpg",
+        "https://cf.geekdo-images.com/Cd8wJNUyCIYVA8zM6NT1Qg__original/img/3ZN9loDM21OMWpCNH7Ju-EbTn4s=/0x0/filters:format(jpeg)/pic2726801.jpg",
+        "https://cf.geekdo-images.com/_bwMggM3riaO-pjZVyeKOQ__original/img/lt6_5Gah6ZocMBgKc3WUgbl04xA=/0x0/filters:format(jpeg)/pic2598928.jpg"
+      ],
+      "rating": 7.5,
+      "minPlayers": 2,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "198773",
+      "name": "Codenames: Pictures",
+      "yearPublished": 2016,
+      "image": "https://cf.geekdo-images.com/TGHPcdYEnD3_QzMohEIrNw__itemrep/img/i_PQa-VPVVqEQcqqllVCs6CIeNk=/fit-in/246x300/filters:strip_icc()/pic9206059.png",
+      "thumbnail": "https://cf.geekdo-images.com/TGHPcdYEnD3_QzMohEIrNw__itemrep/img/i_PQa-VPVVqEQcqqllVCs6CIeNk=/fit-in/246x300/filters:strip_icc()/pic9206059.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/1APyTf1prIGcDPR_wUIsvQ__original/img/mRb27hwNJeWSqGy01xaRqhGzJAM=/0x0/filters:format(jpeg)/pic2991327.jpg"
+      ],
+      "rating": 7.2,
+      "minPlayers": 2,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "147151",
+      "name": "Concept",
+      "yearPublished": 2013,
+      "image": "https://cf.geekdo-images.com/hHFs0_KRoW_FJ0cMIVgZcw__itemrep/img/uTJREz55VIG7CJAy1oQYBE1duAU=/fit-in/246x300/filters:strip_icc()/pic4991925.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/hHFs0_KRoW_FJ0cMIVgZcw__itemrep/img/uTJREz55VIG7CJAy1oQYBE1duAU=/fit-in/246x300/filters:strip_icc()/pic4991925.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/jyLv1tY5HhleE4PlMzoeeA__original/img/kxmxvQjgY56a0JcKyNs9_Oem438=/0x0/filters:format(jpeg)/pic2556081.jpg",
+        "https://cf.geekdo-images.com/KisrVMmOLDrPAMp4uk3hog__original/img/nn5zlsDlOiLTjlmVs_-2cbNnKWM=/0x0/filters:format(jpeg)/pic3744765.jpg"
+      ],
+      "rating": 6.7,
+      "minPlayers": 4,
+      "maxPlayers": 12,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "39856",
+      "name": "Dixit",
+      "yearPublished": 2008,
+      "image": "https://cf.geekdo-images.com/J0PlHArkZDJ57H-brXW2Fw__itemrep/img/tsmN3sAHJ6trDaWNbq08BZXtq7g=/fit-in/246x300/filters:strip_icc()/pic6738336.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/J0PlHArkZDJ57H-brXW2Fw__itemrep/img/tsmN3sAHJ6trDaWNbq08BZXtq7g=/fit-in/246x300/filters:strip_icc()/pic6738336.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/iJ9UObRloY42ZY1PkgBFdA__original/img/h3FqWgF04fm8L5XBnFP9e7Lmbos=/0x0/filters:format(jpeg)/pic423753.jpg",
+        "https://cf.geekdo-images.com/xVtIZwvjdLUFVEI4d9PQDA__original/img/ogbMnkx7JrDdtRpbP4KFIAuiWL4=/0x0/filters:format(jpeg)/pic579093.jpg",
+        "https://cf.geekdo-images.com/dszlo__IZZmykHTLkbEs2w__original/img/qyjCjYcifzPJoGXD_uEZUqu9sgA=/0x0/filters:format(jpeg)/pic423748.jpg"
+      ],
+      "rating": 7.2,
+      "minPlayers": 3,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "2394",
+      "name": "Dominoes",
+      "yearPublished": 1500,
+      "image": "https://cf.geekdo-images.com/7YdY99fgAanc04jyhqQ66w__itemrep/img/7We10bb8ryNMZC7aMXfnCjgRiW8=/fit-in/246x300/filters:strip_icc()/pic90585.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/7YdY99fgAanc04jyhqQ66w__itemrep/img/7We10bb8ryNMZC7aMXfnCjgRiW8=/fit-in/246x300/filters:strip_icc()/pic90585.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/lKtxn_Jwpy8k_WBZ4QoZ8w__original/img/WRU9eXawZKfXBWRjS_McxPlvpBI=/0x0/filters:format(jpeg)/pic853860.jpg",
+        "https://cf.geekdo-images.com/RzhKsxYHUJY8qjlVl9NfXg__original/img/8CUzTm6SAw6gZyLMtcCujHclCew=/0x0/filters:format(jpeg)/pic285026.jpg",
+        "https://cf.geekdo-images.com/WN0z5jSf4AOXltaUzvWEDg__original/img/3g_61EqZQIfJWunZPkggeSeaOWA=/0x0/filters:format(jpeg)/pic114646.jpg"
+      ],
+      "rating": 5.6,
+      "minPlayers": 2,
+      "maxPlayers": 10,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "18931",
+      "name": "Emira",
+      "yearPublished": 2006,
+      "image": "https://cf.geekdo-images.com/g1pnPCmL6wgNcGicifhr4Q__itemrep/img/LyNKzMQxwOuWv50ynPJw86w6yGc=/fit-in/246x300/filters:strip_icc()/pic2953700.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/g1pnPCmL6wgNcGicifhr4Q__itemrep/img/LyNKzMQxwOuWv50ynPJw86w6yGc=/fit-in/246x300/filters:strip_icc()/pic2953700.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/7CMnYLji4Pqyje9DFXhLCQ__original/img/VbhCmc9PvfEpWbwmQNaxt5zIfYE=/0x0/filters:format(jpeg)/pic138041.jpg",
+        "https://cf.geekdo-images.com/V1aa414m2T1T2lPsy5Iebg__original/img/Um-kIUHk-lMMDnOOO6Q6YFa5omk=/0x0/filters:format(jpeg)/pic281115.jpg",
+        "https://cf.geekdo-images.com/9Si3DLoCzdQ4N9cGeRr3Tg__original/img/v24MwAQGB4wqk0podvA2uBZlazY=/0x0/filters:format(jpeg)/pic154640.jpg"
+      ],
+      "rating": 5.9,
+      "minPlayers": 3,
+      "maxPlayers": 5,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "256804",
+      "name": "Exploding Kittens: Party Pack",
+      "yearPublished": 2017,
+      "image": "https://cf.geekdo-images.com/TTsbFSWQjf6ALCmct9Q02g__itemrep/img/zBxkQib6DP9pwqnmT6HW3dAxElg=/fit-in/246x300/filters:strip_icc()/pic5940391.png",
+      "thumbnail": "https://cf.geekdo-images.com/TTsbFSWQjf6ALCmct9Q02g__itemrep/img/zBxkQib6DP9pwqnmT6HW3dAxElg=/fit-in/246x300/filters:strip_icc()/pic5940391.png",
+      "galleryImages": [],
+      "rating": 7.1,
+      "minPlayers": 2,
+      "maxPlayers": 10,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "100901",
+      "name": "Flash Point: Fire Rescue",
+      "yearPublished": 2011,
+      "image": "https://cf.geekdo-images.com/v6bTbxeprDFj1nN4AenvjA__itemrep/img/Vw7DmPfr-ySMAI5QaBKHVD-un7M=/fit-in/246x300/filters:strip_icc()/pic1129370.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/v6bTbxeprDFj1nN4AenvjA__itemrep/img/Vw7DmPfr-ySMAI5QaBKHVD-un7M=/fit-in/246x300/filters:strip_icc()/pic1129370.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/IN9-YTBXUslJU9YbWarPqA__original/img/teAjf5KRVgAIyW7uZFdAqpIyNtk=/0x0/filters:format(png)/pic1372545.png",
+        "https://cf.geekdo-images.com/a6LzGWh21MRz0_W4SiVL2w__original/img/yQF8kB3WMOxU_LFqErTo15wIrHk=/0x0/filters:format(jpeg)/pic2197395.jpg",
+        "https://cf.geekdo-images.com/_BrOELlx0pp48js79PfUHg__original/img/9KrwAnSmPWK36gCh2BvA5rbx2Cw=/0x0/filters:format(jpeg)/pic1066125.jpg"
+      ],
+      "rating": 7.1,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "420087",
+      "name": "Flip 7",
+      "yearPublished": 2024,
+      "image": "https://cf.geekdo-images.com/YrQxEB9Ef0kQorRApzG5vQ__itemrep/img/5JLNPGM983Wl2Uu2v-7JQihdFMA=/fit-in/246x300/filters:strip_icc()/pic8780246.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/YrQxEB9Ef0kQorRApzG5vQ__itemrep/img/5JLNPGM983Wl2Uu2v-7JQihdFMA=/fit-in/246x300/filters:strip_icc()/pic8780246.jpg",
+      "galleryImages": [],
+      "rating": 7.2,
+      "minPlayers": 3,
+      "maxPlayers": 18,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "65244",
+      "name": "Forbidden Island",
+      "yearPublished": 2010,
+      "image": "https://cf.geekdo-images.com/JgAkEBUaiHOsOS94iRMs2w__itemrep/img/6pTx2AK0L_a39_rsORJ_cs-qExw=/fit-in/246x300/filters:strip_icc()/pic646458.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/JgAkEBUaiHOsOS94iRMs2w__itemrep/img/6pTx2AK0L_a39_rsORJ_cs-qExw=/fit-in/246x300/filters:strip_icc()/pic646458.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/-uyI4kCQRls6QbcnIv3Bcg__original/img/ku-FIJzicKHU_hs2eccq_M0VTZQ=/0x0/filters:format(jpeg)/pic847150.jpg",
+        "https://cf.geekdo-images.com/-2cRyU_ssY77g2iHmIGyTg__original/img/EnKio8ePeU7tyu46hgr5RgVQlUc=/0x0/filters:format(jpeg)/pic720360.jpg",
+        "https://cf.geekdo-images.com/YzvPNFQhsAk_NMhGxBLLJw__original/img/nP2XujEh1CY_Mao_cAkQ5SIfBt4=/0x0/filters:format(jpeg)/pic746286.jpg"
+      ],
+      "rating": 6.8,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "258665",
+      "name": "Get Packing",
+      "yearPublished": 2018,
+      "image": "https://cf.geekdo-images.com/pME7D4_hZzByQFKNb2VXbA__itemrep/img/aIgo3M5Yw4PM-w_LbLmBlFbbQXQ=/fit-in/246x300/filters:strip_icc()/pic4269749.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/pME7D4_hZzByQFKNb2VXbA__itemrep/img/aIgo3M5Yw4PM-w_LbLmBlFbbQXQ=/fit-in/246x300/filters:strip_icc()/pic4269749.jpg",
+      "galleryImages": [],
+      "rating": 6,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "4143",
+      "name": "Guess Who?",
+      "yearPublished": 1979,
+      "image": "https://cf.geekdo-images.com/9IzIcHIJVY08OYkXpTmUQA__itemrep/img/O2Jsu1LMVEdIGQR2axJXO0cSWzY=/fit-in/246x300/filters:strip_icc()/pic335812.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/9IzIcHIJVY08OYkXpTmUQA__itemrep/img/O2Jsu1LMVEdIGQR2axJXO0cSWzY=/fit-in/246x300/filters:strip_icc()/pic335812.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/q_kXrPiVgmwDzrIRrS9M_g__original/img/RP7lQAzNGdoqN7I7ub3f6CEReAE=/0x0/filters:format(jpeg)/pic463690.jpg",
+        "https://cf.geekdo-images.com/N_LxE5qX88ckL4En4KC4aQ__original/img/aTQfx6qTOQWHc_efQNn3Whqq9FQ=/0x0/filters:format(jpeg)/pic603768.jpg",
+        "https://cf.geekdo-images.com/n0IbZeGAPchU1DOlIhzlhg__original/img/2qaqyyU-ye_ilC6b2t_VO5s3VaA=/0x0/filters:format(jpeg)/pic176244.jpg"
+      ],
+      "rating": 4.8,
+      "minPlayers": null,
+      "maxPlayers": null,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "290357",
+      "name": "Hanabi Deluxe: What a Show!",
+      "yearPublished": 2019,
+      "image": "https://cf.geekdo-images.com/o2q0VHuxcE2IyZd33jD7Sw__itemrep/img/x-Gra9bKd4_PLZrGg9Ift3vEKng=/fit-in/246x300/filters:strip_icc()/pic6428011.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/o2q0VHuxcE2IyZd33jD7Sw__itemrep/img/x-Gra9bKd4_PLZrGg9Ift3vEKng=/fit-in/246x300/filters:strip_icc()/pic6428011.jpg",
+      "galleryImages": [],
+      "rating": 7.6,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": 25,
+      "maxPlaytime": 45,
+      "numPlays": 0
+    },
+    {
+      "id": "194626",
+      "name": "Happy Salmon",
+      "yearPublished": 2016,
+      "image": "https://cf.geekdo-images.com/qiPO300rG73UqxJvpUe3og__itemrep/img/gX4H65X6lEWVEYJHCicuk4JrUB4=/fit-in/246x300/filters:strip_icc()/pic7354069.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/qiPO300rG73UqxJvpUe3og__itemrep/img/gX4H65X6lEWVEYJHCicuk4JrUB4=/fit-in/246x300/filters:strip_icc()/pic7354069.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/OvnyKHMsFiLk092ciN2W2Q__original/img/2Bnjx3IvIrzjx45SemM2A-gnItc=/0x0/filters:format(jpeg)/pic3668953.jpg",
+        "https://cf.geekdo-images.com/06pt3r33HQAhEl9yl2U4dQ__original/img/LyGeu-WIkUsn3Ez0TKM-wYIxpf4=/0x0/filters:format(jpeg)/pic8070863.jpg",
+        "https://cf.geekdo-images.com/D6x3nuCwa4pzuCzxVza0Yg__original/img/M5eRuZ0W03qckU-4y-N7-ya6Isc=/0x0/filters:format(jpeg)/pic3370246.jpg"
+      ],
+      "rating": 6.7,
+      "minPlayers": 3,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "299252",
+      "name": "Here to Slay",
+      "yearPublished": 2020,
+      "image": "https://cf.geekdo-images.com/ozUv3be9fcf28tJk30bNow__itemrep/img/qxn5NdQ85BjgM1xgDkfx33-IUYk=/fit-in/246x300/filters:strip_icc()/pic5181432.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/ozUv3be9fcf28tJk30bNow__itemrep/img/qxn5NdQ85BjgM1xgDkfx33-IUYk=/fit-in/246x300/filters:strip_icc()/pic5181432.jpg",
+      "galleryImages": [],
+      "rating": 6.9,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": 30,
+      "maxPlaytime": 60,
+      "numPlays": 0
+    },
+    {
+      "id": "349286",
+      "name": "Here to Slay: Berserkers & Necromancers",
+      "yearPublished": 2022,
+      "image": "https://cf.geekdo-images.com/LkUupPt0pgN6T68xAbElNQ__itemrep/img/dobCmWH6Y9mw7pZvvi7Gc54rC7Y=/fit-in/246x300/filters:strip_icc()/pic6602480.png",
+      "thumbnail": "https://cf.geekdo-images.com/LkUupPt0pgN6T68xAbElNQ__itemrep/img/dobCmWH6Y9mw7pZvvi7Gc54rC7Y=/fit-in/246x300/filters:strip_icc()/pic6602480.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/4cWAJ6C53WH3TMNmzpOR-w__original/img/95XnxA0zyr-xY_n5vPMvIgHsnKI=/0x0/filters:format(png)/pic7877684.png",
+        "https://cf.geekdo-images.com/g4UCEFREA1jVkxZaR5ZNCw__original/img/xJntfIxB0eemsG3IsPA0hYx7BmU=/0x0/filters:format(jpeg)/pic7565464.jpg"
+      ],
+      "rating": 7.5,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": 30,
+      "maxPlaytime": 60,
+      "numPlays": 0
+    },
+    {
+      "id": "2655",
+      "name": "Hive",
+      "yearPublished": 2001,
+      "image": "https://cf.geekdo-images.com/fQe85tsBZoH6ibPnm1k1UA__itemrep/img/SdQ5at_SaQCPbs1QES2KfeUKqaQ=/fit-in/246x300/filters:strip_icc()/pic791151.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/fQe85tsBZoH6ibPnm1k1UA__itemrep/img/SdQ5at_SaQCPbs1QES2KfeUKqaQ=/fit-in/246x300/filters:strip_icc()/pic791151.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/O-5rOm6Ky5FQeDpZDBnLcg__original/img/2S0U2vI5CLMvnUOXHGCr77lqZwA=/0x0/filters:format(jpeg)/pic447348.jpg",
+        "https://cf.geekdo-images.com/11P3K6xITRtmFND15RqEZA__original/img/45j5r4te4UFzIByjqA59vrKZhjI=/0x0/filters:format(jpeg)/pic188943.jpg",
+        "https://cf.geekdo-images.com/DzL3Lkw2JWMa2D0vDCa0bQ__original/img/7m3UOHK6Entmk4bNbUwUsXA_Vf0=/0x0/filters:format(jpeg)/pic418535.jpg"
+      ],
+      "rating": 7.3,
+      "minPlayers": null,
+      "maxPlayers": null,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "254640",
+      "name": "Just One",
+      "yearPublished": 2018,
+      "image": "https://cf.geekdo-images.com/74haNunMBn85beBi-yIKwA__itemrep/img/JJ6JxH8LXK_y5YFwBxMq4UCGNfw=/fit-in/246x300/filters:strip_icc()/pic8669313.png",
+      "thumbnail": "https://cf.geekdo-images.com/74haNunMBn85beBi-yIKwA__itemrep/img/JJ6JxH8LXK_y5YFwBxMq4UCGNfw=/fit-in/246x300/filters:strip_icc()/pic8669313.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/dnMJCv0NbZUNvGmgjoVlgw__original/img/hpgPlrNEw7K-j9GQMgEBO6FMehI=/0x0/filters:format(jpeg)/pic4268501.jpg"
+      ],
+      "rating": 7.6,
+      "minPlayers": 3,
+      "maxPlayers": 7,
+      "minPlaytime": 20,
+      "maxPlaytime": 60,
+      "numPlays": 0
+    },
+    {
+      "id": "943",
+      "name": "Ligretto",
+      "yearPublished": 1988,
+      "image": "https://cf.geekdo-images.com/BQ6UyXXeivndO4F9Hu8CHw__itemrep/img/Avxt2pUifVr7XkyOn1U84g0jN-E=/fit-in/246x300/filters:strip_icc()/pic1306961.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/BQ6UyXXeivndO4F9Hu8CHw__itemrep/img/Avxt2pUifVr7XkyOn1U84g0jN-E=/fit-in/246x300/filters:strip_icc()/pic1306961.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/fdP52ctpf-zjQ9qnFYSGNw__original/img/g1zEA8x2OTSy5M9fE74Ia8EfTn0=/0x0/filters:format(jpeg)/pic108394.jpg",
+        "https://cf.geekdo-images.com/X9uGN3CyQH2YrMENLJXegw__original/img/TSL_ZAJZAJf5-kRpCmEH0dYi8Zg=/0x0/filters:format(jpeg)/pic36896.jpg",
+        "https://cf.geekdo-images.com/lhHuyD-nYdJNEFoeRBJtRw__original/img/v74lYLWdk8989gbFeQ3lXb1imYc=/0x0/filters:format(jpeg)/pic207239.jpg"
+      ],
+      "rating": 6.2,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "2392",
+      "name": "Mastermind",
+      "yearPublished": 1971,
+      "image": "https://cf.geekdo-images.com/im_XE341_hfKMchAeH6mtw__itemrep/img/KUEb2eoz66t91Lg5KCn349sFMNY=/fit-in/246x300/filters:strip_icc()/pic1118956.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/im_XE341_hfKMchAeH6mtw__itemrep/img/KUEb2eoz66t91Lg5KCn349sFMNY=/fit-in/246x300/filters:strip_icc()/pic1118956.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/oiNNKlwu7FN18n-zt-6muw__original/img/_Wwx0o5JSeIVFtKZ_4KUa6TUOV0=/0x0/filters:format(jpeg)/pic472082.jpg",
+        "https://cf.geekdo-images.com/EK0lI4RjPs_tqXcOpk310Q__original/img/ddrZVkWKqGiF1jCZ833naqp6qEM=/0x0/filters:format(jpeg)/pic227497.jpg",
+        "https://cf.geekdo-images.com/FjJb-Q58dbkinK80J6HwWw__original/img/aIH0_0zoGY5zxs3bmyU8U_jDkAk=/0x0/filters:format(jpeg)/pic116418.jpg"
+      ],
+      "rating": 5.7,
+      "minPlayers": null,
+      "maxPlayers": null,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "314491",
+      "name": "Meadow",
+      "yearPublished": 2021,
+      "image": "https://cf.geekdo-images.com/9r3qdPijtgoIN24PxFU2gw__itemrep/img/1yJh57jtXEq12EZ2eBBN9q5b71I=/fit-in/246x300/filters:strip_icc()/pic5894745.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/9r3qdPijtgoIN24PxFU2gw__itemrep/img/1yJh57jtXEq12EZ2eBBN9q5b71I=/fit-in/246x300/filters:strip_icc()/pic5894745.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/jMXusmUBejPQghH2DxtphA__original/img/YeH2EHWdW0Jkq9b2hez2XEFN3xE=/0x0/filters:format(jpeg)/pic7173270.jpg",
+        "https://cf.geekdo-images.com/xeOXTCTgb6Th1pDDyLCw3g__original/img/37enclHg-gjSgyaEJBFxKQ7njSs=/0x0/filters:format(jpeg)/pic7173269.jpg",
+        "https://cf.geekdo-images.com/DbR7IKOQM_0BYNODtExELQ__original/img/pDwo03P9dPxEvMIpvSHI1wno1j4=/0x0/filters:format(jpeg)/pic7173271.jpg"
+      ],
+      "rating": 7.7,
+      "minPlayers": 1,
+      "maxPlayers": 4,
+      "minPlaytime": 60,
+      "maxPlaytime": 90,
+      "numPlays": 0
+    },
+    {
+      "id": "590",
+      "name": "Mille Bornes",
+      "yearPublished": 1954,
+      "image": "https://cf.geekdo-images.com/kzLZY_DHTh-hBcqXP34a5w__itemrep/img/03900Mg7512a9ig4XEp6epY7omw=/fit-in/246x300/filters:strip_icc()/pic4330533.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/kzLZY_DHTh-hBcqXP34a5w__itemrep/img/03900Mg7512a9ig4XEp6epY7omw=/fit-in/246x300/filters:strip_icc()/pic4330533.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/VP0_-I6J04ACHrmFDMX_KQ__original/img/23jDCDnkgSqnBYpEYjfqr_hDsZo=/0x0/filters:format(jpeg)/pic184675.jpg",
+        "https://cf.geekdo-images.com/UtQTzZFPrz5yPf1JA5WeTQ__original/img/eCkMKSiCHdUfqMB4ZiEVSsSgO1I=/0x0/filters:format(jpeg)/pic184677.jpg",
+        "https://cf.geekdo-images.com/ZOchRZemXrTv8wv6QKIPfA__original/img/X4WtcrsfF5uxnn-VdK8Dh71lyXk=/0x0/filters:format(jpeg)/pic184674.jpg"
+      ],
+      "rating": 5.7,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "164840",
+      "name": "Monopoly Deal",
+      "yearPublished": 2014,
+      "image": "https://cf.geekdo-images.com/BH5gxOe_ozOtWihuCJ3lYw__itemrep/img/v9Q7ohqPFxUnxwxBqf_4y28-6UI=/fit-in/246x300/filters:strip_icc()/pic2098412.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/BH5gxOe_ozOtWihuCJ3lYw__itemrep/img/v9Q7ohqPFxUnxwxBqf_4y28-6UI=/fit-in/246x300/filters:strip_icc()/pic2098412.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/SDs8_29RjcAlnLTYUy0yYQ__original/img/vg6uXX22DCFYJ6pLJMz12rJgNww=/0x0/filters:format(jpeg)/pic2181136.jpg",
+        "https://cf.geekdo-images.com/MCo1WEqQ_IFNv6doAugBmQ__original/img/G5VymXRrN8WVYCfQP9zGFZWwGuE=/0x0/filters:format(jpeg)/pic2098414.jpg",
+        "https://cf.geekdo-images.com/PVfjJBGRg-VRWnqleuALMw__original/img/soWJTuwXzSmZ59-sOT3h8MgWquI=/0x0/filters:format(jpeg)/pic2098413.jpg"
+      ],
+      "rating": 6.4,
+      "minPlayers": 2,
+      "maxPlayers": 3,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "192860",
+      "name": "Oceanos",
+      "yearPublished": 2016,
+      "image": "https://cf.geekdo-images.com/pSz89XjEGXbZZn5ROo45EQ__itemrep/img/lelo7869JA96fjneBEm8fNf1tRQ=/fit-in/246x300/filters:strip_icc()/pic3014888.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/pSz89XjEGXbZZn5ROo45EQ__itemrep/img/lelo7869JA96fjneBEm8fNf1tRQ=/fit-in/246x300/filters:strip_icc()/pic3014888.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/RGlbWmEDTEzkMdWZA0Gvmg__original/img/nfpa5yrtALt7FqQsmwz2ckm8voQ=/0x0/filters:format(jpeg)/pic3098059.jpg",
+        "https://cf.geekdo-images.com/zlMIQLmk0HF-Pi66kOlJow__original/img/n8Mase9xCgjT4g6Z_0mdTj8lCts=/0x0/filters:format(jpeg)/pic3098061.jpg",
+        "https://cf.geekdo-images.com/hMA8S9m5x-supMRMnjJhhw__original/img/A7xXmFV4YTf8kmUa9bXnj-4oX1k=/0x0/filters:format(jpeg)/pic3098047.jpg"
+      ],
+      "rating": 6.8,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": 30,
+      "maxPlaytime": 45,
+      "numPlays": 0
+    },
+    {
+      "id": "30549",
+      "name": "Pandemic",
+      "yearPublished": 2008,
+      "image": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__itemrep/img/wAMLbgihOl7dJDHnvqt7OXKEV-4=/fit-in/246x300/filters:strip_icc()/pic1534148.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__itemrep/img/wAMLbgihOl7dJDHnvqt7OXKEV-4=/fit-in/246x300/filters:strip_icc()/pic1534148.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/LiRi5Rwkw0M9G7Yx5oPnNg__original/img/JONfF-F7ShqVfiBzRNiCf4kW3es=/0x0/filters:format(jpeg)/pic473228.jpg",
+        "https://cf.geekdo-images.com/7jhLOkPv1pGG1kXS49N5Lw__original/img/vGM74rujSvaSjMVyglxLo5ZMj0s=/0x0/filters:format(jpeg)/pic674296.jpg",
+        "https://cf.geekdo-images.com/jh4TzRRbv8pZA17k7mVJRA__original/img/PfzObXk3cHhohtxDCF8QCYuA-D0=/0x0/filters:format(jpeg)/pic442853.jpg"
+      ],
+      "rating": 7.5,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "276498",
+      "name": "Paris: La Cité de la Lumière",
+      "yearPublished": 2019,
+      "image": "https://cf.geekdo-images.com/6mIsd0NbfluAAZxwS-3P8Q__itemrep/img/Quh759xmfSYK-lK_fKbavqyE4Sw=/fit-in/246x300/filters:strip_icc()/pic4664437.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/6mIsd0NbfluAAZxwS-3P8Q__itemrep/img/Quh759xmfSYK-lK_fKbavqyE4Sw=/fit-in/246x300/filters:strip_icc()/pic4664437.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/8VU8LgaMtNIcYMLeBZXl5A__original/img/qSZbfp018or665vcMtN9wyTv1l8=/0x0/filters:format(jpeg)/pic6246018.jpg",
+        "https://cf.geekdo-images.com/Fy-bVkqgvqHAezzVmyBW2Q__original/img/pej75K71i0K-LRYJ6gW-e5TjJjQ=/0x0/filters:format(jpeg)/pic5101743.jpg",
+        "https://cf.geekdo-images.com/kk7aXmZtOSyC351ttFANng__original/img/Dup1JXmV45u4ItorWY5HSztCzWI=/0x0/filters:format(jpeg)/pic5804416.jpg"
+      ],
+      "rating": 7.2,
+      "minPlayers": null,
+      "maxPlayers": null,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "5588",
+      "name": "Perfection",
+      "yearPublished": 1973,
+      "image": "https://cf.geekdo-images.com/lfLEY0sbSSQTt_hmxPnH8w__itemrep/img/SZfE3d49kgYagYPC_pukzu4UzCU=/fit-in/246x300/filters:strip_icc()/pic8203344.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/lfLEY0sbSSQTt_hmxPnH8w__itemrep/img/SZfE3d49kgYagYPC_pukzu4UzCU=/fit-in/246x300/filters:strip_icc()/pic8203344.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/KfPjyySexT4nxDWJYNjl8g__original/img/NAR1rIk5vc4YlsCKDTCvb2gBrUM=/0x0/filters:format(jpeg)/pic95278.jpg",
+        "https://cf.geekdo-images.com/oyX2u5b_27ffwLPCr0t-HQ__original/img/CWEP1w8WWw_nTPdErD1aBfiXMtE=/0x0/filters:format(jpeg)/pic262213.jpg",
+        "https://cf.geekdo-images.com/QVfhhpeApU6GsrSypd-gCg__original/img/_CYIOVvD2bfwKCZqexOIUH-HcqA=/0x0/filters:format(jpeg)/pic95279.jpg"
+      ],
+      "rating": 4.4,
+      "minPlayers": 1,
+      "maxPlayers": 99,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "8996",
+      "name": "Pictionary Junior",
+      "yearPublished": 1988,
+      "image": "https://cf.geekdo-images.com/7anu4_PG8ZU2oAlI87VEmQ__itemrep/img/nz2q6_ITGwWYnsraMld4J8CuZBk=/fit-in/246x300/filters:strip_icc()/pic106035.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/7anu4_PG8ZU2oAlI87VEmQ__itemrep/img/nz2q6_ITGwWYnsraMld4J8CuZBk=/fit-in/246x300/filters:strip_icc()/pic106035.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/bTz2QteS7uWKOu4R-yizNQ__original/img/z50sKpp92MzUy1wOH1H19gnSAXU=/0x0/filters:format(jpeg)/pic172388.jpg",
+        "https://cf.geekdo-images.com/dlyKRmcioYtB2eUDJpjjeg__original/img/Jfc-p-ttiMSyPDrXlFLbV-XPh8E=/0x0/filters:format(jpeg)/pic172387.jpg",
+        "https://cf.geekdo-images.com/Gv9gsO4NKMPNnXR7bD4oZw__original/img/OCvoM7t3FJijU1LGx90H3RksIqw=/0x0/filters:format(jpeg)/pic172386.jpg"
+      ],
+      "rating": 5.4,
+      "minPlayers": 3,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "284108",
+      "name": "Pictures",
+      "yearPublished": 2019,
+      "image": "https://cf.geekdo-images.com/pR7dcr6bs5TIOHOhKIoe_A__itemrep/img/wW9nb34NGo1UnJg0E8vbjKCKCnE=/fit-in/246x300/filters:strip_icc()/pic4946885.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/pR7dcr6bs5TIOHOhKIoe_A__itemrep/img/wW9nb34NGo1UnJg0E8vbjKCKCnE=/fit-in/246x300/filters:strip_icc()/pic4946885.jpg",
+      "galleryImages": [],
+      "rating": 7.2,
+      "minPlayers": 3,
+      "maxPlayers": 5,
+      "minPlaytime": 20,
+      "maxPlaytime": 30,
+      "numPlays": 0
+    },
+    {
+      "id": "2651",
+      "name": "Power Grid",
+      "yearPublished": 2004,
+      "image": "https://cf.geekdo-images.com/yd6LuatytHRhcFCxCf-EEg__itemrep/img/LsqKzcnoaVUlSUmLxFE8dwxFndk=/fit-in/246x300/filters:strip_icc()/pic4459753.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/yd6LuatytHRhcFCxCf-EEg__itemrep/img/LsqKzcnoaVUlSUmLxFE8dwxFndk=/fit-in/246x300/filters:strip_icc()/pic4459753.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/031KGSuNFbQYjuOzB0aqWw__original/img/7CIrJIDuSqaBDUrQsnDBk6S1Tgw=/0x0/filters:format(jpeg)/pic147429.jpg",
+        "https://cf.geekdo-images.com/uQ6jKzhoXOgDZ61-mLpgcA__original/img/tsyDkuKDdD_CUgAD8ZGRTsNIAZk=/0x0/filters:format(jpeg)/pic729927.jpg",
+        "https://cf.geekdo-images.com/9hGXe0k2buob1jyDKiaZxg__original/img/OWnIk3Ttzxv_7XpiGJpiuBXFPUI=/0x0/filters:format(jpeg)/pic1078240.jpg"
+      ],
+      "rating": 7.8,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "3076",
+      "name": "Puerto Rico",
+      "yearPublished": 2002,
+      "image": "https://cf.geekdo-images.com/QFiIRd2kimaMqTyWsX0aUg__itemrep/img/YDEozo5DfKYdDp8xi2mAfoV2qWk=/fit-in/246x300/filters:strip_icc()/pic158548.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/QFiIRd2kimaMqTyWsX0aUg__itemrep/img/YDEozo5DfKYdDp8xi2mAfoV2qWk=/fit-in/246x300/filters:strip_icc()/pic158548.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/or9aGeUuejYWJfjCLsqngg__original/img/pjLFvPItCUd9X8xIpGOOXkUGr6E=/0x0/filters:format(jpeg)/pic76638.jpg",
+        "https://cf.geekdo-images.com/s865Fm5Z_rze_zbpShcBkQ__original/img/1pvhOQWBSQkY-UyveT1tjjO7ciM=/0x0/filters:format(jpeg)/pic442801.jpg",
+        "https://cf.geekdo-images.com/-BZnWPEBL5cPhLgHtSI32Q__original/img/OXIJ9oC9Jzj1jzVQqB3nAe3K-SY=/0x0/filters:format(jpeg)/pic183683.jpg"
+      ],
+      "rating": 7.9,
+      "minPlayers": 3,
+      "maxPlayers": 5,
+      "minPlaytime": 90,
+      "maxPlaytime": 150,
+      "numPlays": 0
+    },
+    {
+      "id": "681",
+      "name": "Quarto",
+      "yearPublished": 1991,
+      "image": "https://cf.geekdo-images.com/e7eP58UJVDA1wC5pWjCPqg__itemrep/img/k2GNFYEJhSYmRGS_DNL_bA7Z6Jc=/fit-in/246x300/filters:strip_icc()/pic3488229.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/e7eP58UJVDA1wC5pWjCPqg__itemrep/img/k2GNFYEJhSYmRGS_DNL_bA7Z6Jc=/fit-in/246x300/filters:strip_icc()/pic3488229.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/1tQoBEBHD1C1iuZVqzCXmw__original/img/j5QjnIU_KvAsVlaOpu_FPA85Ss0=/0x0/filters:format(jpeg)/pic449265.jpg",
+        "https://cf.geekdo-images.com/GRNckpzjgftVNDlHiZEyuA__original/img/r2qDEtfMpLf2A6QPPqFmFqv2BMg=/0x0/filters:format(jpeg)/pic449267.jpg",
+        "https://cf.geekdo-images.com/2xhLA88F9iK6v-F6ruNVGg__original/img/mfHtDOGyqC8kuv_vIwDTQUVy2qU=/0x0/filters:format(jpeg)/pic539495.jpg"
+      ],
+      "rating": 6.9,
+      "minPlayers": null,
+      "maxPlayers": null,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "3190",
+      "name": "Quixo",
+      "yearPublished": 1995,
+      "image": "https://cf.geekdo-images.com/Iuh9lINb-kTIGgmPQZu3DA__itemrep/img/3KwUM7z0GcLxACvgpPWUNJ8mUWw=/fit-in/246x300/filters:strip_icc()/pic3488230.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/Iuh9lINb-kTIGgmPQZu3DA__itemrep/img/3KwUM7z0GcLxACvgpPWUNJ8mUWw=/fit-in/246x300/filters:strip_icc()/pic3488230.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/XmgJ3CLPxNPzvmiQYMQXnw__original/img/aT5n3MtPJyk_u4DetgqCvAGKhU4=/0x0/filters:format(jpeg)/pic158581.jpg",
+        "https://cf.geekdo-images.com/uKtLmgETZApSJG4Nl0E7Mg__original/img/8ijVJf8I-TkiPevpRimlaUVs94c=/0x0/filters:format(jpeg)/pic256940.jpg",
+        "https://cf.geekdo-images.com/CyrTmyb8uBoAO-POTiFVjg__original/img/tR5upbK1N_mZ1kboN0q_Rq0gEQ4=/0x0/filters:format(jpeg)/pic133566.jpg"
+      ],
+      "rating": 6.3,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "25669",
+      "name": "Qwirkle",
+      "yearPublished": 2006,
+      "image": "https://cf.geekdo-images.com/k7zHj8j_a6uUAtXUt5Fvuw__itemrep/img/NT_ZcUmqsFuTFrGQbybvmPsl1dY=/fit-in/246x300/filters:strip_icc()/pic309353.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/k7zHj8j_a6uUAtXUt5Fvuw__itemrep/img/NT_ZcUmqsFuTFrGQbybvmPsl1dY=/fit-in/246x300/filters:strip_icc()/pic309353.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/1e17mpxb2zhMxUDv0SZRQQ__original/img/bM0nJq2B_sQN4FWIF00crCkK0sU=/0x0/filters:format(jpeg)/pic1043582.jpg",
+        "https://cf.geekdo-images.com/kDVvU2ROz8Sff5AFS5zXQw__original/img/ZANSV_9ysyG9XrSakwsCfBZIRnM=/0x0/filters:format(jpeg)/pic233933.jpg",
+        "https://cf.geekdo-images.com/rIqiYUsgJrvi5sAsHZ6p1Q__original/img/iMseOx1UZZglweJvAJwwte5t6J4=/0x0/filters:format(jpeg)/pic1499233.jpg"
+      ],
+      "rating": 6.8,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "131260",
+      "name": "Qwixx",
+      "yearPublished": 2012,
+      "image": "https://cf.geekdo-images.com/aOt-bT9nDzZdWl0dUqLy4w__itemrep/img/z9C2pWTcupjSYechU-aT9Yd9t24=/fit-in/246x300/filters:strip_icc()/pic1950487.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/aOt-bT9nDzZdWl0dUqLy4w__itemrep/img/z9C2pWTcupjSYechU-aT9Yd9t24=/fit-in/246x300/filters:strip_icc()/pic1950487.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/BODjGhof6E9qiGH2EmpojQ__original/img/V3izI0OznyqM4yYyT3SyDAegZb4=/0x0/filters:format(jpeg)/pic1900085.jpg",
+        "https://cf.geekdo-images.com/NQvKosRj7CJHjTai1ksuuw__original/img/AWPPzhn07ToAo2wfyWKMYNc_LnE=/0x0/filters:format(jpeg)/pic1561305.jpg",
+        "https://cf.geekdo-images.com/3FEJwPDYlAue-7Ea4gjhYQ__original/img/Hyunc3RcnikcNjjdig0YQ7jUAKc=/0x0/filters:format(png)/pic6449148.png"
+      ],
+      "rating": 6.9,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "3837",
+      "name": "Rat-a-Tat Cat",
+      "yearPublished": 1995,
+      "image": "https://cf.geekdo-images.com/4nQQ9GA-1JXcxwNd-tCR8w__itemrep/img/7bCQhZauNwAuekRT3xwbt2FCLlo=/fit-in/246x300/filters:strip_icc()/pic147435.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/4nQQ9GA-1JXcxwNd-tCR8w__itemrep/img/7bCQhZauNwAuekRT3xwbt2FCLlo=/fit-in/246x300/filters:strip_icc()/pic147435.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/GrSIGdsWmwZki4dq_mtLNw__original/img/Ap0InXKqE9zJ-MZCR_Lgx3zPMZo=/0x0/filters:format(jpeg)/pic276904.jpg",
+        "https://cf.geekdo-images.com/ZQzd04DzJAI8aDH2k5EAgA__original/img/saAkaPxQkD5w-VFkcLUa4Oh8RT0=/0x0/filters:format(jpeg)/pic97105.jpg",
+        "https://cf.geekdo-images.com/O_rfM8HR6aVaPEkcN6AG6A__original/img/OgP3IDvlAnuEyjLbLTL--Zp2UTY=/0x0/filters:format(jpeg)/pic191696.jpg"
+      ],
+      "rating": 6.3,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "218333",
+      "name": "Rhino Hero: Super Battle",
+      "yearPublished": 2017,
+      "image": "https://cf.geekdo-images.com/MC97m49MPrqU2lo_V3hdEw__itemrep/img/6B3HLLhOv_hnMgaSNVUqoU3XutA=/fit-in/246x300/filters:strip_icc()/pic9267014.png",
+      "thumbnail": "https://cf.geekdo-images.com/MC97m49MPrqU2lo_V3hdEw__itemrep/img/6B3HLLhOv_hnMgaSNVUqoU3XutA=/fit-in/246x300/filters:strip_icc()/pic9267014.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/slundgpYgcyrMfcsZoQNCA__original/img/mTp01UD6a0V5byqG5wgnqA-lbFg=/0x0/filters:format(jpeg)/pic3779328.jpg"
+      ],
+      "rating": 7.2,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": 10,
+      "maxPlaytime": 20,
+      "numPlays": 0
+    },
+    {
+      "id": "129090",
+      "name": "Roll For It!",
+      "yearPublished": 2011,
+      "image": "https://cf.geekdo-images.com/_XIEf19iGAkd1RKrZhvgPA__itemrep/img/VPtCw8GqmEJjbPH-7qyqAiRWL6A=/fit-in/246x300/filters:strip_icc()/pic1638562.png",
+      "thumbnail": "https://cf.geekdo-images.com/_XIEf19iGAkd1RKrZhvgPA__itemrep/img/VPtCw8GqmEJjbPH-7qyqAiRWL6A=/fit-in/246x300/filters:strip_icc()/pic1638562.png",
+      "galleryImages": [],
+      "rating": 6.1,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "9220",
+      "name": "Saboteur",
+      "yearPublished": 2004,
+      "image": "https://cf.geekdo-images.com/0vJwP6NGa7GHPZKC3gplUw__itemrep/img/aJcXGhYr8XxyKEK6EqbG0bePrOk=/fit-in/246x300/filters:strip_icc()/pic3989824.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/0vJwP6NGa7GHPZKC3gplUw__itemrep/img/aJcXGhYr8XxyKEK6EqbG0bePrOk=/fit-in/246x300/filters:strip_icc()/pic3989824.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/IQIuxvVRrEzfgsHfLzsrZQ__original/img/yHTUzgd8d2tj-bIbAqk6raQBpPc=/0x0/filters:format(jpeg)/pic180040.jpg",
+        "https://cf.geekdo-images.com/ioqLWpGreET3EVd1Xwka-Q__original/img/8GndM9bkh0qrY1kDu6oczk4hKRI=/0x0/filters:format(jpeg)/pic221276.jpg",
+        "https://cf.geekdo-images.com/ponERHnZ8nKiuwsUh6aXMQ__original/img/8MxRwyUhcEzMG0MImuUmgSdOIUg=/0x0/filters:format(jpeg)/pic56983.jpg"
+      ],
+      "rating": 6.5,
+      "minPlayers": 3,
+      "maxPlayers": 10,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "194655",
+      "name": "Santorini",
+      "yearPublished": 2016,
+      "image": "https://cf.geekdo-images.com/665Ply7Ho1WVf1v1iZlWeg__itemrep/img/8vG-UtGeFbhMXPTzLDUOqWot8hA=/fit-in/246x300/filters:strip_icc()/pic3283110.png",
+      "thumbnail": "https://cf.geekdo-images.com/665Ply7Ho1WVf1v1iZlWeg__itemrep/img/8vG-UtGeFbhMXPTzLDUOqWot8hA=/fit-in/246x300/filters:strip_icc()/pic3283110.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/6pNbq46TyQyBrvNi0sIxgw__original/img/FrLYo24MAku_S5B0vhpvCWLNwX8=/0x0/filters:format(jpeg)/pic3309414.jpg",
+        "https://cf.geekdo-images.com/_j296hXZz0Gz36Mq7AQZfw__original/img/TmfU3lApKZt9r0q_8XwV4w82Oe0=/0x0/filters:format(jpeg)/pic7309463.jpg",
+        "https://cf.geekdo-images.com/BMyRjx4mOoBS_ahA2rDF-g__original/img/gWCq5x3f9xW0jzztBDbnQPA4B3U=/0x0/filters:format(jpeg)/pic7230238.jpg"
+      ],
+      "rating": 7.3,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "438",
+      "name": "Scotland Yard",
+      "yearPublished": 1983,
+      "image": "https://cf.geekdo-images.com/yEhaXszPTy5N4hiY469DPA__itemrep/img/V9qe3zL7yZFljRg6A4EWWRH0g4s=/fit-in/246x300/filters:strip_icc()/pic8377405.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/yEhaXszPTy5N4hiY469DPA__itemrep/img/V9qe3zL7yZFljRg6A4EWWRH0g4s=/fit-in/246x300/filters:strip_icc()/pic8377405.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/WdnDo1qzRfWigGF6IWKkjw__original/img/_cWAWi89zzmcjk0H4Yf8uQB2UnM=/0x0/filters:format(jpeg)/pic407682.jpg",
+        "https://cf.geekdo-images.com/WOWwrf5bo8aRcnbgAnymnQ__original/img/8PPaeWLdlw3mrt2ZQbaIGkTuRZ8=/0x0/filters:format(jpeg)/pic777663.jpg",
+        "https://cf.geekdo-images.com/gTesEEFiyhsNAZmsDPuxQQ__original/img/ph_xGnRiUFBnvUee1aDcaDV2tLM=/0x0/filters:format(jpeg)/pic1688843.jpg"
+      ],
+      "rating": 6.5,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "2318",
+      "name": "Scrabble Junior",
+      "yearPublished": 1958,
+      "image": "https://cf.geekdo-images.com/dISaMQ8bx4njVOFl2EFh3Q__itemrep/img/5Gk7RGcf2yIQm5UZadN4W5b7EJE=/fit-in/246x300/filters:strip_icc()/pic176233.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/dISaMQ8bx4njVOFl2EFh3Q__itemrep/img/5Gk7RGcf2yIQm5UZadN4W5b7EJE=/fit-in/246x300/filters:strip_icc()/pic176233.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/rMkxeCWcBVHgU9A5aFiswQ__original/img/bQKi4d5LtvoJ_EB1HAUYbPfAyXM=/0x0/filters:format(jpeg)/pic176238.jpg",
+        "https://cf.geekdo-images.com/b6X9BOuBUqfHp0spZtr-Mw__original/img/qaKEb7cBmgWkLGtJfJ8MazR0Q_g=/0x0/filters:format(jpeg)/pic13562.jpg",
+        "https://cf.geekdo-images.com/gi3AX9NKEETaWc19Wxf_-w__original/img/iy86wVvp-2H17xQkAmePufoV45A=/0x0/filters:format(jpeg)/pic176241.jpg"
+      ],
+      "rating": 4.8,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "2375",
+      "name": "Sequence",
+      "yearPublished": 1982,
+      "image": "https://cf.geekdo-images.com/VosGBqkOjkhgC2QFS1o3_g__itemrep/img/mIw3ZMq4f_QbAgBsy9NOma2-AX8=/fit-in/246x300/filters:strip_icc()/pic212893.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/VosGBqkOjkhgC2QFS1o3_g__itemrep/img/mIw3ZMq4f_QbAgBsy9NOma2-AX8=/fit-in/246x300/filters:strip_icc()/pic212893.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/XjzNDasS-8hADK8XupmhmA__original/img/TEYjSMIjaevBnAkXIoFRNe83o60=/0x0/filters:format(jpeg)/pic119203.jpg",
+        "https://cf.geekdo-images.com/heVPxuKtAPG0X4THkk_2YQ__original/img/-MyVYWDNIwDIfxrbZJ9dNNrEtVM=/0x0/filters:format(jpeg)/pic119204.jpg",
+        "https://cf.geekdo-images.com/cTMnspUZaiA__nZzoseu4A__original/img/3HqThd4GauQ0lLTd65j0kwOaggM=/0x0/filters:format(jpeg)/pic95705.jpg"
+      ],
+      "rating": 6.2,
+      "minPlayers": 2,
+      "maxPlayers": 12,
+      "minPlaytime": 10,
+      "maxPlaytime": 30,
+      "numPlays": 0
+    },
+    {
+      "id": "1198",
+      "name": "SET",
+      "yearPublished": 1988,
+      "image": "https://cf.geekdo-images.com/uEtWO_Ag8OxbG6NkSZbH6A__itemrep/img/Q-d3FEGSmReugCuzy-IzK_KSgNI=/fit-in/246x300/filters:strip_icc()/pic7627182.png",
+      "thumbnail": "https://cf.geekdo-images.com/uEtWO_Ag8OxbG6NkSZbH6A__itemrep/img/Q-d3FEGSmReugCuzy-IzK_KSgNI=/fit-in/246x300/filters:strip_icc()/pic7627182.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/uQd2xFMUB2noRmbNKrdt3w__original/img/ZWx0Bd9HqgFK5GC2VYAKy2XRt9E=/0x0/filters:format(jpeg)/pic125449.jpg",
+        "https://cf.geekdo-images.com/LPAB-heDqT9Om-7cmhZwHA__original/img/93xucgTRMmAM293geYXfmm1m1dk=/0x0/filters:format(jpeg)/pic681453.jpg",
+        "https://cf.geekdo-images.com/nem1lshwVyw5mdmwEElB4Q__original/img/NQ2Tj5gmtCDp9ylB413FtS12m98=/0x0/filters:format(jpeg)/pic398750.jpg"
+      ],
+      "rating": 6.5,
+      "minPlayers": 1,
+      "maxPlayers": 20,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "77130",
+      "name": "Sid Meier's Civilization: The Board Game",
+      "yearPublished": 2010,
+      "image": "https://cf.geekdo-images.com/1WAfWHPi4Vvm1UCMtQaeaA__itemrep/img/yTcqoZKFqXfzC7zcRQrtIaAIwZI=/fit-in/246x300/filters:strip_icc()/pic798666.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/1WAfWHPi4Vvm1UCMtQaeaA__itemrep/img/yTcqoZKFqXfzC7zcRQrtIaAIwZI=/fit-in/246x300/filters:strip_icc()/pic798666.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/HgfARqBIQF-CagmrhuiHEQ__original/img/S5I5652qOb2zyHh2GLptEAX5NQk=/0x0/filters:format(jpeg)/pic1063550.jpg",
+        "https://cf.geekdo-images.com/k0dPqYOb8yJWCXhQQNgf3w__original/img/AsoGdSYIiLcT73jrNNZjUfNXs2c=/0x0/filters:format(jpeg)/pic837063.jpg",
+        "https://cf.geekdo-images.com/eU5QXadUXX1N60v8UjcfaQ__original/img/O94amkYAjA4OIorzloIXNbbtt2U=/0x0/filters:format(jpeg)/pic858294.jpg"
+      ],
+      "rating": 7.4,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": 120,
+      "maxPlaytime": 240,
+      "numPlays": 0
+    },
+    {
+      "id": "1269",
+      "name": "Skip-Bo",
+      "yearPublished": 1967,
+      "image": "https://cf.geekdo-images.com/aaUJua2zRXA6lqbVbNcBGg__itemrep/img/b8bMbHIlOqYwvTgborQ6H2iWtdM=/fit-in/246x300/filters:strip_icc()/pic8204244.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/aaUJua2zRXA6lqbVbNcBGg__itemrep/img/b8bMbHIlOqYwvTgborQ6H2iWtdM=/fit-in/246x300/filters:strip_icc()/pic8204244.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/6IUSp0zNe0CvAW7kGVPVYw__original/img/P3D_N3gtEKio8f4zIGqFpXLMKgk=/0x0/filters:format(jpeg)/pic411978.jpg",
+        "https://cf.geekdo-images.com/-JUVVGy2aEjwyv6sJkE6iA__original/img/Jdd2TDl-0dzVong9jC710pz1lQs=/0x0/filters:format(jpeg)/pic121379.jpg",
+        "https://cf.geekdo-images.com/fQAxCI0iEks5QiTpTXn1_A__original/img/w0GzOxn_lyNY21W9VDh-SFZfwFw=/0x0/filters:format(jpeg)/pic98542.jpg"
+      ],
+      "rating": 5.6,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "10370",
+      "name": "Speedy Graffiti",
+      "yearPublished": 1991,
+      "image": "https://cf.geekdo-images.com/JJPvROoKpH3nZWIlEbAMpg__itemrep/img/2J_9hf6GJdIdJMq-IYUchy5OLOY=/fit-in/246x300/filters:strip_icc()/pic42774.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/JJPvROoKpH3nZWIlEbAMpg__itemrep/img/2J_9hf6GJdIdJMq-IYUchy5OLOY=/fit-in/246x300/filters:strip_icc()/pic42774.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/4CcgdoYF2L4gS0Y4J5KcMA__original/img/UyS6KqbktM651lqpa7A0wPyTh2g=/0x0/filters:format(jpeg)/pic182565.jpg",
+        "https://cf.geekdo-images.com/liHVCajkYTMTn_HlJFOLdQ__original/img/vW34TyIGocNuLFY5NzHhZSKEQro=/0x0/filters:format(jpeg)/pic182564.jpg",
+        "https://cf.geekdo-images.com/ZmGAVZy6-NNxh0AnpPm4Cw__original/img/_j_e3HKeEvRuhLM40fxoLmu4ZII=/0x0/filters:format(jpeg)/pic124285.jpg"
+      ],
+      "rating": 5.2,
+      "minPlayers": 3,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "148228",
+      "name": "Splendor",
+      "yearPublished": 2014,
+      "image": "https://cf.geekdo-images.com/vNFe4JkhKAERzi4T0Ntwpw__itemrep/img/OoBoVLPl4ZYiNioNIKlV_0HLEYQ=/fit-in/246x300/filters:strip_icc()/pic8234167.png",
+      "thumbnail": "https://cf.geekdo-images.com/vNFe4JkhKAERzi4T0Ntwpw__itemrep/img/OoBoVLPl4ZYiNioNIKlV_0HLEYQ=/fit-in/246x300/filters:strip_icc()/pic8234167.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/fXEj4hEOFSvQNU7EbZTWNQ__original/img/mhGTkqp4uimbbn88-240_ffSd-U=/0x0/filters:format(jpeg)/pic1991004.jpg",
+        "https://cf.geekdo-images.com/v6-wn1l5XPLXVOe8a61n3A__original/img/80NR2i_1YtIeeL5lDuCphMUK4Go=/0x0/filters:format(jpeg)/pic1998170.jpg",
+        "https://cf.geekdo-images.com/tbkjlljHQahwSYeIpEA64w__original/img/AWPuQAH0vk8wLDtaB920-0Xb5wM=/0x0/filters:format(jpeg)/pic1904126.jpg"
+      ],
+      "rating": 7.4,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "364073",
+      "name": "Splendor Duel",
+      "yearPublished": 2022,
+      "image": "https://cf.geekdo-images.com/V1PyFDPNFY4bJFgreLPxmQ__itemrep/img/X1a_aOpNwx26n4NuXIK3RDvP7hY=/fit-in/246x300/filters:strip_icc()/pic6929347.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/V1PyFDPNFY4bJFgreLPxmQ__itemrep/img/X1a_aOpNwx26n4NuXIK3RDvP7hY=/fit-in/246x300/filters:strip_icc()/pic6929347.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/KO6WTXssiMNj2Zy1xy4bEA__original/img/Rct0zDBRYd6yoGmtJQXxXO3YZEE=/0x0/filters:format(jpeg)/pic8099685.jpg"
+      ],
+      "rating": 7.9,
+      "minPlayers": null,
+      "maxPlayers": null,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "63268",
+      "name": "Spot it!",
+      "yearPublished": 2009,
+      "image": "https://cf.geekdo-images.com/hqDT4HbEb2eNCyMOeiGj-g__itemrep/img/vxMVCMLOIutFnpSi7Scqvrjrr0E=/fit-in/246x300/filters:strip_icc()/pic6477003.png",
+      "thumbnail": "https://cf.geekdo-images.com/hqDT4HbEb2eNCyMOeiGj-g__itemrep/img/vxMVCMLOIutFnpSi7Scqvrjrr0E=/fit-in/246x300/filters:strip_icc()/pic6477003.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/3Rc4ulVFlU0Gn1bHMep0ug__original/img/Yd565GeQzw-5pBLAdQYZ2SVoNik=/0x0/filters:format(jpeg)/pic1473741.jpg",
+        "https://cf.geekdo-images.com/43ltLAhWYs6TaI-mlASCBA__original/img/2bgB6naUwHJncOTJtDDBlVqVmWk=/0x0/filters:format(jpeg)/pic1170066.jpg",
+        "https://cf.geekdo-images.com/KmyFS-jrrTRB9DmP8Ifzwg__original/img/XC_b93bFtaKpCdCo8zJpkug4ofk=/0x0/filters:format(jpeg)/pic1170065.jpg"
+      ],
+      "rating": 6.5,
+      "minPlayers": 2,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "425428",
+      "name": "Survive The Island",
+      "yearPublished": 2024,
+      "image": "https://cf.geekdo-images.com/MG8gloAo6F2cD4C6gz12Lg__itemrep/img/9aXq1xUxJTrVBTYhtq8Lf9MkOYE=/fit-in/246x300/filters:strip_icc()/pic8337555.png",
+      "thumbnail": "https://cf.geekdo-images.com/MG8gloAo6F2cD4C6gz12Lg__itemrep/img/9aXq1xUxJTrVBTYhtq8Lf9MkOYE=/fit-in/246x300/filters:strip_icc()/pic8337555.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/DASnGMDnocPwn6wEqc34tA__original/img/aTEjOQ1dYynpHTXqFLbwMOmY7nA=/0x0/filters:format(png)/pic8337556.png"
+      ],
+      "rating": 7.4,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "133473",
+      "name": "Sushi Go!",
+      "yearPublished": 2013,
+      "image": "https://cf.geekdo-images.com/Fn3PSPZVxa3YurlorITQ1Q__itemrep/img/XEFhq_xryUgTUJpNGF4tQH_5WRs=/fit-in/246x300/filters:strip_icc()/pic1900075.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/Fn3PSPZVxa3YurlorITQ1Q__itemrep/img/XEFhq_xryUgTUJpNGF4tQH_5WRs=/fit-in/246x300/filters:strip_icc()/pic1900075.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/PL0h3Essd1x-vxEPdGJjjQ__original/img/IcvMBhwb8rcVlBVx9bZCbSAj3d4=/0x0/filters:format(jpeg)/pic1950458.jpg",
+        "https://cf.geekdo-images.com/mGJjMyKqDWT_xh39QTmnXw__original/img/8IEOyyoAPwTzmK5OxBNobD4P9S0=/0x0/filters:format(jpeg)/pic2281301.jpg",
+        "https://cf.geekdo-images.com/p-WG6CQDTRqQ0jRMT9PYtA__original/img/kFYo86uPhIQMj3Eb48vpwqasVCg=/0x0/filters:format(jpeg)/pic1593112.jpg"
+      ],
+      "rating": 7,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "99219",
+      "name": "Swish",
+      "yearPublished": 2011,
+      "image": "https://cf.geekdo-images.com/zzbOtVGaOfJArqg660wM3g__itemrep/img/AJ6L-7c8bC1E-UvulV0kZpWvZyw=/fit-in/246x300/filters:strip_icc()/pic8782824.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/zzbOtVGaOfJArqg660wM3g__itemrep/img/AJ6L-7c8bC1E-UvulV0kZpWvZyw=/fit-in/246x300/filters:strip_icc()/pic8782824.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/3r5vJyTvun8sO-tNP9pIqg__original/img/GoBYYDSRCrq359cEaLS9m96z6OM=/0x0/filters:format(jpeg)/pic998640.jpg"
+      ],
+      "rating": 6.1,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "253664",
+      "name": "Taco Cat Goat Cheese Pizza",
+      "yearPublished": 2018,
+      "image": "https://cf.geekdo-images.com/GHrnr-Khb0LvBU_QkrC_qA__itemrep/img/cWh2D89fj4HLBkLT71g7JYWiM1s=/fit-in/246x300/filters:strip_icc()/pic7192024.png",
+      "thumbnail": "https://cf.geekdo-images.com/GHrnr-Khb0LvBU_QkrC_qA__itemrep/img/cWh2D89fj4HLBkLT71g7JYWiM1s=/fit-in/246x300/filters:strip_icc()/pic7192024.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/D_qXsbjTotgQzDTDphxz6Q__original/img/3x5U4FvKiFx090kePXIw3u6O2WQ=/0x0/filters:format(jpeg)/pic5478418.jpg"
+      ],
+      "rating": 6.5,
+      "minPlayers": 2,
+      "maxPlayers": 8,
+      "minPlaytime": 10,
+      "maxPlaytime": 30,
+      "numPlays": 0
+    },
+    {
+      "id": "1038",
+      "name": "Tantrix",
+      "yearPublished": 1991,
+      "image": "https://cf.geekdo-images.com/4_motvqsgOa1NjQUwoeIng__itemrep/img/LCGuADSeWEN03qONv1HCkmSAT5g=/fit-in/246x300/filters:strip_icc()/pic8692267.png",
+      "thumbnail": "https://cf.geekdo-images.com/4_motvqsgOa1NjQUwoeIng__itemrep/img/LCGuADSeWEN03qONv1HCkmSAT5g=/fit-in/246x300/filters:strip_icc()/pic8692267.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/ypqp0tFV2xEvJj8TpB8zVQ__original/img/u6QAvg6pzGfMF5A-QnxnvV1q4gM=/0x0/filters:format(jpeg)/pic531845.jpg",
+        "https://cf.geekdo-images.com/bqN5IlenNel5UmcYeQ1_6w__original/img/iTJxeDRpbXICjtBOaV2_dNB9zd4=/0x0/filters:format(jpeg)/pic164586.jpg",
+        "https://cf.geekdo-images.com/FkAONXE1edICZU9NGMZQ7w__original/img/WMZXfvjM-h2ixZJ_cw0rEDgR8yI=/0x0/filters:format(jpeg)/pic115340.jpg"
+      ],
+      "rating": 6.4,
+      "minPlayers": 1,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "46213",
+      "name": "Telestrations",
+      "yearPublished": 2009,
+      "image": "https://cf.geekdo-images.com/Dd94J37Oi1tgL7HAAaOfAQ__itemrep/img/2EI7SOtkRg2U2lXc8gI4mR-yO_0=/fit-in/246x300/filters:strip_icc()/pic8855812.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/Dd94J37Oi1tgL7HAAaOfAQ__itemrep/img/2EI7SOtkRg2U2lXc8gI4mR-yO_0=/fit-in/246x300/filters:strip_icc()/pic8855812.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/1z5NqBhvcxFVPLVeKp1c8Q__original/img/OKn8JuNtyRqFZXpPARkOgOjwXv8=/0x0/filters:format(jpeg)/pic620226.jpg",
+        "https://cf.geekdo-images.com/gJbgwq9e63_ZrzlKXLSj2A__original/img/8eGv7-x1CZjCq3k142-gUKzyVzU=/0x0/filters:format(jpeg)/pic1647341.jpg",
+        "https://cf.geekdo-images.com/9HejfXOo_kUK5vZCuQnvTA__original/img/HZ43z6g5AwdeoQD7fJOnSJkIsEs=/0x0/filters:format(jpeg)/pic1647340.jpg"
+      ],
+      "rating": 7.4,
+      "minPlayers": 4,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "406663",
+      "name": "That's Not a Hat: Pop Culture",
+      "yearPublished": 2024,
+      "image": "https://cf.geekdo-images.com/f05Ep10b3StPqbWLRKYC1A__itemrep/img/kGQezak8NcE8MyDTBSfDjKaGijs=/fit-in/246x300/filters:strip_icc()/pic8000153.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/f05Ep10b3StPqbWLRKYC1A__itemrep/img/kGQezak8NcE8MyDTBSfDjKaGijs=/fit-in/246x300/filters:strip_icc()/pic8000153.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/lcRsdDwh_fVGhb49NOidIw__original/img/truBdQN-gZLbKaIZLAk0pUlms7U=/0x0/filters:format(jpeg)/pic8201672.jpg",
+        "https://cf.geekdo-images.com/QqdTbWhxBf0IRI0QoeV1Jw__original/img/5JBSnc2yzDy9sHU-kfjxolVJjqg=/0x0/filters:format(jpeg)/pic8201681.jpg",
+        "https://cf.geekdo-images.com/j7N5bLAtyQK_wvzDiN7f7g__original/img/7WXy40eRhjwGUvR4yR5wGz86jtM=/0x0/filters:format(jpeg)/pic8201671.jpg"
+      ],
+      "rating": 7.2,
+      "minPlayers": 3,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "326908",
+      "name": "The Curse of the Maldita Diamond",
+      "yearPublished": 2021,
+      "image": "https://cf.geekdo-images.com/ZMPYsF-NB_bbsfpGj8nf3w__itemrep/img/jgi2IrMk_0pOIgT332g87dSSbDs=/fit-in/246x300/filters:strip_icc()/pic6075963.png",
+      "thumbnail": "https://cf.geekdo-images.com/ZMPYsF-NB_bbsfpGj8nf3w__itemrep/img/jgi2IrMk_0pOIgT332g87dSSbDs=/fit-in/246x300/filters:strip_icc()/pic6075963.png",
+      "galleryImages": [],
+      "rating": 7.2,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "41916",
+      "name": "The Magic Labyrinth",
+      "yearPublished": 2009,
+      "image": "https://cf.geekdo-images.com/XdRFJ8oqpUnDSN4AnIO5KA__itemrep/img/IX89mh6XK5TXZm86QDOyM7AKIhs=/fit-in/246x300/filters:strip_icc()/pic6961974.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/XdRFJ8oqpUnDSN4AnIO5KA__itemrep/img/IX89mh6XK5TXZm86QDOyM7AKIhs=/fit-in/246x300/filters:strip_icc()/pic6961974.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/x-cx1jl6KxvUarvy3VhbcQ__original/img/bp0_JQOjBSHVYlZCKd0IcttSr64=/0x0/filters:format(jpeg)/pic547385.jpg"
+      ],
+      "rating": 6.8,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": 20,
+      "maxPlaytime": 30,
+      "numPlays": 0
+    },
+    {
+      "id": "244992",
+      "name": "The Mind",
+      "yearPublished": 2018,
+      "image": "https://cf.geekdo-images.com/q_JGK291hrhnhiRB0667oA__itemrep/img/w6x_ahGLQVe2u6trDx0kO91OprM=/fit-in/246x300/filters:strip_icc()/pic3979766.png",
+      "thumbnail": "https://cf.geekdo-images.com/q_JGK291hrhnhiRB0667oA__itemrep/img/w6x_ahGLQVe2u6trDx0kO91OprM=/fit-in/246x300/filters:strip_icc()/pic3979766.png",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/eAlx64aDF48R_8LL-xzbWA__original/img/MfN-q_LOWAah0RgYtdtznSBCj_Y=/0x0/filters:format(jpeg)/pic3943451.jpg"
+      ],
+      "rating": 6.7,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "9209",
+      "name": "Ticket to Ride",
+      "yearPublished": 2004,
+      "image": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__itemrep/img/OYmwWIZ8MCn3aDAiywQ1fG7UY6E=/fit-in/246x300/filters:strip_icc()/pic8937637.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__itemrep/img/OYmwWIZ8MCn3aDAiywQ1fG7UY6E=/fit-in/246x300/filters:strip_icc()/pic8937637.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/thJ_8rjvWLBAJM82L7EuRw__original/img/by5SD44CMnQ_jXH2vANLUWEHgMY=/0x0/filters:format(jpeg)/pic620297.jpg",
+        "https://cf.geekdo-images.com/BR70_dieU6usK6LbcF4mgw__original/img/KX1P9-lIyjbBl1wxj70f3XD4Ybw=/0x0/filters:format(jpeg)/pic101298.jpg",
+        "https://cf.geekdo-images.com/mk7DE5ks0Oe7Ks8AYd8-ug__original/img/nC6wzEt5XhJ7nnUpHcOky_dXfTg=/0x0/filters:format(jpeg)/pic658615.jpg"
+      ],
+      "rating": 7.4,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": 30,
+      "maxPlaytime": 60,
+      "numPlays": 0
+    },
+    {
+      "id": "182078",
+      "name": "Ticket to Ride Map Collection 5: United Kingdom & Pennsylvania",
+      "yearPublished": 2015,
+      "image": "https://cf.geekdo-images.com/Secxz_vsdngRrecTHcPc3A__itemrep/img/FAQjDvOUs1uVcK4i4fI3TAowUok=/fit-in/246x300/filters:strip_icc()/pic2640876.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/Secxz_vsdngRrecTHcPc3A__itemrep/img/FAQjDvOUs1uVcK4i4fI3TAowUok=/fit-in/246x300/filters:strip_icc()/pic2640876.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/DiT_MVg-JYnCML-F4h35EA__original/img/lhfNo-7xp-jVYrlzTHJS8AoiOQ8=/0x0/filters:format(jpeg)/pic2640877.jpg",
+        "https://cf.geekdo-images.com/OwoZtMJYhESzyr4vTYhxfg__original/img/5DXEOTxztdJQoYPVbS_5xVU6Etg=/0x0/filters:format(jpeg)/pic2640881.jpg",
+        "https://cf.geekdo-images.com/4CECoh6xgo7uzmq1kOZA2g__original/img/dU3bPlVMLM96hBI5BRYcWh_qtOk=/0x0/filters:format(jpeg)/pic2705041.jpg"
+      ],
+      "rating": 8,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": 30,
+      "maxPlaytime": 75,
+      "numPlays": 0
+    },
+    {
+      "id": "14996",
+      "name": "Ticket to Ride: Europe",
+      "yearPublished": 2005,
+      "image": "https://cf.geekdo-images.com/0K1AOciqlMVUWFPLTJSiww__itemrep/img/D9gFnF3e-NXcVjvkNUsn19C7cHQ=/fit-in/246x300/filters:strip_icc()/pic66668.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/0K1AOciqlMVUWFPLTJSiww__itemrep/img/D9gFnF3e-NXcVjvkNUsn19C7cHQ=/fit-in/246x300/filters:strip_icc()/pic66668.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/OQy-iPZa1zIbcX3rN-xNhQ__original/img/XjMyn_r99thvDvZRMXdaZpDu9VU=/0x0/filters:format(jpeg)/pic1024256.jpg",
+        "https://cf.geekdo-images.com/34etSTfl-aa9hsi1gd2MZw__original/img/nhBqtw6ISU8K544rFQ2jPuyBDtM=/0x0/filters:format(jpeg)/pic70732.jpg",
+        "https://cf.geekdo-images.com/sTxQkoc6Aq4G2_Iez_8pTA__original/img/Swdsz0kJ9NRN2lRZamMgF_u8v9c=/0x0/filters:format(jpeg)/pic666329.jpg"
+      ],
+      "rating": 7.5,
+      "minPlayers": 2,
+      "maxPlayers": 5,
+      "minPlaytime": 30,
+      "maxPlaytime": 60,
+      "numPlays": 0
+    },
+    {
+      "id": "113401",
+      "name": "Timeline: Events",
+      "yearPublished": 2011,
+      "image": "https://cf.geekdo-images.com/V-LCKnzAZvzdim9_PMPGpw__itemrep/img/zYBR0mHJVvesDIUTOnE-l0ebSmI=/fit-in/246x300/filters:strip_icc()/pic5872050.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/V-LCKnzAZvzdim9_PMPGpw__itemrep/img/zYBR0mHJVvesDIUTOnE-l0ebSmI=/fit-in/246x300/filters:strip_icc()/pic5872050.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/4dwFzavJjRrcMOTDUzk4dw__original/img/a5D7ELiLRs9KkUQCthzoqGYkt2A=/0x0/filters:format(jpeg)/pic1293791.jpg",
+        "https://cf.geekdo-images.com/i63y90Sx_uSmQlU4NBMZ_w__original/img/-SJKGCv0cA1gKwqunEir0MXu6uY=/0x0/filters:format(jpeg)/pic1293795.jpg",
+        "https://cf.geekdo-images.com/dpz-8iH6dXiOEyV_mWvYNA__original/img/0zTdWWWC1b1xcJWLvF_X0Gr9VdE=/0x0/filters:format(jpeg)/pic1218895.jpg"
+      ],
+      "rating": 6.8,
+      "minPlayers": 2,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "189160",
+      "name": "Top That!",
+      "yearPublished": 2016,
+      "image": "https://cf.geekdo-images.com/SysSdDd9DWQWyODjqtFPxA__itemrep/img/uSMFIzg7dVoldW40wx1RF-X0YVY=/fit-in/246x300/filters:strip_icc()/pic3518130.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/SysSdDd9DWQWyODjqtFPxA__itemrep/img/uSMFIzg7dVoldW40wx1RF-X0YVY=/fit-in/246x300/filters:strip_icc()/pic3518130.jpg",
+      "galleryImages": [],
+      "rating": 6.1,
+      "minPlayers": 2,
+      "maxPlayers": 4,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "1730",
+      "name": "Trap the Cap",
+      "yearPublished": 1927,
+      "image": "https://cf.geekdo-images.com/4dpkcQLhlsIUF8ifucGtWg__itemrep/img/5PzETNjUOihdbRdM1_3qgw5hVzM=/fit-in/246x300/filters:strip_icc()/pic266561.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/4dpkcQLhlsIUF8ifucGtWg__itemrep/img/5PzETNjUOihdbRdM1_3qgw5hVzM=/fit-in/246x300/filters:strip_icc()/pic266561.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/pvb5IAbZ5I3T_PgdKHgy6w__original/img/fBljqEhaTCi9lPfeMn58FonQiGA=/0x0/filters:format(jpeg)/pic2505584.jpg",
+        "https://cf.geekdo-images.com/c3HRwluH2UPhdKlA22gtzA__original/img/yfwROb5xkqt-QE0OMcHKSfsV83A=/0x0/filters:format(jpeg)/pic1361201.jpg",
+        "https://cf.geekdo-images.com/ni56VQvlMSvIbxiTgCs50w__original/img/AUKkeHi-XERN_QuhBrNrHh_nu-g=/0x0/filters:format(jpeg)/pic689256.jpg"
+      ],
+      "rating": 5,
+      "minPlayers": 2,
+      "maxPlayers": 6,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "2223",
+      "name": "UNO",
+      "yearPublished": 1971,
+      "image": "https://cf.geekdo-images.com/-DHiHBBSnvaLu0Do8CIykQ__itemrep/img/m4GOPbjQ_C6lclrlQQqvLkVtyo8=/fit-in/246x300/filters:strip_icc()/pic8204165.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/-DHiHBBSnvaLu0Do8CIykQ__itemrep/img/m4GOPbjQ_C6lclrlQQqvLkVtyo8=/fit-in/246x300/filters:strip_icc()/pic8204165.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/p0d88xaHUqiTgjZNzYTKgg__original/img/VbulYhhMAccEXKdV2kwaoF5IpwM=/0x0/filters:format(jpeg)/pic210526.jpg",
+        "https://cf.geekdo-images.com/XdmolYkoRE3IxPEFlDz7oA__original/img/a8CgEAh1M1L6uFowVyWVf6tA_3k=/0x0/filters:format(jpeg)/pic52931.jpg",
+        "https://cf.geekdo-images.com/C3AF2YuatLrpxoAHiQ5U5w__original/img/SvYTTTNjfi5i2hXcHPjLJXh95f4=/0x0/filters:format(jpeg)/pic214248.jpg"
+      ],
+      "rating": 5.5,
+      "minPlayers": 2,
+      "maxPlayers": 10,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "271460",
+      "name": "UNO Flip!",
+      "yearPublished": 2019,
+      "image": "https://cf.geekdo-images.com/8IO6sl0jN5IylDDRAOK8GQ__itemrep/img/blhBELUdzXGufapZZrlYzHDyTh8=/fit-in/246x300/filters:strip_icc()/pic8214042.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/8IO6sl0jN5IylDDRAOK8GQ__itemrep/img/blhBELUdzXGufapZZrlYzHDyTh8=/fit-in/246x300/filters:strip_icc()/pic8214042.jpg",
+      "galleryImages": [],
+      "rating": 6.3,
+      "minPlayers": 2,
+      "maxPlayers": 10,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "428030",
+      "name": "UNO Teams!",
+      "yearPublished": 2024,
+      "image": "https://cf.geekdo-images.com/LllUytksmvlCgbEjHfD2wQ__itemrep/img/-PnCIkwb1F1Kg7ZW7VX6SC75pro=/fit-in/246x300/filters:strip_icc()/pic8397387.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/LllUytksmvlCgbEjHfD2wQ__itemrep/img/-PnCIkwb1F1Kg7ZW7VX6SC75pro=/fit-in/246x300/filters:strip_icc()/pic8397387.jpg",
+      "galleryImages": [],
+      "rating": 6,
+      "minPlayers": 4,
+      "maxPlayers": 8,
+      "minPlaytime": null,
+      "maxPlaytime": null,
+      "numPlays": 0
+    },
+    {
+      "id": "262543",
+      "name": "Wavelength",
+      "yearPublished": 2019,
+      "image": "https://cf.geekdo-images.com/z4fbPdmJg_5yphJEvql4ZA__itemrep/img/Dnjsh4DWMkiZBsPszNWs8bqtvGY=/fit-in/246x300/filters:strip_icc()/pic4552862.png",
+      "thumbnail": "https://cf.geekdo-images.com/z4fbPdmJg_5yphJEvql4ZA__itemrep/img/Dnjsh4DWMkiZBsPszNWs8bqtvGY=/fit-in/246x300/filters:strip_icc()/pic4552862.png",
+      "galleryImages": [],
+      "rating": 7.2,
+      "minPlayers": 2,
+      "maxPlayers": 12,
+      "minPlaytime": 30,
+      "maxPlaytime": 45,
+      "numPlays": 0
+    },
+    {
+      "id": "311659",
+      "name": "What Do You Meme?: Family Edition",
+      "yearPublished": 2019,
+      "image": "https://cf.geekdo-images.com/U-v1wL_A4KXiviHytWU9Yw__itemrep/img/QVdvRJMAQ8BaucXVy0O8oOYb61c=/fit-in/246x300/filters:strip_icc()/pic5574661.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/U-v1wL_A4KXiviHytWU9Yw__itemrep/img/QVdvRJMAQ8BaucXVy0O8oOYb61c=/fit-in/246x300/filters:strip_icc()/pic5574661.jpg",
+      "galleryImages": [],
+      "rating": 5.1,
+      "minPlayers": 3,
+      "maxPlayers": 20,
+      "minPlaytime": 30,
+      "maxPlaytime": 90,
+      "numPlays": 0
+    },
+    {
+      "id": "266192",
+      "name": "Wingspan",
+      "yearPublished": 2019,
+      "image": "https://cf.geekdo-images.com/yLZJCVLlIx4c7eJEWUNJ7w__itemrep/img/DR7181wU4sHT6gn6Q1XccpPxNHg=/fit-in/246x300/filters:strip_icc()/pic4458123.jpg",
+      "thumbnail": "https://cf.geekdo-images.com/yLZJCVLlIx4c7eJEWUNJ7w__itemrep/img/DR7181wU4sHT6gn6Q1XccpPxNHg=/fit-in/246x300/filters:strip_icc()/pic4458123.jpg",
+      "galleryImages": [
+        "https://cf.geekdo-images.com/34lJGCBVlI9skDo6zqwqHA__original/img/5Xu9HAli_SQnlAmChYuXhF9XdB0=/0x0/filters:format(jpeg)/pic4444006.jpg",
+        "https://cf.geekdo-images.com/mrqKHhyS669h3kbloXRBug__original/img/gS6Wi3GpR8vt1hskFvtJeM4gKvQ=/0x0/filters:format(jpeg)/pic6384893.jpg",
+        "https://cf.geekdo-images.com/HbO0tVsyg4UGvhP9b0q3Mw__original/img/bqGYSUrtifQk-PvWEi0RkYZzQvw=/0x0/filters:format(jpeg)/pic4444007.jpg"
+      ],
+      "rating": 8,
+      "minPlayers": 1,
+      "maxPlayers": 5,
+      "minPlaytime": 40,
+      "maxPlaytime": 70,
+      "numPlays": 0
+    }
+  ]
+}

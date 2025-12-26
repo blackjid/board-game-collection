@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafaf9;
+  --foreground: #1c1917;
 }
 
 @theme inline {
@@ -12,15 +12,66 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Print Styles */
+@media print {
+  /* Reset page margins for maximum content */
+  @page {
+    margin: 0.4in;
+    size: letter portrait;
+  }
+
+  /* Force light theme for printing */
+  :root {
+    --background: #ffffff;
+    --foreground: #000000;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 8pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Optimize images for print */
+  img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* Card grid optimizations - tighter spacing */
+  .grid {
+    gap: 6px !important;
+  }
+
+  /* Remove shadows and simplify borders */
+  .shadow-sm,
+  .shadow {
+    box-shadow: none !important;
+  }
+
+  /* Compact card styling */
+  .rounded-lg {
+    border-radius: 4px !important;
+  }
+
+  /* Remove drop shadows on images for cleaner print */
+  .drop-shadow-lg {
+    filter: none !important;
+  }
+}
+
+/* Line clamping utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

@@ -1,7 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Allow BGG images
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cf.geekdo-images.com",
+        pathname: "/**",
+      },
+    ],
+  },
+  // Generate static output
+  output: "export",
 };
 
 export default nextConfig;

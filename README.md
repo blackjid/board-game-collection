@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Board Game Collection Printer
 
-## Getting Started
+A static Next.js site that displays your BoardGameGeek collection in a beautiful, print-optimized grid.
 
-First, run the development server:
+## Features
+
+- Fetches your BGG collection using browser automation (no API key required)
+- Displays game covers, titles, year, player count, and playtime
+- Responsive grid layout (6 columns on desktop, 2 on mobile)
+- Print-optimized CSS with proper page breaks
+- Static export for easy hosting
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Install Playwright browsers (first time only):
+   ```bash
+   npx playwright install chromium
+   ```
+
+## Usage
+
+### Fetch Collection
+
+Fetch your game collection from BoardGameGeek:
+
+```bash
+npm run fetch
+```
+
+This scrapes your BGG collection page and fetches game images, saving the data to `data/games.json`.
+
+### Development
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view your collection.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build Static Site
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Build the static export:
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+The static site will be in the `out/` directory.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Refresh Collection
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Fetch latest data and rebuild:
 
-## Deploy on Vercel
+```bash
+npm run refresh
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Printing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Open the site in your browser
+2. Click "Print Collection" or press `Ctrl+P` / `Cmd+P`
+3. The print styles will hide navigation and optimize the grid for paper
+
+## Configuration
+
+To use a different BGG username, edit `scripts/fetch-collection.ts`:
+
+```typescript
+const BGG_USERNAME = "your_username";
+```
+
+## Project Structure
+
+```
+├── app/
+│   ├── page.tsx          # Main collection grid page
+│   ├── layout.tsx         # Root layout with metadata
+│   └── globals.css        # Styles including print CSS
+├── components/
+│   └── GameCard.tsx       # Individual game card component
+├── data/
+│   └── games.json         # Cached collection data
+├── scripts/
+│   └── fetch-collection.ts # BGG scraping script
+└── types/
+    └── game.ts            # TypeScript interfaces
+```
+
+## Tech Stack
+
+- [Next.js 16](https://nextjs.org/) - React framework
+- [Tailwind CSS v4](https://tailwindcss.com/) - Styling
+- [Playwright](https://playwright.dev/) - Browser automation
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
