@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import "@testing-library/dom";
+import "@testing-library/jest-dom/vitest";
 
 // Mock Next.js modules that aren't available in test environment
 vi.mock("next/navigation", () => ({
