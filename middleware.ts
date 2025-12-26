@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Pages that require admin access (will redirect to login)
-const ADMIN_PAGES = ["/admin"];
+const ADMIN_PAGES = ["/settings"];
 
 // API routes where mutating methods (POST, PATCH, DELETE) require admin
 // GET requests are public for these routes (for collection viewing)
@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/admin/:path*",
+    "/settings/:path*",
     "/api/games/:path*",
     "/api/collection/:path*",
     "/api/settings/:path*",

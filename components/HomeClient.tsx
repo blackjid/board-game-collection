@@ -56,10 +56,10 @@ export function HomeClient({ games, totalGames, collectionName, bggUsername }: H
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
-              href="/admin"
+              href="/settings"
               className="px-3 sm:px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-sm font-medium transition-colors border border-stone-700"
             >
-              Admin
+              Settings
             </Link>
             <Link
               href="/experience"
@@ -174,10 +174,10 @@ export function HomeClient({ games, totalGames, collectionName, bggUsername }: H
               Import your BGG collection and activate some games to display them here.
             </p>
             <Link
-              href="/admin"
+              href="/settings"
               className="inline-block bg-amber-600 hover:bg-amber-500 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              Go to Admin
+              Go to Settings
             </Link>
           </div>
         ) : viewMode === "grid" ? (
