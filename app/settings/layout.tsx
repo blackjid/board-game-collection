@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, createContext, useContext, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
@@ -59,19 +59,140 @@ const SECTIONS = [
 
 export type SectionId = (typeof SECTIONS)[number]["id"];
 
+// Navigation component that uses useSearchParams
+function SettingsNavigation({
+  currentUser,
+  mobileMenuOpen,
+  setMobileMenuOpen,
+  onLogout,
+}: {
+  currentUser: CurrentUser | null;
+  mobileMenuOpen: boolean;
+  setMobileMenuOpen: (open: boolean) => void;
+  onLogout: () => void;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const currentSection = (searchParams.get("section") as SectionId) || "general";
+
+  const navigateToSection = (sectionId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("section", sectionId);
+    router.push(`${pathname}?${params.toString()}`);
+    setMobileMenuOpen(false);
+  };
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 flex-col fixed left-0 top-16 bottom-0 bg-stone-900 border-r border-stone-800">
+        <nav className="flex-1 p-4 space-y-1">
+          {SECTIONS.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => navigateToSection(section.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                currentSection === section.id
+                  ? "bg-amber-600 text-white"
+                  : "text-stone-400 hover:text-white hover:bg-stone-800"
+              }`}
+            >
+              <section.Icon className="w-5 h-5" />
+              <span className="font-medium">{section.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {currentUser && (
+          <div className="p-4 border-t border-stone-800">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold">
+                {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-white truncate">
+                  {currentUser.name || currentUser.email}
+                </div>
+                <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              className="w-full px-3 py-2 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors text-center"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/60 z-30"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar (Drawer) */}
+      <aside
+        className={`lg:hidden fixed left-0 top-16 bottom-0 w-72 bg-stone-900 border-r border-stone-800 z-40 transform transition-transform duration-300 flex flex-col ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <nav className="flex-1 p-4 space-y-1">
+          {SECTIONS.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => navigateToSection(section.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                currentSection === section.id
+                  ? "bg-amber-600 text-white"
+                  : "text-stone-400 hover:text-white hover:bg-stone-800"
+              }`}
+            >
+              <section.Icon className="w-5 h-5" />
+              <span className="font-medium">{section.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {currentUser && (
+          <div className="p-4 border-t border-stone-800">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold">
+                {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-white truncate">
+                  {currentUser.name || currentUser.email}
+                </div>
+                <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              className="w-full px-3 py-2 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors text-center"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </aside>
+    </>
+  );
+}
+
 export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const currentSection = (searchParams.get("section") as SectionId) || "general";
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -92,13 +213,6 @@ export default function SettingsLayout({
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/login";
-  };
-
-  const navigateToSection = (sectionId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("section", sectionId);
-    router.push(`${pathname}?${params.toString()}`);
-    setMobileMenuOpen(false);
   };
 
   if (loading) {
@@ -142,101 +256,14 @@ export default function SettingsLayout({
         </header>
 
         <div className="flex">
-          {/* Desktop Sidebar */}
-          <aside className="hidden lg:flex w-64 flex-col fixed left-0 top-16 bottom-0 bg-stone-900 border-r border-stone-800">
-            <nav className="flex-1 p-4 space-y-1">
-              {SECTIONS.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => navigateToSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                    currentSection === section.id
-                      ? "bg-amber-600 text-white"
-                      : "text-stone-400 hover:text-white hover:bg-stone-800"
-                  }`}
-                >
-                  <section.Icon className="w-5 h-5" />
-                  <span className="font-medium">{section.label}</span>
-                </button>
-              ))}
-            </nav>
-
-            {currentUser && (
-              <div className="p-4 border-t border-stone-800">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold">
-                    {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white truncate">
-                      {currentUser.name || currentUser.email}
-                    </div>
-                    <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-3 py-2 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors text-center"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </aside>
-
-          {/* Mobile Sidebar Overlay */}
-          {mobileMenuOpen && (
-            <div
-              className="lg:hidden fixed inset-0 bg-black/60 z-30"
-              onClick={() => setMobileMenuOpen(false)}
+          <Suspense fallback={null}>
+            <SettingsNavigation
+              currentUser={currentUser}
+              mobileMenuOpen={mobileMenuOpen}
+              setMobileMenuOpen={setMobileMenuOpen}
+              onLogout={handleLogout}
             />
-          )}
-
-          {/* Mobile Sidebar (Drawer) */}
-          <aside
-            className={`lg:hidden fixed left-0 top-16 bottom-0 w-72 bg-stone-900 border-r border-stone-800 z-40 transform transition-transform duration-300 flex flex-col ${
-              mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-          >
-            <nav className="flex-1 p-4 space-y-1">
-              {SECTIONS.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => navigateToSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                    currentSection === section.id
-                      ? "bg-amber-600 text-white"
-                      : "text-stone-400 hover:text-white hover:bg-stone-800"
-                  }`}
-                >
-                  <section.Icon className="w-5 h-5" />
-                  <span className="font-medium">{section.label}</span>
-                </button>
-              ))}
-            </nav>
-
-            {currentUser && (
-              <div className="p-4 border-t border-stone-800">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold">
-                    {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white truncate">
-                      {currentUser.name || currentUser.email}
-                    </div>
-                    <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-3 py-2 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors text-center"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </aside>
+          </Suspense>
 
           {/* Main Content */}
           <main className="flex-1 lg:ml-64 min-h-[calc(100vh-4rem)] w-full overflow-x-hidden">

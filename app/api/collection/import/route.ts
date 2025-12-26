@@ -1,16 +1,25 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { syncCollection, getBggUsername } from "@/lib/sync";
+import { performSyncWithAutoScrape, getBggUsername } from "@/lib/sync";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
   } catch {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const result = await syncCollection();
+  // Check for skipAutoScrape in request body
+  let skipAutoScrape = false;
+  try {
+    const body = await request.json();
+    skipAutoScrape = body.skipAutoScrape === true;
+  } catch {
+    // No body or invalid JSON - use default (don't skip)
+  }
+
+  const result = await performSyncWithAutoScrape(skipAutoScrape);
 
   if (!result.success) {
     return NextResponse.json(
@@ -21,10 +30,12 @@ export async function POST() {
 
   return NextResponse.json({
     success: true,
-    message: `Import complete: ${result.created} new games, ${result.updated} updated`,
+    message: `Sync complete: ${result.created} new games, ${result.updated} updated`,
     total: result.total,
     created: result.created,
     updated: result.updated,
+    autoScraped: result.autoScraped,
+    autoScrapeFailed: result.autoScrapeFailed,
   });
 }
 

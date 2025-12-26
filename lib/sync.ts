@@ -23,6 +23,11 @@ export interface SyncResult {
   error?: string;
 }
 
+export interface SyncWithAutoScrapeResult extends SyncResult {
+  autoScraped: number;
+  autoScrapeFailed: number;
+}
+
 export interface ScrapeResult {
   success: boolean;
   scraped: number;
@@ -197,6 +202,50 @@ export async function syncCollection(): Promise<SyncResult> {
       error: String(error),
     };
   }
+}
+
+// ============================================================================
+// Sync with Auto-Scrape (Used by both manual and scheduled sync)
+// ============================================================================
+
+export async function performSyncWithAutoScrape(
+  skipAutoScrape: boolean = false
+): Promise<SyncWithAutoScrapeResult> {
+  const settings = await getSettings();
+
+  // Run the sync
+  const result = await syncCollection();
+
+  // Initialize auto-scrape counters
+  let autoScraped = 0;
+  let autoScrapeFailed = 0;
+
+  // Auto-scrape new games if enabled and not skipped
+  if (
+    result.success &&
+    settings.autoScrapeNewGames &&
+    !skipAutoScrape &&
+    result.newGameIds.length > 0
+  ) {
+    console.log(`[Sync] Auto-scraping ${result.newGameIds.length} new games...`);
+
+    // First, mark new games as active
+    await prisma.game.updateMany({
+      where: { id: { in: result.newGameIds } },
+      data: { isActive: true },
+    });
+
+    // Scrape the new games
+    const scrapeResult = await scrapeGames(result.newGameIds);
+    autoScraped = scrapeResult.scraped;
+    autoScrapeFailed = scrapeResult.failed;
+  }
+
+  return {
+    ...result,
+    autoScraped,
+    autoScrapeFailed,
+  };
 }
 
 // ============================================================================
@@ -431,11 +480,9 @@ export async function isSyncDue(): Promise<boolean> {
 }
 
 export async function runScheduledSync(): Promise<void> {
-  const settings = await getSettings();
-
   console.log("[Scheduler] Running scheduled sync...");
 
-  const result = await syncCollection();
+  const result = await performSyncWithAutoScrape();
 
   if (result.success) {
     // Update last scheduled sync time
@@ -444,17 +491,8 @@ export async function runScheduledSync(): Promise<void> {
       data: { lastScheduledSync: new Date() },
     });
 
-    // Auto-scrape new games if enabled
-    if (settings.autoScrapeNewGames && result.newGameIds.length > 0) {
-      console.log(`[Scheduler] Auto-scraping ${result.newGameIds.length} new games...`);
-
-      // First, mark new games as active
-      await prisma.game.updateMany({
-        where: { id: { in: result.newGameIds } },
-        data: { isActive: true },
-      });
-
-      await scrapeGames(result.newGameIds);
+    if (result.autoScraped > 0) {
+      console.log(`[Scheduler] Auto-scraped ${result.autoScraped} new games`);
     }
   }
 }

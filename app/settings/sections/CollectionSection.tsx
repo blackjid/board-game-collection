@@ -210,9 +210,11 @@ export function CollectionSection() {
   });
   const [usernameInput, setUsernameInput] = useState("");
   const [loading, setLoading] = useState(true);
-  const [importing, setImporting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
+  const [showSyncDialog, setShowSyncDialog] = useState(false);
+  const [syncDialogAutoScrape, setSyncDialogAutoScrape] = useState(true);
 
   // Games state
   const [games, setGames] = useState<Game[]>([]);
@@ -248,15 +250,26 @@ export function CollectionSection() {
     fetchData();
   }, [fetchData]);
 
-  const handleImport = async () => {
-    setImporting(true);
+  const handleSyncClick = () => {
+    // Pre-set the checkbox based on the current setting
+    setSyncDialogAutoScrape(settings.autoScrapeNewGames);
+    setShowSyncDialog(true);
+  };
+
+  const handleSync = async (skipAutoScrape: boolean) => {
+    setShowSyncDialog(false);
+    setSyncing(true);
     try {
-      await fetch("/api/collection/import", { method: "POST" });
+      await fetch("/api/collection/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skipAutoScrape }),
+      });
       await fetchData();
     } catch (error) {
-      console.error("Failed to import:", error);
+      console.error("Failed to sync:", error);
     } finally {
-      setImporting(false);
+      setSyncing(false);
     }
   };
 
@@ -345,175 +358,168 @@ export function CollectionSection() {
         </p>
       </div>
 
-      {/* BGG Username */}
+      {/* Collection Source & Sync */}
       <div className="bg-stone-900 rounded-xl p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-white mb-1">BGG Username</h3>
-        <p className="text-stone-500 text-xs mb-4">
-          Enter your BoardGameGeek username to import your collection
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 max-w-xl">
-          <input
-            type="text"
-            value={usernameInput}
-            onChange={(e) => setUsernameInput(e.target.value)}
-            placeholder="your-bgg-username"
-            className="flex-1 px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
-          />
-          <button
-            onClick={handleUsernameChange}
-            disabled={saving || usernameInput === (settings.bggUsername || "")}
-            className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
-          >
-            {saving ? "Saving..." : "Save Username"}
-          </button>
-        </div>
-        {settings.bggUsername && usernameInput !== settings.bggUsername && usernameInput && (
-          <p className="text-amber-500 text-xs mt-3 flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Changing username will require re-importing the collection
-          </p>
-        )}
-      </div>
-
-      {/* Import Section */}
-      <div className="bg-stone-900 rounded-xl p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-white">Sync Collection</h3>
-            <p className="text-stone-400 text-xs sm:text-sm mt-1">
-              Import from: <span className="text-amber-400 font-medium">{syncStatus?.bggUsername || "not set"}</span>
-            </p>
+        {/* Header with username and sync button */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white mb-3">BGG Source</h3>
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md">
+              <input
+                type="text"
+                value={usernameInput}
+                onChange={(e) => setUsernameInput(e.target.value)}
+                placeholder="BGG username"
+                className="flex-1 px-4 py-2 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors text-sm"
+              />
+              <button
+                onClick={handleUsernameChange}
+                disabled={saving || usernameInput === (settings.bggUsername || "")}
+                className="px-4 py-2 bg-stone-700 hover:bg-stone-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap text-sm"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+            </div>
+            {settings.bggUsername && usernameInput !== settings.bggUsername && usernameInput && (
+              <p className="text-amber-500 text-xs mt-2 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Changing username will clear current collection
+              </p>
+            )}
           </div>
+
           <button
-            onClick={handleImport}
-            disabled={importing || !settings.bggUsername}
+            onClick={handleSyncClick}
+            disabled={syncing || !settings.bggUsername}
             className="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {importing ? (
+            {syncing ? (
               <>
                 <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Importing...
+                Syncing...
               </>
             ) : (
-              "Import from BGG"
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Sync Now
+              </>
             )}
           </button>
         </div>
 
+        {/* Stats */}
         {syncStatus && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-stone-800 rounded-lg p-3 sm:p-4">
-              <div className="text-2xl sm:text-3xl font-bold text-white">
-                {syncStatus.stats.total}
-              </div>
-              <div className="text-stone-400 text-xs sm:text-sm">Total Games</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="bg-stone-800 rounded-lg p-3">
+              <div className="text-2xl font-bold text-white">{syncStatus.stats.total}</div>
+              <div className="text-stone-400 text-xs">Total Games</div>
             </div>
-            <div className="bg-stone-800 rounded-lg p-3 sm:p-4">
-              <div className="text-2xl sm:text-3xl font-bold text-amber-400">
-                {syncStatus.stats.active}
-              </div>
-              <div className="text-stone-400 text-xs sm:text-sm">Active</div>
+            <div className="bg-stone-800 rounded-lg p-3">
+              <div className="text-2xl font-bold text-amber-400">{syncStatus.stats.active}</div>
+              <div className="text-stone-400 text-xs">Active</div>
             </div>
-            <div className="bg-stone-800 rounded-lg p-3 sm:p-4">
-              <div className="text-2xl sm:text-3xl font-bold text-emerald-400">
-                {syncStatus.stats.scraped}
-              </div>
-              <div className="text-stone-400 text-xs sm:text-sm">Scraped</div>
+            <div className="bg-stone-800 rounded-lg p-3">
+              <div className="text-2xl font-bold text-emerald-400">{syncStatus.stats.scraped}</div>
+              <div className="text-stone-400 text-xs">Scraped</div>
             </div>
-            <div className="bg-stone-800 rounded-lg p-3 sm:p-4">
-              <div className="text-xs sm:text-sm text-white">
+            <div className="bg-stone-800 rounded-lg p-3">
+              <div className="text-xs text-white">
                 {syncStatus.lastSync
-                  ? new Date(syncStatus.lastSync.syncedAt).toLocaleString()
+                  ? new Date(syncStatus.lastSync.syncedAt).toLocaleDateString()
                   : "Never"}
               </div>
-              <div className="text-stone-400 text-xs sm:text-sm">Last Sync</div>
+              <div className="text-stone-400 text-xs">Last Sync</div>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Sync Schedule */}
-      <div className="bg-stone-900 rounded-xl p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-white mb-1">Sync Schedule</h3>
-        <p className="text-stone-500 text-xs mb-4">
-          Automatically refresh your collection from BGG on a schedule
-        </p>
-
-        <div className="space-y-4 max-w-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <label htmlFor="sync-schedule" className="text-stone-300 text-sm sm:w-32">
-              Frequency
-            </label>
-            <select
-              id="sync-schedule"
-              value={settings.syncSchedule}
-              onChange={async (e) => {
-                const newSchedule = e.target.value;
-                setSettings({ ...settings, syncSchedule: newSchedule });
-                try {
-                  await fetch("/api/settings", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ syncSchedule: newSchedule }),
-                  });
-                } catch (error) {
-                  console.error("Failed to save schedule:", error);
-                }
-              }}
-              className="flex-1 px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
-            >
-              <option value="manual">Manual only</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 py-2">
-            <div>
-              <label htmlFor="auto-scrape" className="text-stone-300 text-sm">
-                Auto-scrape new games
-              </label>
-              <p className="text-stone-500 text-xs mt-0.5">
-                Automatically fetch details for newly imported games
-              </p>
+        {/* Settings Grid */}
+        <div className="border-t border-stone-800 pt-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Auto-sync schedule */}
+            <div className="flex items-center justify-between gap-3 p-3 bg-stone-800/50 rounded-lg">
+              <div>
+                <label htmlFor="sync-schedule" className="text-stone-200 text-sm font-medium">
+                  Auto-sync
+                </label>
+                <p className="text-stone-500 text-xs mt-0.5">
+                  Schedule automatic syncs
+                </p>
+              </div>
+              <select
+                id="sync-schedule"
+                value={settings.syncSchedule}
+                onChange={async (e) => {
+                  const newSchedule = e.target.value;
+                  setSettings({ ...settings, syncSchedule: newSchedule });
+                  try {
+                    await fetch("/api/settings", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ syncSchedule: newSchedule }),
+                    });
+                  } catch (error) {
+                    console.error("Failed to save schedule:", error);
+                  }
+                }}
+                className="px-3 py-1.5 bg-stone-700 border border-stone-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
+              >
+                <option value="manual">Off</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
             </div>
-            <button
-              id="auto-scrape"
-              onClick={async () => {
-                const newValue = !settings.autoScrapeNewGames;
-                setSettings({ ...settings, autoScrapeNewGames: newValue });
-                try {
-                  await fetch("/api/settings", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ autoScrapeNewGames: newValue }),
-                  });
-                } catch (error) {
-                  console.error("Failed to save auto-scrape setting:", error);
-                }
-              }}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
-                settings.autoScrapeNewGames ? "bg-amber-600" : "bg-stone-700"
-              }`}
-            >
-              <span
-                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                  settings.autoScrapeNewGames ? "translate-x-6" : ""
+
+            {/* Auto-scrape new games */}
+            <div className="flex items-center justify-between gap-3 p-3 bg-stone-800/50 rounded-lg">
+              <div>
+                <label htmlFor="auto-scrape" className="text-stone-200 text-sm font-medium">
+                  Auto-scrape new games
+                </label>
+                <p className="text-stone-500 text-xs mt-0.5">
+                  Fetch details on any sync
+                </p>
+              </div>
+              <button
+                id="auto-scrape"
+                onClick={async () => {
+                  const newValue = !settings.autoScrapeNewGames;
+                  setSettings({ ...settings, autoScrapeNewGames: newValue });
+                  try {
+                    await fetch("/api/settings", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ autoScrapeNewGames: newValue }),
+                    });
+                  } catch (error) {
+                    console.error("Failed to save auto-scrape setting:", error);
+                  }
+                }}
+                className={`relative w-11 h-6 rounded-full transition-colors ${
+                  settings.autoScrapeNewGames ? "bg-amber-600" : "bg-stone-600"
                 }`}
-              />
-            </button>
+              >
+                <span
+                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    settings.autoScrapeNewGames ? "translate-x-5" : ""
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
           {settings.syncSchedule !== "manual" && settings.lastScheduledSync && (
-            <div className="text-stone-400 text-xs pt-2 border-t border-stone-800">
-              Last scheduled sync: {new Date(settings.lastScheduledSync).toLocaleString()}
-            </div>
+            <p className="text-stone-500 text-xs mt-3">
+              Last auto-sync: {new Date(settings.lastScheduledSync).toLocaleString()}
+            </p>
           )}
         </div>
       </div>
@@ -676,7 +682,7 @@ export function CollectionSection() {
           {filteredGames.length === 0 && (
             <div className="p-12 text-center text-stone-500">
               {games.length === 0
-                ? "No games yet. Import your collection from BGG to get started."
+                ? "No games yet. Click Manual Sync to get your collection from BGG."
                 : "No games match the current filter."}
             </div>
           )}
@@ -690,6 +696,67 @@ export function CollectionSection() {
           onClose={() => setSelectedGame(null)}
           onSave={fetchData}
         />
+      )}
+
+      {/* Manual Sync Confirmation Dialog */}
+      {showSyncDialog && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-stone-900 rounded-2xl max-w-md w-full overflow-hidden">
+            <div className="p-6 border-b border-stone-700">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Sync Collection</h2>
+                  <p className="text-stone-400 text-sm">Fetch latest collection from BGG</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <p className="text-stone-300 mb-4">
+                This will sync your collection from{" "}
+                <span className="text-amber-400 font-medium">{settings.bggUsername}</span> on BoardGameGeek.
+              </p>
+              <p className="text-stone-400 text-sm mb-4">
+                New games will be added and existing games will be updated.
+              </p>
+
+              <label className="flex items-center gap-3 p-3 bg-stone-800 rounded-lg cursor-pointer hover:bg-stone-750 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={syncDialogAutoScrape}
+                  onChange={(e) => setSyncDialogAutoScrape(e.target.checked)}
+                  className="w-5 h-5 rounded border-stone-600 bg-stone-700 text-amber-500 focus:ring-amber-500 focus:ring-offset-stone-900"
+                />
+                <div>
+                  <span className="text-stone-200 text-sm font-medium">Auto-scrape new games</span>
+                  <p className="text-stone-500 text-xs mt-0.5">
+                    Automatically fetch details and images for newly added games
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <div className="p-6 border-t border-stone-700 flex justify-end gap-3">
+              <button
+                onClick={() => setShowSyncDialog(false)}
+                className="px-4 py-2 text-stone-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSync(!syncDialogAutoScrape)}
+                className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors"
+              >
+                Start Sync
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Username Change Warning Modal */}
@@ -723,7 +790,7 @@ export function CollectionSection() {
                 </p>
               </div>
               <p className="text-stone-400 text-sm">
-                After saving, click &quot;Import from BGG&quot; to load the new collection.
+                After saving, click &quot;Manual Sync&quot; to load the new collection.
               </p>
             </div>
 
