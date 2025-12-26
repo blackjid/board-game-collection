@@ -291,35 +291,48 @@ async function fetchExtendedDataFromAPI(gameId: string) {
   };
 
   try {
-    const response = await fetch(`https://api.geekdo.com/api/geekitems?objecttype=thing&objectid=${gameId}`);
-    const data = await response.json();
-    const item = data.item;
+    // Fetch basic game info and dynamic stats in parallel
+    const [geekItemResponse, dynamicInfoResponse] = await Promise.all([
+      fetch(`https://api.geekdo.com/api/geekitems?objecttype=thing&objectid=${gameId}`),
+      fetch(`https://api.geekdo.com/api/dynamicinfo?objectid=${gameId}&objecttype=thing`),
+    ]);
 
-    if (!item) return result;
+    const geekItemData = await geekItemResponse.json();
+    const dynamicData = await dynamicInfoResponse.json();
 
-    result.isExpansion = item.subtype === "boardgameexpansion";
+    const item = geekItemData.item;
 
-    if (item.short_description) {
-      result.description = item.short_description;
-    } else if (item.description) {
-      let desc = stripHtml(item.description);
-      if (desc.length > 500) {
-        desc = desc.substring(0, 500).replace(/\s+\S*$/, "") + "...";
+    if (item) {
+      result.isExpansion = item.subtype === "boardgameexpansion";
+
+      if (item.short_description) {
+        result.description = item.short_description;
+      } else if (item.description) {
+        let desc = stripHtml(item.description);
+        if (desc.length > 500) {
+          desc = desc.substring(0, 500).replace(/\s+\S*$/, "") + "...";
+        }
+        result.description = desc;
       }
-      result.description = desc;
+
+      if (item.minplayers) result.minPlayers = parseInt(item.minplayers, 10);
+      if (item.maxplayers) result.maxPlayers = parseInt(item.maxplayers, 10);
+      if (item.minplaytime) result.minPlaytime = parseInt(item.minplaytime, 10);
+      if (item.maxplaytime) result.maxPlaytime = parseInt(item.maxplaytime, 10);
+      if (item.minage) result.minAge = parseInt(item.minage, 10);
+
+      const categories = item.links?.boardgamecategory || [];
+      result.categories = categories.map((c: { name: string }) => c.name);
+
+      const mechanics = item.links?.boardgamemechanic || [];
+      result.mechanics = mechanics.map((m: { name: string }) => m.name);
     }
 
-    if (item.minplayers) result.minPlayers = parseInt(item.minplayers, 10);
-    if (item.maxplayers) result.maxPlayers = parseInt(item.maxplayers, 10);
-    if (item.minplaytime) result.minPlaytime = parseInt(item.minplaytime, 10);
-    if (item.maxplaytime) result.maxPlaytime = parseInt(item.maxplaytime, 10);
-    if (item.minage) result.minAge = parseInt(item.minage, 10);
-
-    const categories = item.links?.boardgamecategory || [];
-    result.categories = categories.map((c: { name: string }) => c.name);
-
-    const mechanics = item.links?.boardgamemechanic || [];
-    result.mechanics = mechanics.map((m: { name: string }) => m.name);
+    // Get rating from dynamic info (stats.average is the community rating)
+    const stats = dynamicData?.item?.stats;
+    if (stats?.average) {
+      result.rating = Math.round(parseFloat(stats.average) * 10) / 10;
+    }
   } catch (e) {
     console.log(`[Scrape] API fetch error for ${gameId}: ${e}`);
   }
@@ -327,14 +340,13 @@ async function fetchExtendedDataFromAPI(gameId: string) {
   return result;
 }
 
-// Scrape main image and rating from game page
+// Scrape main image from game page
 async function scrapeGamePage(gameId: string, isExpansion: boolean) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
 
   let image = "";
-  let rating: number | null = null;
 
   try {
     const url = isExpansion
@@ -347,34 +359,17 @@ async function scrapeGamePage(gameId: string, isExpansion: boolean) {
       // Get the main game image
       const imgEl = document.querySelector('img[src*="cf.geekdo-images"][src*="itemrep"]') ||
                    document.querySelector('img[src*="cf.geekdo-images"]:not([src*="avatar"])');
-      const image = imgEl?.getAttribute("src") || "";
-
-      // Get BGG rating from JSON-LD
-      let bggRating: number | null = null;
-      const jsonLdScript = document.querySelector('script[type="application/ld+json"]');
-      if (jsonLdScript) {
-        try {
-          const jsonData = JSON.parse(jsonLdScript.textContent || "");
-          if (jsonData.aggregateRating?.ratingValue) {
-            bggRating = Math.round(parseFloat(jsonData.aggregateRating.ratingValue) * 10) / 10;
-          }
-        } catch {
-          // Ignore JSON parse errors
-        }
-      }
-
-      return { image, bggRating };
+      return imgEl?.getAttribute("src") || "";
     });
 
-    image = result.image;
-    rating = result.bggRating;
+    image = result;
   } catch (e) {
     console.log(`[Scrape] Scrape error for ${gameId}: ${e}`);
   } finally {
     await browser.close();
   }
 
-  return { image, rating };
+  return { image };
 }
 
 // Scrape a single game
@@ -401,7 +396,7 @@ export async function scrapeGame(gameId: string): Promise<boolean> {
       data: {
         image: pageData.image || null,
         thumbnail: pageData.image || null,
-        rating: pageData.rating ?? extendedData.rating,
+        rating: extendedData.rating,
         description: extendedData.description,
         minPlayers: extendedData.minPlayers,
         maxPlayers: extendedData.maxPlayers,

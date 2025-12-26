@@ -106,3 +106,20 @@ export async function getCollectionSettings(): Promise<CollectionSettings> {
     bggUsername: settings?.bggUsername || DEFAULT_BGG_USERNAME,
   };
 }
+
+export interface LastSyncInfo {
+  syncedAt: Date | null;
+  gamesFound: number;
+}
+
+export async function getLastSyncInfo(): Promise<LastSyncInfo> {
+  const lastSync = await prisma.syncLog.findFirst({
+    where: { status: "success" },
+    orderBy: { syncedAt: "desc" },
+  });
+
+  return {
+    syncedAt: lastSync?.syncedAt || null,
+    gamesFound: lastSync?.gamesFound || 0,
+  };
+}

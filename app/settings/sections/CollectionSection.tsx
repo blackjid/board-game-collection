@@ -365,30 +365,30 @@ export function CollectionSection() {
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-white mb-3">BGG Source</h3>
             <div className="flex flex-col sm:flex-row gap-3 max-w-md">
-              <input
-                type="text"
-                value={usernameInput}
-                onChange={(e) => setUsernameInput(e.target.value)}
+          <input
+            type="text"
+            value={usernameInput}
+            onChange={(e) => setUsernameInput(e.target.value)}
                 placeholder="BGG username"
                 className="flex-1 px-4 py-2 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors text-sm"
-              />
-              <button
-                onClick={handleUsernameChange}
-                disabled={saving || usernameInput === (settings.bggUsername || "")}
+          />
+          <button
+            onClick={handleUsernameChange}
+            disabled={saving || usernameInput === (settings.bggUsername || "")}
                 className="px-4 py-2 bg-stone-700 hover:bg-stone-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap text-sm"
-              >
+          >
                 {saving ? "Saving..." : "Save"}
-              </button>
-            </div>
-            {settings.bggUsername && usernameInput !== settings.bggUsername && usernameInput && (
+          </button>
+        </div>
+        {settings.bggUsername && usernameInput !== settings.bggUsername && usernameInput && (
               <p className="text-amber-500 text-xs mt-2 flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
                 Changing username will clear current collection
-              </p>
-            )}
-          </div>
+          </p>
+        )}
+      </div>
 
           <button
             onClick={handleSyncClick}
@@ -453,66 +453,66 @@ export function CollectionSection() {
                   Schedule automatic syncs
                 </p>
               </div>
-              <select
-                id="sync-schedule"
-                value={settings.syncSchedule}
-                onChange={async (e) => {
-                  const newSchedule = e.target.value;
-                  setSettings({ ...settings, syncSchedule: newSchedule });
-                  try {
-                    await fetch("/api/settings", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ syncSchedule: newSchedule }),
-                    });
-                  } catch (error) {
-                    console.error("Failed to save schedule:", error);
-                  }
-                }}
+            <select
+              id="sync-schedule"
+              value={settings.syncSchedule}
+              onChange={async (e) => {
+                const newSchedule = e.target.value;
+                setSettings({ ...settings, syncSchedule: newSchedule });
+                try {
+                  await fetch("/api/settings", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ syncSchedule: newSchedule }),
+                  });
+                } catch (error) {
+                  console.error("Failed to save schedule:", error);
+                }
+              }}
                 className="px-3 py-1.5 bg-stone-700 border border-stone-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
-              >
+            >
                 <option value="manual">Off</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            </div>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
 
             {/* Auto-scrape new games */}
             <div className="flex items-center justify-between gap-3 p-3 bg-stone-800/50 rounded-lg">
-              <div>
+            <div>
                 <label htmlFor="auto-scrape" className="text-stone-200 text-sm font-medium">
-                  Auto-scrape new games
-                </label>
-                <p className="text-stone-500 text-xs mt-0.5">
+                Auto-scrape new games
+              </label>
+              <p className="text-stone-500 text-xs mt-0.5">
                   Fetch details on any sync
-                </p>
-              </div>
-              <button
-                id="auto-scrape"
-                onClick={async () => {
-                  const newValue = !settings.autoScrapeNewGames;
-                  setSettings({ ...settings, autoScrapeNewGames: newValue });
-                  try {
-                    await fetch("/api/settings", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ autoScrapeNewGames: newValue }),
-                    });
-                  } catch (error) {
-                    console.error("Failed to save auto-scrape setting:", error);
-                  }
-                }}
+              </p>
+            </div>
+            <button
+              id="auto-scrape"
+              onClick={async () => {
+                const newValue = !settings.autoScrapeNewGames;
+                setSettings({ ...settings, autoScrapeNewGames: newValue });
+                try {
+                  await fetch("/api/settings", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ autoScrapeNewGames: newValue }),
+                  });
+                } catch (error) {
+                  console.error("Failed to save auto-scrape setting:", error);
+                }
+              }}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
                   settings.autoScrapeNewGames ? "bg-amber-600" : "bg-stone-600"
-                }`}
-              >
-                <span
-                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+              }`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
                     settings.autoScrapeNewGames ? "translate-x-5" : ""
-                  }`}
-                />
-              </button>
+                }`}
+              />
+            </button>
             </div>
           </div>
 

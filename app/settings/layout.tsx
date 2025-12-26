@@ -86,101 +86,101 @@ function SettingsNavigation({
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 flex-col fixed left-0 top-16 bottom-0 bg-stone-900 border-r border-stone-800">
-        <nav className="flex-1 p-4 space-y-1">
-          {SECTIONS.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => navigateToSection(section.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentSection === section.id
-                  ? "bg-amber-600 text-white"
-                  : "text-stone-400 hover:text-white hover:bg-stone-800"
-              }`}
-            >
-              <section.Icon className="w-5 h-5" />
-              <span className="font-medium">{section.label}</span>
-            </button>
-          ))}
-        </nav>
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:flex w-64 flex-col fixed left-0 top-16 bottom-0 bg-stone-900 border-r border-stone-800">
+            <nav className="flex-1 p-4 space-y-1">
+              {SECTIONS.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => navigateToSection(section.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                    currentSection === section.id
+                      ? "bg-amber-600 text-white"
+                      : "text-stone-400 hover:text-white hover:bg-stone-800"
+                  }`}
+                >
+                  <section.Icon className="w-5 h-5" />
+                  <span className="font-medium">{section.label}</span>
+                </button>
+              ))}
+            </nav>
 
-        {currentUser && (
-          <div className="p-4 border-t border-stone-800">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold">
-                {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white truncate">
-                  {currentUser.name || currentUser.email}
+            {currentUser && (
+              <div className="p-4 border-t border-stone-800">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold">
+                    {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-white truncate">
+                      {currentUser.name || currentUser.email}
+                    </div>
+                    <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
+                  </div>
                 </div>
-                <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
-              </div>
-            </div>
-            <button
+                <button
               onClick={onLogout}
-              className="w-full px-3 py-2 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors text-center"
-            >
-              Logout
-            </button>
-          </div>
-        )}
-      </aside>
-
-      {/* Mobile Sidebar Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/60 z-30"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Mobile Sidebar (Drawer) */}
-      <aside
-        className={`lg:hidden fixed left-0 top-16 bottom-0 w-72 bg-stone-900 border-r border-stone-800 z-40 transform transition-transform duration-300 flex flex-col ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <nav className="flex-1 p-4 space-y-1">
-          {SECTIONS.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => navigateToSection(section.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                currentSection === section.id
-                  ? "bg-amber-600 text-white"
-                  : "text-stone-400 hover:text-white hover:bg-stone-800"
-              }`}
-            >
-              <section.Icon className="w-5 h-5" />
-              <span className="font-medium">{section.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {currentUser && (
-          <div className="p-4 border-t border-stone-800">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold">
-                {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
+                  className="w-full px-3 py-2 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors text-center"
+                >
+                  Logout
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white truncate">
-                  {currentUser.name || currentUser.email}
+            )}
+          </aside>
+
+          {/* Mobile Sidebar Overlay */}
+          {mobileMenuOpen && (
+            <div
+              className="lg:hidden fixed inset-0 bg-black/60 z-30"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+          )}
+
+          {/* Mobile Sidebar (Drawer) */}
+          <aside
+            className={`lg:hidden fixed left-0 top-16 bottom-0 w-72 bg-stone-900 border-r border-stone-800 z-40 transform transition-transform duration-300 flex flex-col ${
+              mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            <nav className="flex-1 p-4 space-y-1">
+              {SECTIONS.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => navigateToSection(section.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                    currentSection === section.id
+                      ? "bg-amber-600 text-white"
+                      : "text-stone-400 hover:text-white hover:bg-stone-800"
+                  }`}
+                >
+                  <section.Icon className="w-5 h-5" />
+                  <span className="font-medium">{section.label}</span>
+                </button>
+              ))}
+            </nav>
+
+            {currentUser && (
+              <div className="p-4 border-t border-stone-800">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold">
+                    {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-white truncate">
+                      {currentUser.name || currentUser.email}
+                    </div>
+                    <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
+                  </div>
                 </div>
-                <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
-              </div>
-            </div>
-            <button
+                <button
               onClick={onLogout}
-              className="w-full px-3 py-2 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors text-center"
-            >
-              Logout
-            </button>
-          </div>
-        )}
-      </aside>
+                  className="w-full px-3 py-2 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors text-center"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </aside>
     </>
   );
 }
@@ -198,9 +198,19 @@ export default function SettingsLayout({
     try {
       const response = await fetch("/api/auth/me");
       const data = await response.json();
+
+      // Check if user is admin
+      if (!data.user || data.user.role !== "admin") {
+        // Redirect non-admin users to home page
+        window.location.href = "/?error=unauthorized";
+        return;
+      }
+
       setCurrentUser(data.user);
     } catch (error) {
       console.error("Failed to fetch user:", error);
+      // Redirect on error
+      window.location.href = "/login?redirect=/settings";
     } finally {
       setLoading(false);
     }
@@ -218,7 +228,23 @@ export default function SettingsLayout({
   if (loading) {
     return (
       <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="animate-pulse">
+          <div className="w-12 h-12 rounded-full bg-amber-600/20 flex items-center justify-center">
+            <svg className="w-6 h-6 text-amber-500 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no admin user (redirect will happen)
+  if (!currentUser || currentUser.role !== "admin") {
+    return (
+      <div className="min-h-screen bg-stone-950 flex items-center justify-center">
+        <div className="text-stone-400">Redirecting...</div>
       </div>
     );
   }

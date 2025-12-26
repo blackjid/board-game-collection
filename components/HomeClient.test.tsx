@@ -10,6 +10,17 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// Mock next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+  }),
+}));
+
+// Mock fetch
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
 // Mock window.print
 const mockPrint = vi.fn();
 Object.defineProperty(window, "print", { value: mockPrint });
@@ -17,6 +28,7 @@ Object.defineProperty(window, "print", { value: mockPrint });
 describe("HomeClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
   });
 
   const createMockGame = (overrides: Partial<GameData> = {}): GameData => ({
@@ -47,15 +59,26 @@ describe("HomeClient", () => {
     createMockGame({ id: "3", name: "Azul", yearPublished: 2017, rating: 7.8 }),
   ];
 
+  const mockAdminUser = {
+    id: "user-1",
+    name: "Admin User",
+    email: "admin@example.com",
+    role: "admin",
+  };
+
+  const defaultProps = {
+    games: mockGames,
+    totalGames: 3,
+    collectionName: "Test Collection",
+    bggUsername: "testuser",
+    lastSyncedAt: new Date().toISOString(),
+    currentUser: null,
+  };
+
   describe("rendering", () => {
     it("should render collection name", () => {
       render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="My Board Games"
-          bggUsername="testuser"
-        />
+        <HomeClient {...defaultProps} collectionName="My Board Games" />
       );
 
       // Multiple h1 elements exist (one for screen, one for print)
@@ -65,40 +88,27 @@ describe("HomeClient", () => {
 
     it("should render default collection name from username", () => {
       render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName={null}
-          bggUsername="testuser"
-        />
+        <HomeClient {...defaultProps} collectionName={null} bggUsername="testuser" />
       );
 
-      const headings = screen.getAllByText("testuser's collection");
-      expect(headings.length).toBeGreaterThan(0);
+      // Title is now split into name + "Collection" (multiple elements in screen and print headers)
+      expect(screen.getAllByText("testuser's").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Collection").length).toBeGreaterThan(0);
     });
 
     it("should render fallback collection name when no username", () => {
       render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName={null}
-          bggUsername={null}
-        />
+        <HomeClient {...defaultProps} collectionName={null} bggUsername={null} />
       );
 
-      const headings = screen.getAllByText("My Collection");
-      expect(headings.length).toBeGreaterThan(0);
+      // Title is now split into "Board Game" + "Collection" (multiple elements in screen and print headers)
+      expect(screen.getAllByText("Board Game").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Collection").length).toBeGreaterThan(0);
     });
 
     it("should render total games count", () => {
       render(
-        <HomeClient
-          games={mockGames}
-          totalGames={42}
-          collectionName="Test"
-          bggUsername="user"
-        />
+        <HomeClient {...defaultProps} totalGames={42} />
       );
 
       // Multiple count elements exist (one for screen, one for print)
@@ -107,42 +117,21 @@ describe("HomeClient", () => {
     });
 
     it("should render all game cards in grid view", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+      render(<HomeClient {...defaultProps} />);
 
       expect(screen.getByText("Wingspan")).toBeInTheDocument();
       expect(screen.getByText("Catan")).toBeInTheDocument();
       expect(screen.getByText("Azul")).toBeInTheDocument();
     });
 
-    it("should render Settings link", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+    it("should render Login link when not authenticated", () => {
+      render(<HomeClient {...defaultProps} currentUser={null} />);
 
-      expect(screen.getByText("Settings")).toBeInTheDocument();
+      expect(screen.getByText("Login")).toBeInTheDocument();
     });
 
     it("should render Experience link", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+      render(<HomeClient {...defaultProps} />);
 
       const experienceLinks = screen.getAllByRole("link").filter(
         link => link.getAttribute("href") === "/experience"
@@ -151,61 +140,120 @@ describe("HomeClient", () => {
     });
   });
 
-  describe("empty state", () => {
-    it("should render empty state when no games", () => {
+  describe("auth-aware features", () => {
+    it("should show user menu when logged in as admin", () => {
+      render(<HomeClient {...defaultProps} currentUser={mockAdminUser} />);
+
+      expect(screen.getByText("Admin User")).toBeInTheDocument();
+    });
+
+    it("should show sync button for admins", () => {
+      render(<HomeClient {...defaultProps} currentUser={mockAdminUser} />);
+
+      expect(screen.getByText("Sync")).toBeInTheDocument();
+    });
+
+    it("should not show sync button for guests", () => {
+      render(<HomeClient {...defaultProps} currentUser={null} />);
+
+      expect(screen.queryByText("Sync")).not.toBeInTheDocument();
+    });
+
+    it("should show last synced time for admins", () => {
+      const syncedAt = new Date();
+      syncedAt.setHours(syncedAt.getHours() - 2);
+
       render(
         <HomeClient
-          games={[]}
-          totalGames={0}
-          collectionName="Test"
-          bggUsername="user"
+          {...defaultProps}
+          currentUser={mockAdminUser}
+          lastSyncedAt={syncedAt.toISOString()}
         />
       );
 
-      expect(screen.getByText("No games yet")).toBeInTheDocument();
-      expect(
-        screen.getByText(/Import your BGG collection/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Synced 2h ago/)).toBeInTheDocument();
+    });
+  });
+
+  describe("empty state / onboarding", () => {
+    it("should render onboarding when no games", () => {
+      render(
+        <HomeClient {...defaultProps} games={[]} totalGames={0} currentUser={null} />
+      );
+
+      expect(screen.getByText("Welcome to Your Collection!")).toBeInTheDocument();
+      expect(screen.getByText("Login to Get Started")).toBeInTheDocument();
     });
 
-    it("should link to settings in empty state", () => {
+    it("should show Go to Settings when logged in with empty collection", () => {
       render(
-        <HomeClient
-          games={[]}
-          totalGames={0}
-          collectionName="Test"
-          bggUsername="user"
-        />
+        <HomeClient {...defaultProps} games={[]} totalGames={0} currentUser={mockAdminUser} />
       );
 
       expect(screen.getByText("Go to Settings")).toBeInTheDocument();
+    });
+
+    it("should show onboarding steps", () => {
+      render(
+        <HomeClient {...defaultProps} games={[]} totalGames={0} currentUser={null} />
+      );
+
+      expect(screen.getByText("Login as admin")).toBeInTheDocument();
+      expect(screen.getByText("Set your BGG username")).toBeInTheDocument();
+      expect(screen.getByText("Sync your collection")).toBeInTheDocument();
+    });
+  });
+
+  describe("search functionality", () => {
+    it("should filter games by search query", () => {
+      render(<HomeClient {...defaultProps} />);
+
+      const searchInput = screen.getByPlaceholderText("Search games...");
+      fireEvent.change(searchInput, { target: { value: "wing" } });
+
+      expect(screen.getByText("Wingspan")).toBeInTheDocument();
+      expect(screen.queryByText("Catan")).not.toBeInTheDocument();
+      expect(screen.queryByText("Azul")).not.toBeInTheDocument();
+    });
+
+    it("should show no results message when search has no matches", () => {
+      render(<HomeClient {...defaultProps} />);
+
+      const searchInput = screen.getByPlaceholderText("Search games...");
+      fireEvent.change(searchInput, { target: { value: "xyz" } });
+
+      expect(screen.getByText("No games found")).toBeInTheDocument();
+      expect(screen.getByText(/No games match "xyz"/)).toBeInTheDocument();
+    });
+
+    it("should clear search when clear button clicked", () => {
+      render(<HomeClient {...defaultProps} />);
+
+      const searchInput = screen.getByPlaceholderText("Search games...");
+      fireEvent.change(searchInput, { target: { value: "wing" } });
+
+      // Click clear button
+      const clearButton = screen.getAllByRole("button").find(
+        btn => btn.querySelector("svg path[d='M6 18L18 6M6 6l12 12']")
+      );
+      if (clearButton) fireEvent.click(clearButton);
+
+      expect(screen.getByText("Wingspan")).toBeInTheDocument();
+      expect(screen.getByText("Catan")).toBeInTheDocument();
+      expect(screen.getByText("Azul")).toBeInTheDocument();
     });
   });
 
   describe("sorting", () => {
     it("should sort by name by default (A-Z)", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+      render(<HomeClient {...defaultProps} />);
 
       const gameNames = screen.getAllByRole("heading", { level: 3 }).map(h => h.textContent);
       expect(gameNames).toEqual(["Azul", "Catan", "Wingspan"]);
     });
 
     it("should sort by year when selected (newest first)", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+      render(<HomeClient {...defaultProps} />);
 
       const sortSelect = screen.getByRole("combobox");
       fireEvent.change(sortSelect, { target: { value: "year" } });
@@ -215,14 +263,7 @@ describe("HomeClient", () => {
     });
 
     it("should sort by rating when selected (highest first)", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+      render(<HomeClient {...defaultProps} />);
 
       const sortSelect = screen.getByRole("combobox");
       fireEvent.change(sortSelect, { target: { value: "rating" } });
@@ -234,14 +275,7 @@ describe("HomeClient", () => {
 
   describe("view mode toggle", () => {
     it("should start in grid view", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+      render(<HomeClient {...defaultProps} />);
 
       // Grid view shows game cards, check for the grid class
       const container = screen.getByRole("main");
@@ -249,14 +283,7 @@ describe("HomeClient", () => {
     });
 
     it("should switch to list view when list button clicked", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+      render(<HomeClient {...defaultProps} />);
 
       const buttons = screen.getAllByRole("button");
       const listButton = buttons.find(b => b.getAttribute("title") === "List view");
@@ -273,16 +300,9 @@ describe("HomeClient", () => {
 
   describe("print functionality", () => {
     it("should call window.print when print button clicked", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="user"
-        />
-      );
+      render(<HomeClient {...defaultProps} />);
 
-      const printButton = screen.getByText("Print");
+      const printButton = screen.getByText("Print Collection");
       fireEvent.click(printButton);
 
       expect(mockPrint).toHaveBeenCalled();
@@ -291,16 +311,9 @@ describe("HomeClient", () => {
 
   describe("footer", () => {
     it("should render BGG link when username provided", () => {
-      render(
-        <HomeClient
-          games={mockGames}
-          totalGames={3}
-          collectionName="Test"
-          bggUsername="testuser"
-        />
-      );
+      render(<HomeClient {...defaultProps} bggUsername="testuser" />);
 
-      const bggLink = screen.getByText("collection on BGG");
+      const bggLink = screen.getByText("View on BGG");
       expect(bggLink.getAttribute("href")).toBe(
         "https://boardgamegeek.com/collection/user/testuser"
       );
