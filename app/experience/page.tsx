@@ -30,13 +30,24 @@ function seededRandom(seed: number) {
 }
 
 export default function ExperiencePage() {
-  const { games, username, totalGames } = gamesData;
+  const { games, totalGames } = gamesData;
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const [windowHeight, setWindowHeight] = useState(1);
   const [docHeight, setDocHeight] = useState(1);
   const [suggestedGame, setSuggestedGame] = useState<typeof games[0] | null>(null);
   const [hoveredGallery, setHoveredGallery] = useState<string | null>(null);
+  const [collectionName, setCollectionName] = useState<string | null>(null);
+
+  // Fetch collection settings
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        setCollectionName(data.collectionName || (data.bggUsername ? `${data.bggUsername}'s` : "My"));
+      })
+      .catch(() => {});
+  }, []);
 
   // Sort games by rating
   const sortedGames = useMemo(() =>
@@ -171,7 +182,7 @@ export default function ExperiencePage() {
 
           <div className="relative z-10 text-center px-6">
             <p className="text-amber-400 text-sm md:text-base font-semibold tracking-[0.4em] uppercase mb-6 animate-fade-in-up">
-              The {username} Collection
+              {collectionName ? `${collectionName} Collection` : "The Collection"}
             </p>
             <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight leading-[0.85] mb-8 animate-fade-in-up delay-100">
               <span className="block">{totalGames}</span>

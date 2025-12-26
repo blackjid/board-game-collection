@@ -24,11 +24,17 @@ interface SyncStatus {
     gamesFound: number;
     status: string;
   } | null;
+  bggUsername: string;
   stats: {
     total: number;
     active: number;
     scraped: number;
   };
+}
+
+interface Settings {
+  collectionName: string | null;
+  bggUsername: string | null;
 }
 
 interface ImageEditorProps {
@@ -207,12 +213,17 @@ function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
 export default function AdminPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+  const [settings, setSettings] = useState<Settings>({ collectionName: null, bggUsername: null });
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [scraping, setScraping] = useState<string | null>(null);
   const [scrapingAll, setScrapingAll] = useState(false);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "scraped">("all");
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [collectionNameInput, setCollectionNameInput] = useState("");
+  const [showUsernameWarning, setShowUsernameWarning] = useState(false);
 
   const fetchGames = useCallback(async () => {
     const response = await fetch("/api/games");
@@ -226,9 +237,50 @@ export default function AdminPage() {
     setSyncStatus(data);
   }, []);
 
+  const fetchSettings = useCallback(async () => {
+    const response = await fetch("/api/settings");
+    const data = await response.json();
+    setSettings(data);
+    setUsernameInput(data.bggUsername || "");
+    setCollectionNameInput(data.collectionName || "");
+  }, []);
+
+  const saveSettings = async (updates: Partial<Settings>) => {
+    setSavingSettings(true);
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      const data = await response.json();
+      setSettings(data);
+      await fetchSyncStatus();
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const handleUsernameChange = () => {
+    // If there's an existing username and games in collection, show warning
+    const hasExistingCollection = syncStatus && syncStatus.stats.total > 0;
+    const isChangingUsername = settings.bggUsername && usernameInput !== settings.bggUsername;
+
+    if (hasExistingCollection && isChangingUsername) {
+      setShowUsernameWarning(true);
+    } else {
+      saveSettings({ bggUsername: usernameInput || null });
+    }
+  };
+
+  const confirmUsernameChange = async () => {
+    setShowUsernameWarning(false);
+    await saveSettings({ bggUsername: usernameInput || null });
+  };
+
   useEffect(() => {
-    Promise.all([fetchGames(), fetchSyncStatus()]).finally(() => setLoading(false));
-  }, [fetchGames, fetchSyncStatus]);
+    Promise.all([fetchGames(), fetchSyncStatus(), fetchSettings()]).finally(() => setLoading(false));
+  }, [fetchGames, fetchSyncStatus, fetchSettings]);
 
   const handleImport = async () => {
     setImporting(true);
@@ -303,13 +355,85 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Settings Panel */}
+        <section className="bg-stone-900 rounded-xl p-6 mb-8">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold">Settings</h2>
+            <p className="text-stone-400 text-sm mt-1">
+              Configure your collection display and import settings
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Collection Name */}
+            <div>
+              <label className="block text-sm font-medium text-stone-300 mb-2">
+                Collection Name
+              </label>
+              <p className="text-stone-500 text-xs mb-2">
+                Override the default collection name displayed on the site
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={collectionNameInput}
+                  onChange={(e) => setCollectionNameInput(e.target.value)}
+                  placeholder="My Board Game Collection"
+                  className="flex-1 px-4 py-2 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 transition-colors"
+                />
+                <button
+                  onClick={() => saveSettings({ collectionName: collectionNameInput || null })}
+                  disabled={savingSettings || collectionNameInput === (settings.collectionName || "")}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+            {/* BGG Username */}
+            <div>
+              <label className="block text-sm font-medium text-stone-300 mb-2">
+                BGG Username
+              </label>
+              <p className="text-stone-500 text-xs mb-2">
+                BoardGameGeek username to import collection from
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  placeholder="username"
+                  className="flex-1 px-4 py-2 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 transition-colors"
+                />
+                <button
+                  onClick={handleUsernameChange}
+                  disabled={savingSettings || usernameInput === (settings.bggUsername || "")}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Save
+                </button>
+              </div>
+              {settings.bggUsername && usernameInput !== settings.bggUsername && usernameInput && (
+                <p className="text-amber-500 text-xs mt-2 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Changing username will require re-importing the collection
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Import Panel */}
         <section className="bg-stone-900 rounded-xl p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-semibold">Collection Import</h2>
               <p className="text-stone-400 text-sm mt-1">
-                Import your BGG collection to sync games
+                Import collection from BGG user: <span className="text-amber-400 font-medium">{syncStatus?.bggUsername || "not set"}</span>
               </p>
             </div>
             <button
@@ -498,6 +622,59 @@ export default function AdminPage() {
           onClose={() => setSelectedGame(null)}
           onSave={fetchGames}
         />
+      )}
+
+      {/* Username Change Warning Modal */}
+      {showUsernameWarning && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-stone-900 rounded-2xl max-w-md w-full overflow-hidden">
+            <div className="p-6 border-b border-stone-700">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Change BGG Username?</h2>
+                  <p className="text-stone-400 text-sm">This action affects your collection</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <p className="text-stone-300 mb-4">
+                You are about to change the BGG username from{" "}
+                <span className="text-amber-400 font-medium">{settings.bggUsername}</span> to{" "}
+                <span className="text-amber-400 font-medium">{usernameInput}</span>.
+              </p>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                <p className="text-red-400 text-sm">
+                  <strong>Warning:</strong> Your current collection of{" "}
+                  <span className="font-bold">{syncStatus?.stats.total} games</span> will be replaced when you import the new collection.
+                </p>
+              </div>
+              <p className="text-stone-400 text-sm">
+                After saving, click &quot;Import from BGG&quot; to load the new collection.
+              </p>
+            </div>
+
+            <div className="p-6 border-t border-stone-700 flex justify-end gap-3">
+              <button
+                onClick={() => setShowUsernameWarning(false)}
+                className="px-4 py-2 text-stone-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmUsernameChange}
+                className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors"
+              >
+                Yes, Change Username
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

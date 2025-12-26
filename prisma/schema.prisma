@@ -50,3 +50,10 @@ model SyncLog {
   gamesFound Int
   status     String   // 'success', 'failed'
 }
+
+model Settings {
+  id             String  @id @default("default")
+  collectionName String?
+  bggUsername    String?
+  updatedAt      DateTime @updatedAt
+}

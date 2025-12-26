@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { chromium } from "playwright";
 import prisma from "@/lib/prisma";
 
-const BGG_USERNAME = "jidonoso";
-const COLLECTION_URL = `https://boardgamegeek.com/collection/user/${BGG_USERNAME}?own=1&subtype=boardgame&ff=1`;
+const DEFAULT_BGG_USERNAME = "jidonoso";
+
+async function getBggUsername(): Promise<string> {
+  const settings = await prisma.settings.findUnique({
+    where: { id: "default" },
+  });
+  return settings?.bggUsername || DEFAULT_BGG_USERNAME;
+}
 
 interface ScrapedGame {
   id: string;
@@ -12,12 +18,14 @@ interface ScrapedGame {
   isExpansion: boolean;
 }
 
-async function scrapeCollection(): Promise<ScrapedGame[]> {
+async function scrapeCollection(username: string): Promise<ScrapedGame[]> {
+  const collectionUrl = `https://boardgamegeek.com/collection/user/${username}?own=1&subtype=boardgame&ff=1`;
+
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  await page.goto(COLLECTION_URL, { waitUntil: "networkidle" });
+  await page.goto(collectionUrl, { waitUntil: "networkidle" });
   await page.waitForSelector("table", { timeout: 30000 });
 
   const games = await page.evaluate(() => {
@@ -65,9 +73,10 @@ async function scrapeCollection(): Promise<ScrapedGame[]> {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("Starting collection import...");
+    const bggUsername = await getBggUsername();
+    console.log(`Starting collection import for user: ${bggUsername}...`);
 
-    const games = await scrapeCollection();
+    const games = await scrapeCollection(bggUsername);
     console.log(`Found ${games.length} games in collection`);
 
     // Upsert all games - only update basic info, preserve existing scraped data
@@ -106,7 +115,7 @@ export async function POST(request: NextRequest) {
     // Log the sync
     await prisma.syncLog.create({
       data: {
-        username: BGG_USERNAME,
+        username: bggUsername,
         gamesFound: games.length,
         status: "success",
       },
@@ -123,9 +132,10 @@ export async function POST(request: NextRequest) {
     console.error("Import failed:", error);
 
     // Log the failed sync
+    const failedUsername = await getBggUsername();
     await prisma.syncLog.create({
       data: {
-        username: BGG_USERNAME,
+        username: failedUsername,
         gamesFound: 0,
         status: "failed",
       },
@@ -148,8 +158,11 @@ export async function GET() {
   const activeGames = await prisma.game.count({ where: { isActive: true } });
   const scrapedGames = await prisma.game.count({ where: { lastScraped: { not: null } } });
 
+  const bggUsername = await getBggUsername();
+
   return NextResponse.json({
     lastSync,
+    bggUsername,
     stats: {
       total: totalGames,
       active: activeGames,

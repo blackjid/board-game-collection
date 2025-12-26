@@ -12,10 +12,12 @@ type ViewMode = "grid" | "list";
 interface HomeClientProps {
   games: GameData[];
   totalGames: number;
-  username: string;
+  collectionName: string | null;
+  bggUsername: string | null;
 }
 
-export function HomeClient({ games, totalGames, username }: HomeClientProps) {
+export function HomeClient({ games, totalGames, collectionName, bggUsername }: HomeClientProps) {
+  const displayName = collectionName || (bggUsername ? `${bggUsername}'s collection` : "My Collection");
   const [columns, setColumns] = useState(6);
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -46,10 +48,10 @@ export function HomeClient({ games, totalGames, username }: HomeClientProps) {
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">
-              Board Game Collection
+              {displayName}
             </h1>
             <p className="mt-1 text-stone-400">
-              {username}&apos;s collection • {totalGames} games
+              {totalGames} games
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -76,7 +78,7 @@ export function HomeClient({ games, totalGames, username }: HomeClientProps) {
       {/* Print Header */}
       <div className="hidden print:flex print:mb-3 print:border-b print:border-stone-300 print:pb-2 print:items-baseline print:justify-between">
         <h1 className="text-base font-bold text-stone-800">
-          {username}&apos;s Board Game Collection
+          {displayName}
         </h1>
         <p className="text-stone-500 text-[10px]">
           {totalGames} games
@@ -210,18 +212,19 @@ export function HomeClient({ games, totalGames, username }: HomeClientProps) {
               className="h-10 opacity-80 group-hover:opacity-100 transition-opacity"
             />
           </a>
-          <p className="text-stone-600 text-xs">
-            View{" "}
-            <a
-              href={`https://boardgamegeek.com/collection/user/${username}`}
-              className="text-amber-500/70 hover:text-amber-400"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {username}&apos;s collection
-            </a>{" "}
-            on BGG
-          </p>
+          {bggUsername && (
+            <p className="text-stone-600 text-xs">
+              View{" "}
+              <a
+                href={`https://boardgamegeek.com/collection/user/${bggUsername}`}
+                className="text-amber-500/70 hover:text-amber-400"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                collection on BGG
+              </a>
+            </p>
+          )}
         </div>
       </footer>
     </div>

@@ -1,19 +1,21 @@
-import { getActiveGames, getGameCount } from "@/lib/games";
+import { getActiveGames, getGameCount, getCollectionSettings } from "@/lib/games";
 import { HomeClient } from "@/components/HomeClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [games, counts] = await Promise.all([
+  const [games, counts, settings] = await Promise.all([
     getActiveGames(),
     getGameCount(),
+    getCollectionSettings(),
   ]);
 
   return (
     <HomeClient
       games={games}
       totalGames={counts.active}
-      username="jidonoso"
+      collectionName={settings.collectionName}
+      bggUsername={settings.bggUsername}
     />
   );
 }

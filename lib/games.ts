@@ -88,3 +88,21 @@ export async function getGameCount(): Promise<{ total: number; active: number }>
 export function getDisplayImage(game: GameData): string | null {
   return game.selectedThumbnail || game.image || game.thumbnail;
 }
+
+export interface CollectionSettings {
+  collectionName: string | null;
+  bggUsername: string | null;
+}
+
+const DEFAULT_BGG_USERNAME = "jidonoso";
+
+export async function getCollectionSettings(): Promise<CollectionSettings> {
+  const settings = await prisma.settings.findUnique({
+    where: { id: "default" },
+  });
+
+  return {
+    collectionName: settings?.collectionName || null,
+    bggUsername: settings?.bggUsername || DEFAULT_BGG_USERNAME,
+  };
+}
