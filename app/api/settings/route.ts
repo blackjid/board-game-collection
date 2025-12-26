@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 const SETTINGS_ID = "default";
 
@@ -19,6 +20,12 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const body = await request.json();
   const { collectionName, bggUsername } = body;
 

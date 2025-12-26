@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { chromium } from "playwright";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 const DEFAULT_BGG_USERNAME = "jidonoso";
 
@@ -71,7 +72,13 @@ async function scrapeCollection(username: string): Promise<ScrapedGame[]> {
   return games;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const bggUsername = await getBggUsername();
     console.log(`Starting collection import for user: ${bggUsername}...`);

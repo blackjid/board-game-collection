@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { chromium } from "playwright";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -132,6 +133,12 @@ async function scrapeGamePage(gameId: string, isExpansion: boolean) {
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { id } = await params;
 
   const game = await prisma.game.findUnique({ where: { id } });

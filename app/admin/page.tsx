@@ -37,6 +37,21 @@ interface Settings {
   bggUsername: string | null;
 }
 
+interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  createdAt: string;
+}
+
+interface CurrentUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+}
+
 interface ImageEditorProps {
   game: Game;
   onClose: () => void;
@@ -225,6 +240,15 @@ export default function AdminPage() {
   const [collectionNameInput, setCollectionNameInput] = useState("");
   const [showUsernameWarning, setShowUsernameWarning] = useState(false);
 
+  // User management state
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [userFormData, setUserFormData] = useState({ email: "", password: "", name: "", role: "user" });
+  const [savingUser, setSavingUser] = useState(false);
+  const [userError, setUserError] = useState("");
+
   const fetchGames = useCallback(async () => {
     const response = await fetch("/api/games");
     const data = await response.json();
@@ -243,6 +267,20 @@ export default function AdminPage() {
     setSettings(data);
     setUsernameInput(data.bggUsername || "");
     setCollectionNameInput(data.collectionName || "");
+  }, []);
+
+  const fetchCurrentUser = useCallback(async () => {
+    const response = await fetch("/api/auth/me");
+    const data = await response.json();
+    setCurrentUser(data.user);
+  }, []);
+
+  const fetchUsers = useCallback(async () => {
+    const response = await fetch("/api/auth/users");
+    if (response.ok) {
+      const data = await response.json();
+      setUsers(data.users);
+    }
   }, []);
 
   const saveSettings = async (updates: Partial<Settings>) => {
@@ -279,8 +317,8 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    Promise.all([fetchGames(), fetchSyncStatus(), fetchSettings()]).finally(() => setLoading(false));
-  }, [fetchGames, fetchSyncStatus, fetchSettings]);
+    Promise.all([fetchGames(), fetchSyncStatus(), fetchSettings(), fetchCurrentUser(), fetchUsers()]).finally(() => setLoading(false));
+  }, [fetchGames, fetchSyncStatus, fetchSettings, fetchCurrentUser, fetchUsers]);
 
   const handleImport = async () => {
     setImporting(true);
@@ -321,6 +359,89 @@ export default function AdminPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  };
+
+  const handleOpenUserModal = (user?: User) => {
+    if (user) {
+      setEditingUser(user);
+      setUserFormData({ email: user.email, password: "", name: user.name || "", role: user.role });
+    } else {
+      setEditingUser(null);
+      setUserFormData({ email: "", password: "", name: "", role: "user" });
+    }
+    setUserError("");
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async () => {
+    setSavingUser(true);
+    setUserError("");
+
+    try {
+      if (editingUser) {
+        // Update existing user
+        const response = await fetch(`/api/auth/users/${editingUser.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: userFormData.name || null,
+            role: userFormData.role,
+            ...(userFormData.password && { password: userFormData.password }),
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          setUserError(data.error || "Failed to update user");
+          return;
+        }
+      } else {
+        // Create new user
+        if (!userFormData.email || !userFormData.password) {
+          setUserError("Email and password are required");
+          return;
+        }
+
+        const response = await fetch("/api/auth/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: userFormData.email,
+            password: userFormData.password,
+            name: userFormData.name || null,
+            role: userFormData.role,
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          setUserError(data.error || "Failed to create user");
+          return;
+        }
+      }
+
+      await fetchUsers();
+      setShowUserModal(false);
+    } finally {
+      setSavingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+
+    const response = await fetch(`/api/auth/users/${userId}`, { method: "DELETE" });
+    if (response.ok) {
+      await fetchUsers();
+    } else {
+      const data = await response.json();
+      alert(data.error || "Failed to delete user");
+    }
+  };
+
   const filteredGames = games.filter((game) => {
     if (filter === "active") return game.isActive;
     if (filter === "scraped") return game.lastScraped !== null;
@@ -351,6 +472,20 @@ export default function AdminPage() {
             </Link>
             <h1 className="text-xl sm:text-2xl font-bold">Admin</h1>
           </div>
+          {currentUser && (
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm text-white">{currentUser.name || currentUser.email}</div>
+                <div className="text-xs text-stone-400 capitalize">{currentUser.role}</div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -424,6 +559,69 @@ export default function AdminPage() {
                 </p>
               )}
             </div>
+          </div>
+        </section>
+
+        {/* Users Panel */}
+        <section className="bg-stone-900 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold">Users</h2>
+              <p className="text-stone-400 text-xs sm:text-sm mt-1">
+                Manage who can access the admin panel
+              </p>
+            </div>
+            <button
+              onClick={() => handleOpenUserModal()}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors text-sm"
+            >
+              Add User
+            </button>
+          </div>
+
+          <div className="divide-y divide-stone-800 bg-stone-800 rounded-lg overflow-hidden">
+            {users.map((user) => (
+              <div key={user.id} className="p-3 sm:p-4 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-white truncate text-sm sm:text-base">
+                      {user.name || user.email}
+                    </span>
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      user.role === "admin"
+                        ? "bg-amber-500/20 text-amber-300"
+                        : "bg-stone-700 text-stone-400"
+                    }`}>
+                      {user.role}
+                    </span>
+                  </div>
+                  <div className="text-xs text-stone-400 mt-0.5 truncate">
+                    {user.email}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleOpenUserModal(user)}
+                    className="px-2 py-1 text-xs sm:text-sm text-stone-400 hover:text-white transition-colors"
+                  >
+                    Edit
+                  </button>
+                  {currentUser?.id !== user.id && (
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="px-2 py-1 text-xs sm:text-sm text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {users.length === 0 && (
+              <div className="p-8 text-center text-stone-500 text-sm">
+                No users found.
+              </div>
+            )}
           </div>
         </section>
 
@@ -632,6 +830,105 @@ export default function AdminPage() {
           onClose={() => setSelectedGame(null)}
           onSave={fetchGames}
         />
+      )}
+
+      {/* User Modal */}
+      {showUserModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-stone-900 rounded-2xl max-w-md w-full overflow-hidden">
+            <div className="p-6 border-b border-stone-700">
+              <h2 className="text-xl font-bold text-white">
+                {editingUser ? "Edit User" : "Create User"}
+              </h2>
+              <p className="text-stone-400 text-sm mt-1">
+                {editingUser ? "Update user information" : "Add a new user to the system"}
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {!editingUser && (
+                <div>
+                  <label className="block text-sm font-medium text-stone-300 mb-1.5">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={userFormData.email}
+                    onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="user@example.com"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">
+                  Name (optional)
+                </label>
+                <input
+                  type="text"
+                  value={userFormData.name}
+                  onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">
+                  {editingUser ? "New Password (leave blank to keep current)" : "Password"}
+                </label>
+                <input
+                  type="password"
+                  value={userFormData.password}
+                  onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">
+                  Role
+                </label>
+                <select
+                  value={userFormData.role}
+                  onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
+                  disabled={editingUser?.id === currentUser?.id}
+                  className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+                {editingUser?.id === currentUser?.id && (
+                  <p className="text-xs text-stone-500 mt-1">You cannot change your own role</p>
+                )}
+              </div>
+
+              {userError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {userError}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-stone-700 flex justify-end gap-3">
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="px-4 py-2 text-stone-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveUser}
+                disabled={savingUser}
+                className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                {savingUser ? "Saving..." : editingUser ? "Update" : "Create"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Username Change Warning Modal */}
