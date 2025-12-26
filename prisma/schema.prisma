@@ -81,3 +81,17 @@ model Session {
   expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model ScrapeJob {
+  id          String    @id @default(cuid())
+  gameId      String
+  gameName    String
+  status      String    @default("pending") // pending, processing, completed, failed
+  error       String?
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@index([status])
+  @@index([gameId])
+}

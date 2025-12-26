@@ -39,6 +39,25 @@ interface Game {
   rating: number | null;
 }
 
+interface ScrapeJob {
+  id: string;
+  gameId: string;
+  gameName: string;
+  status: "pending" | "processing" | "completed" | "failed" | "cancelled";
+  error?: string;
+}
+
+interface QueueStatus {
+  isProcessing: boolean;
+  isStopping: boolean;
+  currentJob: ScrapeJob | null;
+  pendingCount: number;
+  completedCount: number;
+  failedCount: number;
+  cancelledCount: number;
+  recentJobs: ScrapeJob[];
+}
+
 interface ImageEditorProps {
   game: Game;
   onClose: () => void;
@@ -223,6 +242,9 @@ export function CollectionSection() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "scraped">("all");
 
+  // Queue status
+  const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null);
+
   const fetchData = useCallback(async () => {
     try {
       const [syncRes, settingsRes, gamesRes] = await Promise.all([
@@ -246,9 +268,35 @@ export function CollectionSection() {
     }
   }, []);
 
+  const fetchQueueStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/scrape-status");
+      const data = await res.json();
+      setQueueStatus(data);
+
+      // If queue is processing, also refresh game data
+      if (data.isProcessing) {
+        fetchData();
+      }
+    } catch (error) {
+      console.error("Failed to fetch queue status:", error);
+    }
+  }, [fetchData]);
+
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchQueueStatus();
+  }, [fetchData, fetchQueueStatus]);
+
+  // Poll queue status while processing
+  useEffect(() => {
+    if (!queueStatus?.isProcessing && queueStatus?.pendingCount === 0) {
+      return;
+    }
+
+    const interval = setInterval(fetchQueueStatus, 2000);
+    return () => clearInterval(interval);
+  }, [queueStatus?.isProcessing, queueStatus?.pendingCount, fetchQueueStatus]);
 
   const handleSyncClick = () => {
     // Pre-set the checkbox based on the current setting
@@ -317,7 +365,8 @@ export function CollectionSection() {
     setScraping(gameId);
     try {
       await fetch(`/api/games/${gameId}/scrape`, { method: "POST" });
-      await fetchData();
+      // Immediately fetch queue status to show the job
+      await fetchQueueStatus();
     } finally {
       setScraping(null);
     }
@@ -327,7 +376,8 @@ export function CollectionSection() {
     setScrapingAll(true);
     try {
       await fetch("/api/games/scrape-active", { method: "POST" });
-      await fetchData();
+      // Immediately fetch queue status to show the jobs
+      await fetchQueueStatus();
     } finally {
       setScrapingAll(false);
     }
@@ -524,8 +574,87 @@ export function CollectionSection() {
         </div>
       </div>
 
+      {/* Scrape Queue Status */}
+      {queueStatus && (queueStatus.isProcessing || queueStatus.pendingCount > 0) && (
+        <div className={`border rounded-xl p-4 sm:p-5 ${
+          queueStatus.isStopping
+            ? "bg-amber-500/10 border-amber-500/30"
+            : "bg-emerald-500/10 border-emerald-500/30"
+        }`}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full animate-pulse ${
+                queueStatus.isStopping ? "bg-amber-500" : "bg-emerald-500"
+              }`} />
+              <h3 className={`font-medium ${
+                queueStatus.isStopping ? "text-amber-300" : "text-emerald-300"
+              }`}>
+                {queueStatus.isStopping ? "Stopping..." : "Scraping in Progress"}
+              </h3>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  await fetch("/api/scrape-status", { method: "POST" });
+                  await fetchQueueStatus();
+                } catch (error) {
+                  console.error("Failed to cancel:", error);
+                }
+              }}
+              disabled={queueStatus.isStopping}
+              className="px-3 py-1.5 bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+              </svg>
+              {queueStatus.isStopping ? "Stopping..." : "Stop"}
+            </button>
+          </div>
+
+          {queueStatus.currentJob && (
+            <div className="bg-stone-800/50 rounded-lg p-3 mb-3">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span className="text-white text-sm font-medium">
+                  {queueStatus.currentJob.gameName}
+                </span>
+                {queueStatus.isStopping && (
+                  <span className="text-amber-400 text-xs">(will stop after this)</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-4 text-xs text-stone-400">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-stone-500 rounded-full" />
+              {queueStatus.pendingCount} pending
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+              {queueStatus.completedCount} completed
+            </span>
+            {queueStatus.failedCount > 0 && (
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-red-500 rounded-full" />
+                {queueStatus.failedCount} failed
+              </span>
+            )}
+            {queueStatus.cancelledCount > 0 && (
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-amber-500 rounded-full" />
+                {queueStatus.cancelledCount} cancelled
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Unscraped Games Notice */}
-      {syncStatus && syncStatus.stats.unscrapedActive > 0 && (
+      {syncStatus && syncStatus.stats.unscrapedActive > 0 && !queueStatus?.isProcessing && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -545,7 +674,7 @@ export function CollectionSection() {
             disabled={scrapingAll}
             className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm whitespace-nowrap"
           >
-            {scrapingAll ? "Scraping..." : "Scrape All Active"}
+            {scrapingAll ? "Queuing..." : "Scrape All Active"}
           </button>
         </div>
       )}
@@ -660,10 +789,22 @@ export function CollectionSection() {
 
                 <button
                   onClick={() => handleScrape(game.id)}
-                  disabled={scraping === game.id}
-                  className="px-2 sm:px-3 py-1 sm:py-1.5 bg-stone-700 hover:bg-stone-600 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50"
+                  disabled={scraping === game.id || queueStatus?.recentJobs.some(j => j.gameId === game.id && (j.status === "pending" || j.status === "processing"))}
+                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 ${
+                    queueStatus?.currentJob?.gameId === game.id
+                      ? "bg-emerald-600 text-white"
+                      : queueStatus?.recentJobs.some(j => j.gameId === game.id && j.status === "pending")
+                      ? "bg-blue-600 text-white"
+                      : "bg-stone-700 hover:bg-stone-600 text-white"
+                  }`}
                 >
-                  {scraping === game.id ? "..." : "Scrape"}
+                  {scraping === game.id
+                    ? "..."
+                    : queueStatus?.currentJob?.gameId === game.id
+                    ? "Scraping"
+                    : queueStatus?.recentJobs.some(j => j.gameId === game.id && j.status === "pending")
+                    ? "Queued"
+                    : "Scrape"}
                 </button>
 
                 <button

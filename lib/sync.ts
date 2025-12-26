@@ -211,12 +211,15 @@ export async function syncCollection(): Promise<SyncResult> {
 export async function performSyncWithAutoScrape(
   skipAutoScrape: boolean = false
 ): Promise<SyncWithAutoScrapeResult> {
+  // Import queue here to avoid circular dependency
+  const { enqueueScrapeMany } = await import("./scrape-queue");
+
   const settings = await getSettings();
 
   // Run the sync
   const result = await syncCollection();
 
-  // Initialize auto-scrape counters
+  // Count of games queued for auto-scrape
   let autoScraped = 0;
   let autoScrapeFailed = 0;
 
@@ -227,7 +230,7 @@ export async function performSyncWithAutoScrape(
     !skipAutoScrape &&
     result.newGameIds.length > 0
   ) {
-    console.log(`[Sync] Auto-scraping ${result.newGameIds.length} new games...`);
+    console.log(`[Sync] Queueing ${result.newGameIds.length} new games for auto-scrape...`);
 
     // First, mark new games as active
     await prisma.game.updateMany({
@@ -235,15 +238,20 @@ export async function performSyncWithAutoScrape(
       data: { isActive: true },
     });
 
-    // Scrape the new games
-    const scrapeResult = await scrapeGames(result.newGameIds);
-    autoScraped = scrapeResult.scraped;
-    autoScrapeFailed = scrapeResult.failed;
+    // Get game names for the queue
+    const games = await prisma.game.findMany({
+      where: { id: { in: result.newGameIds } },
+      select: { id: true, name: true },
+    });
+
+    // Queue games for scraping (non-blocking)
+    enqueueScrapeMany(games.map(g => ({ id: g.id, name: g.name })));
+    autoScraped = games.length; // This is now "queued" count, not "scraped"
   }
 
   return {
     ...result,
-    autoScraped,
+    autoScraped, // Note: This now means "queued for scraping"
     autoScrapeFailed,
   };
 }

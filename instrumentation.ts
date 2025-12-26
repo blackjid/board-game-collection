@@ -1,10 +1,18 @@
 export async function register() {
   // Only run on the server
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    console.log("[Scheduler] Initializing background sync scheduler...");
+    console.log("[Scheduler] Initializing background services...");
 
-    // Import sync functions dynamically to avoid bundling issues
+    // Import functions dynamically to avoid bundling issues
     const { isSyncDue, runScheduledSync } = await import("@/lib/sync");
+    const { resumeInterruptedJobs, cleanupOldJobs } = await import("@/lib/scrape-queue");
+
+    // Resume any interrupted scrape jobs from previous server run
+    try {
+      await resumeInterruptedJobs();
+    } catch (error) {
+      console.error("[ScrapeQueue] Error resuming jobs:", error);
+    }
 
     // Check interval: every minute
     const CHECK_INTERVAL_MS = 60 * 1000;
@@ -39,6 +47,15 @@ export async function register() {
     // Also run an initial check after a short delay (let server fully start)
     setTimeout(checkAndSync, 10000);
 
-    console.log("[Scheduler] Background sync scheduler started (checking every minute).");
+    // Cleanup old scrape jobs daily (check every hour)
+    setInterval(async () => {
+      try {
+        await cleanupOldJobs();
+      } catch (error) {
+        console.error("[ScrapeQueue] Error cleaning up jobs:", error);
+      }
+    }, 60 * 60 * 1000);
+
+    console.log("[Scheduler] Background services started.");
   }
 }

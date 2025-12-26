@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { scrapeGame } from "@/lib/sync";
+import { enqueueScrape } from "@/lib/scrape-queue";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+/**
+ * POST /api/games/[id]/scrape
+ * Queue a single game for scraping (fire-and-forget)
+ */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     await requireAdmin();
@@ -21,20 +25,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Game not found" }, { status: 404 });
   }
 
-  const success = await scrapeGame(id);
-
-  if (!success) {
-    return NextResponse.json(
-      { success: false, error: "Scrape failed" },
-      { status: 500 }
-    );
-  }
-
-  // Fetch the updated game
-  const updatedGame = await prisma.game.findUnique({ where: { id } });
+  // Queue the scrape job (non-blocking)
+  const job = await enqueueScrape(id, game.name);
 
   return NextResponse.json({
     success: true,
-    game: updatedGame,
+    message: "Scrape job queued",
+    job: {
+      id: job.id,
+      gameId: job.gameId,
+      gameName: job.gameName,
+      status: job.status,
+    },
   });
 }
