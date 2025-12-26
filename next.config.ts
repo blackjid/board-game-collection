@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Server mode for API routes (removed static export)
+  // Instrumentation is enabled by default in Next.js 15+
 };
 
 export default nextConfig;

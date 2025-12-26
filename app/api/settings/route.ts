@@ -27,18 +27,22 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { collectionName, bggUsername } = body;
+  const { collectionName, bggUsername, syncSchedule, autoScrapeNewGames } = body;
 
   const settings = await prisma.settings.upsert({
     where: { id: SETTINGS_ID },
     update: {
       ...(collectionName !== undefined && { collectionName }),
       ...(bggUsername !== undefined && { bggUsername }),
+      ...(syncSchedule !== undefined && { syncSchedule }),
+      ...(autoScrapeNewGames !== undefined && { autoScrapeNewGames }),
     },
     create: {
       id: SETTINGS_ID,
       collectionName,
       bggUsername,
+      syncSchedule: syncSchedule || "manual",
+      autoScrapeNewGames: autoScrapeNewGames || false,
     },
   });
 

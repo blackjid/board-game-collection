@@ -55,6 +55,12 @@ model Settings {
   id             String  @id @default("default")
   collectionName String?
   bggUsername    String?
+
+  // Sync scheduling
+  syncSchedule        String   @default("manual") // "manual", "daily", "weekly", "monthly"
+  autoScrapeNewGames  Boolean  @default(false)
+  lastScheduledSync   DateTime?
+
   updatedAt      DateTime @updatedAt
 }
 

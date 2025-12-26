@@ -13,11 +13,15 @@ interface SyncStatus {
     total: number;
     active: number;
     scraped: number;
+    unscrapedActive: number;
   };
 }
 
 interface Settings {
   bggUsername: string | null;
+  syncSchedule: string;
+  autoScrapeNewGames: boolean;
+  lastScheduledSync: string | null;
 }
 
 interface Game {
@@ -198,7 +202,12 @@ function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
 
 export function CollectionSection() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
-  const [settings, setSettings] = useState<Settings>({ bggUsername: null });
+  const [settings, setSettings] = useState<Settings>({
+    bggUsername: null,
+    syncSchedule: "manual",
+    autoScrapeNewGames: false,
+    lastScheduledSync: null,
+  });
   const [usernameInput, setUsernameInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
@@ -427,6 +436,113 @@ export function CollectionSection() {
           </div>
         )}
       </div>
+
+      {/* Sync Schedule */}
+      <div className="bg-stone-900 rounded-xl p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-white mb-1">Sync Schedule</h3>
+        <p className="text-stone-500 text-xs mb-4">
+          Automatically refresh your collection from BGG on a schedule
+        </p>
+
+        <div className="space-y-4 max-w-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <label htmlFor="sync-schedule" className="text-stone-300 text-sm sm:w-32">
+              Frequency
+            </label>
+            <select
+              id="sync-schedule"
+              value={settings.syncSchedule}
+              onChange={async (e) => {
+                const newSchedule = e.target.value;
+                setSettings({ ...settings, syncSchedule: newSchedule });
+                try {
+                  await fetch("/api/settings", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ syncSchedule: newSchedule }),
+                  });
+                } catch (error) {
+                  console.error("Failed to save schedule:", error);
+                }
+              }}
+              className="flex-1 px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
+            >
+              <option value="manual">Manual only</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 py-2">
+            <div>
+              <label htmlFor="auto-scrape" className="text-stone-300 text-sm">
+                Auto-scrape new games
+              </label>
+              <p className="text-stone-500 text-xs mt-0.5">
+                Automatically fetch details for newly imported games
+              </p>
+            </div>
+            <button
+              id="auto-scrape"
+              onClick={async () => {
+                const newValue = !settings.autoScrapeNewGames;
+                setSettings({ ...settings, autoScrapeNewGames: newValue });
+                try {
+                  await fetch("/api/settings", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ autoScrapeNewGames: newValue }),
+                  });
+                } catch (error) {
+                  console.error("Failed to save auto-scrape setting:", error);
+                }
+              }}
+              className={`relative w-12 h-6 rounded-full transition-colors ${
+                settings.autoScrapeNewGames ? "bg-amber-600" : "bg-stone-700"
+              }`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                  settings.autoScrapeNewGames ? "translate-x-6" : ""
+                }`}
+              />
+            </button>
+          </div>
+
+          {settings.syncSchedule !== "manual" && settings.lastScheduledSync && (
+            <div className="text-stone-400 text-xs pt-2 border-t border-stone-800">
+              Last scheduled sync: {new Date(settings.lastScheduledSync).toLocaleString()}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Unscraped Games Notice */}
+      {syncStatus && syncStatus.stats.unscrapedActive > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <p className="text-amber-300 text-sm font-medium">
+                {syncStatus.stats.unscrapedActive} active game{syncStatus.stats.unscrapedActive !== 1 ? "s" : ""} not scraped
+              </p>
+              <p className="text-amber-400/70 text-xs mt-0.5">
+                These games are missing details like images, ratings, and player counts
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleScrapeAll}
+            disabled={scrapingAll}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm whitespace-nowrap"
+          >
+            {scrapingAll ? "Scraping..." : "Scrape All Active"}
+          </button>
+        </div>
+      )}
 
       {/* Games List */}
       <div className="bg-stone-900 rounded-xl overflow-hidden">
