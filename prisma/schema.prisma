@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Game {
+  id              String   @id // BGG game ID
+  name            String
+  yearPublished   Int?
+
+  // Import status
+  isActive        Boolean  @default(false)
+  lastScraped     DateTime?
+
+  // Scraped data (populated after scraping)
+  image           String?
+  thumbnail       String?
+  description     String?
+  minPlayers      Int?
+  maxPlayers      Int?
+  minPlaytime     Int?
+  maxPlaytime     Int?
+  rating          Float?
+  minAge          Int?
+  categories      String?  // JSON string array
+  mechanics       String?  // JSON string array
+  isExpansion     Boolean  @default(false)
+
+  // All available images from BGG gallery
+  availableImages String?  // JSON string array
+
+  // User preferences (image curation)
+  selectedThumbnail  String?
+  componentImages    String?  // JSON string array
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model SyncLog {
+  id         String   @id @default(cuid())
+  username   String
+  syncedAt   DateTime @default(now())
+  gamesFound Int
+  status     String   // 'success', 'failed'
+}

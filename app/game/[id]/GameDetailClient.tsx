@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Game } from "@/types/game";
+import type { GameData } from "@/lib/games";
 
 // Calculate rating color: red (4) -> yellow (6) -> green (8+)
 function getRatingColor(rating: number): string {
@@ -26,23 +26,23 @@ function getRatingColor(rating: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-function formatNumber(num: number): string {
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toString();
-}
-
 interface GameDetailClientProps {
-  game: Game;
+  game: GameData;
 }
 
 export function GameDetailClient({ game }: GameDetailClientProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const imageUrl = game.image || game.thumbnail || null;
-  const galleryImages = game.galleryImages || [];
-  const allImages = imageUrl ? [imageUrl, ...galleryImages] : galleryImages;
-  const displayImage = selectedImage || imageUrl;
+  // Use selectedThumbnail if available, otherwise fall back to image/thumbnail
+  const mainImage = game.selectedThumbnail || game.image || game.thumbnail || null;
+  const galleryImages = game.availableImages || [];
+  const componentImages = game.componentImages || [];
+
+  // All images for the gallery picker (main + available)
+  const allImages = mainImage
+    ? [mainImage, ...galleryImages.filter(img => img !== mainImage)]
+    : galleryImages;
+  const displayImage = selectedImage || mainImage;
 
   const playerCount =
     game.minPlayers && game.maxPlayers
@@ -58,14 +58,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
         : `${game.minPlaytime}-${game.maxPlaytime} min`
       : null;
 
-  const bestPlayers =
-    game.bestPlayerCount && game.bestPlayerCount.length > 0
-      ? game.bestPlayerCount.length === 1
-        ? `${game.bestPlayerCount[0]} players`
-        : `${game.bestPlayerCount[0]}-${game.bestPlayerCount[game.bestPlayerCount.length - 1]} players`
-      : null;
-
-  const ageDisplay = game.communityAge ?? game.minAge;
+  const ageDisplay = game.minAge;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-900 via-stone-900 to-black text-white">
@@ -139,7 +132,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                       key={i}
                       onClick={() => setSelectedImage(img)}
                       className={`w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
-                        (selectedImage || imageUrl) === img
+                        (selectedImage || mainImage) === img
                           ? "border-amber-500 ring-2 ring-amber-500/30"
                           : "border-white/10 hover:border-white/30"
                       }`}
@@ -161,11 +154,6 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                       {game.yearPublished}
                     </span>
                   )}
-                  {game.usersRated && (
-                    <span className="text-stone-500 text-sm">
-                      {formatNumber(game.usersRated)} ratings
-                    </span>
-                  )}
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-4">
                   {game.name}
@@ -178,12 +166,6 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                   <div className="px-5 py-3 bg-white/10 rounded-xl text-sm font-medium backdrop-blur-sm border border-white/5">
                     <span className="text-stone-400 block text-xs mb-1">Players</span>
                     <span className="text-white">👥 {playerCount}</span>
-                  </div>
-                )}
-                {bestPlayers && (
-                  <div className="px-5 py-3 bg-amber-500/20 rounded-xl text-sm font-medium backdrop-blur-sm border border-amber-500/30">
-                    <span className="text-amber-300/70 block text-xs mb-1">Best with</span>
-                    <span className="text-amber-300">⭐ {bestPlayers}</span>
                   </div>
                 )}
                 {playtime && (
@@ -207,6 +189,24 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                   <p className="text-stone-400 leading-relaxed">
                     {game.description}
                   </p>
+                </div>
+              )}
+
+              {/* Component Images */}
+              {componentImages.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-stone-300 mb-3">Game Components</h2>
+                  <div className="grid grid-cols-3 gap-3">
+                    {componentImages.map((img: string, i: number) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedImage(img)}
+                        className="aspect-square rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all"
+                      >
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -244,53 +244,21 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                 </div>
               )}
 
-              {/* Best Player Count Visualization */}
-              {game.bestPlayerCount &&
-                game.bestPlayerCount.length > 0 &&
-                game.minPlayers &&
-                game.maxPlayers && (
-                  <div className="mb-8">
-                    <h2 className="text-lg font-semibold text-stone-300 mb-3">
-                      Recommended Player Count
-                    </h2>
-                    <div className="flex gap-2 flex-wrap">
-                      {Array.from(
-                        { length: game.maxPlayers - game.minPlayers + 1 },
-                        (_, i) => game.minPlayers! + i
-                      ).map((count) => {
-                        const isBest = game.bestPlayerCount!.includes(count);
-                        return (
-                          <div
-                            key={count}
-                            className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg transition-all ${
-                              isBest
-                                ? "bg-amber-500 text-black"
-                                : "bg-white/10 text-stone-500"
-                            }`}
-                          >
-                            {count}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <p className="text-stone-500 text-sm mt-2">
-                      Highlighted numbers indicate the best player counts according to the
-                      community.
-                    </p>
-                  </div>
-                )}
-
               {/* External Link */}
-              <div className="pt-6 border-t border-white/10">
+              <div className="pt-6 border-t border-white/10 flex items-center gap-4">
                 <a
                   href={`https://boardgamegeek.com/boardgame/${game.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors"
+                  className="group flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-orange-500/50 transition-all"
                 >
-                  View on BoardGameGeek
+                  <img
+                    src="/powered-by-bgg.svg"
+                    alt="Powered by BoardGameGeek"
+                    className="h-6 opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
                   <svg
-                    className="w-4 h-4"
+                    className="w-4 h-4 text-stone-500 group-hover:text-amber-400 transition-colors"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

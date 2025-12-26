@@ -1,11 +1,13 @@
 import Link from "next/link";
-import gamesData from "@/data/games.json";
-import { Game } from "@/types/game";
+import { getGameById, getActiveGames } from "@/lib/games";
 import { GameDetailClient } from "./GameDetailClient";
 
-// Generate static params for all games
-export function generateStaticParams() {
-  return gamesData.games.map((game) => ({
+export const dynamic = "force-dynamic";
+
+// Generate static params for all active games
+export async function generateStaticParams() {
+  const games = await getActiveGames();
+  return games.map((game) => ({
     id: game.id,
   }));
 }
@@ -16,7 +18,7 @@ interface PageProps {
 
 export default async function GameDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const game = gamesData.games.find((g) => g.id === id) as Game | undefined;
+  const game = await getGameById(id);
 
   if (!game) {
     return (

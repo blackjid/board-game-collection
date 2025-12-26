@@ -11,8 +11,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Generate static output
-  output: "export",
+  // Server mode for API routes (removed static export)
 };
 
 export default nextConfig;

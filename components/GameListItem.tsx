@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Game } from "@/types/game";
+import type { GameData } from "@/lib/games";
 
 interface GameListItemProps {
-  game: Game;
+  game: GameData;
 }
 
 // Calculate rating color: red (4) -> yellow (6) -> green (8+)
@@ -29,14 +29,8 @@ function getRatingColor(rating: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-function formatNumber(num: number): string {
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toString();
-}
-
 export function GameListItem({ game }: GameListItemProps) {
-  const imageUrl = game.image || game.thumbnail || null;
+  const imageUrl = game.selectedThumbnail || game.image || game.thumbnail || null;
 
   const playerCount = game.minPlayers && game.maxPlayers
     ? game.minPlayers === game.maxPlayers
@@ -52,32 +46,25 @@ export function GameListItem({ game }: GameListItemProps) {
 
   const ratingColor = game.rating ? getRatingColor(game.rating) : undefined;
 
-  // Format best player count display
-  const bestPlayers = game.bestPlayerCount && game.bestPlayerCount.length > 0
-    ? game.bestPlayerCount.length === 1
-      ? `Best: ${game.bestPlayerCount[0]}P`
-      : `Best: ${game.bestPlayerCount[0]}-${game.bestPlayerCount[game.bestPlayerCount.length - 1]}P`
-    : null;
-
-  // Age display - prefer community age, fallback to publisher age
-  const ageDisplay = game.communityAge ?? game.minAge;
+  // Age display
+  const ageDisplay = game.minAge;
 
   return (
     <Link
       href={`/game/${game.id}`}
-      className="flex items-start gap-4 bg-white rounded-lg shadow-sm border border-stone-200 p-4 hover:shadow-md hover:border-amber-300 transition-all cursor-pointer"
+      className="flex items-start gap-4 bg-stone-900 rounded-xl p-4 hover:bg-stone-800 hover:ring-1 hover:ring-amber-500/50 transition-all cursor-pointer group"
     >
       {/* Thumbnail */}
-      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-stone-100 relative">
+      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-stone-800 relative">
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={game.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-3xl">
+          <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-stone-800 to-stone-900">
             🎲
           </div>
         )}
@@ -93,21 +80,16 @@ export function GameListItem({ game }: GameListItemProps) {
       <div className="flex-grow min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="font-semibold text-stone-800 text-base truncate">
+            <h3 className="font-semibold text-white text-base truncate group-hover:text-amber-400 transition-colors">
               {game.name}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
               {game.yearPublished && (
-                <span className="text-xs text-stone-400">{game.yearPublished}</span>
+                <span className="text-xs text-stone-500">{game.yearPublished}</span>
               )}
               {ageDisplay && (
-                <span className="text-xs text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">
+                <span className="text-xs text-stone-400 bg-stone-800 px-1.5 py-0.5 rounded">
                   {ageDisplay}+
-                </span>
-              )}
-              {game.usersRated && (
-                <span className="text-xs text-stone-400" title={`${game.usersRated.toLocaleString()} ratings`}>
-                  {formatNumber(game.usersRated)} ratings
                 </span>
               )}
             </div>
@@ -126,7 +108,7 @@ export function GameListItem({ game }: GameListItemProps) {
 
         {/* Description */}
         {game.description && (
-          <p className="text-xs text-stone-500 mt-2 line-clamp-1">
+          <p className="text-xs text-stone-400 mt-2 line-clamp-1">
             {game.description}
           </p>
         )}
@@ -134,19 +116,14 @@ export function GameListItem({ game }: GameListItemProps) {
         {/* Bottom row: metadata + categories */}
         <div className="flex items-center gap-3 mt-2 flex-wrap">
           {/* Game stats */}
-          <div className="flex items-center gap-2 text-xs text-stone-600">
+          <div className="flex items-center gap-2 text-xs text-stone-400">
             {playerCount && (
-              <span className="bg-stone-100 px-2 py-0.5 rounded">
+              <span className="bg-stone-800 px-2 py-0.5 rounded">
                 👥 {playerCount}
               </span>
             )}
-            {bestPlayers && (
-              <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-medium">
-                {bestPlayers}
-              </span>
-            )}
             {playtime && (
-              <span className="bg-stone-100 px-2 py-0.5 rounded">
+              <span className="bg-stone-800 px-2 py-0.5 rounded">
                 ⏱ {playtime}
               </span>
             )}
@@ -158,7 +135,7 @@ export function GameListItem({ game }: GameListItemProps) {
               {game.categories.slice(0, 3).map((cat, i) => (
                 <span
                   key={i}
-                  className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded"
+                  className="text-[10px] bg-amber-900/50 text-amber-400 px-1.5 py-0.5 rounded"
                 >
                   {cat}
                 </span>

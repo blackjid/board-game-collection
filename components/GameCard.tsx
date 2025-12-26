@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Game } from "@/types/game";
+import type { GameData } from "@/lib/games";
 
 interface GameCardProps {
-  game: Game;
+  game: GameData;
 }
 
 // Calculate rating color: red (4) -> yellow (6) -> green (8+)
@@ -35,8 +35,8 @@ function getRatingColor(rating: number): string {
 }
 
 export function GameCard({ game }: GameCardProps) {
-  // Use the higher quality image for both display and background
-  const imageUrl = game.image || game.thumbnail || null;
+  // Use selectedThumbnail if available, otherwise fall back to image/thumbnail
+  const imageUrl = game.selectedThumbnail || game.image || game.thumbnail || null;
 
   // Format player count
   const playerCount = game.minPlayers && game.maxPlayers
@@ -58,7 +58,7 @@ export function GameCard({ game }: GameCardProps) {
   return (
     <Link
       href={`/game/${game.id}`}
-      className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden flex flex-col print:shadow-none print:border-stone-300 print:break-inside-avoid hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer"
+      className="bg-stone-900 rounded-xl overflow-hidden flex flex-col print:shadow-none print:border-stone-300 print:break-inside-avoid hover:bg-stone-800 hover:ring-1 hover:ring-amber-500/50 transition-all duration-200 cursor-pointer group"
     >
       {/* Game Cover Image with Blurred Background */}
       <div className="aspect-square relative overflow-hidden bg-stone-800">
@@ -70,27 +70,27 @@ export function GameCard({ game }: GameCardProps) {
                 src={imageUrl}
                 alt=""
                 aria-hidden="true"
-                className="min-w-[300%] min-h-[300%] object-cover blur-3xl saturate-150 opacity-90 scale-110"
+                className="min-w-[300%] min-h-[300%] object-cover blur-3xl saturate-150 opacity-80 scale-110"
                 loading="lazy"
               />
             </div>
 
             {/* Subtle vignette overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
 
             {/* Main image - shown at natural aspect ratio, centered */}
             <img
               src={imageUrl}
               alt={game.name}
-              className="absolute inset-0 w-full h-full object-contain z-10 drop-shadow-lg"
+              className="absolute inset-0 w-full h-full object-contain z-10 drop-shadow-lg group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center p-4 bg-gradient-to-br from-amber-100 to-stone-100">
+          <div className="w-full h-full flex items-center justify-center p-4 bg-gradient-to-br from-stone-800 to-stone-900">
             <div className="text-center">
               <div className="text-4xl mb-2">🎲</div>
-              <span className="text-stone-400 text-xs font-medium line-clamp-2">
+              <span className="text-stone-500 text-xs font-medium line-clamp-2">
                 {game.name}
               </span>
             </div>
@@ -99,18 +99,18 @@ export function GameCard({ game }: GameCardProps) {
       </div>
 
       {/* Game Info - Unified layout for both screen and print */}
-      <div className="p-2 print:p-1 flex flex-col flex-grow">
-        <h3 className="font-semibold text-stone-800 text-sm print:text-[8px] leading-tight print:leading-snug line-clamp-2 print:line-clamp-none">
+      <div className="p-3 print:p-1 flex flex-col flex-grow">
+        <h3 className="font-semibold text-white text-sm print:text-[8px] leading-tight print:leading-snug line-clamp-2 print:line-clamp-none group-hover:text-amber-400 transition-colors">
           {game.name}
         </h3>
 
         {game.yearPublished && (
-          <p className="text-xs print:text-[7px] text-stone-400 mt-0.5">
+          <p className="text-xs print:text-[7px] text-stone-500 mt-0.5">
             {game.yearPublished}
           </p>
         )}
 
-        <div className="flex items-center justify-start gap-1.5 print:gap-1 text-xs print:text-[7px] text-stone-500 mt-auto pt-1 print:pt-0.5">
+        <div className="flex items-center justify-start gap-1.5 print:gap-1 text-xs print:text-[7px] text-stone-400 mt-auto pt-1.5 print:pt-0.5">
           {game.rating && (
             <span
               className="text-white font-bold px-1.5 py-0.5 rounded text-[10px] print:text-[6px] print:px-1 print:py-0"
@@ -124,7 +124,7 @@ export function GameCard({ game }: GameCardProps) {
           )}
           {playtime && (
             <>
-              <span className="text-stone-300">•</span>
+              <span className="text-stone-600">•</span>
               <span>{playtime}</span>
             </>
           )}
