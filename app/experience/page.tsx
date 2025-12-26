@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import gamesData from "@/data/games.json";
 import Link from "next/link";
 
@@ -31,6 +31,7 @@ function seededRandom(seed: number) {
 
 export default function ExperiencePage() {
   const { games, username, totalGames } = gamesData;
+  const containerRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const [windowHeight, setWindowHeight] = useState(1);
   const [docHeight, setDocHeight] = useState(1);
@@ -67,8 +68,15 @@ export default function ExperiencePage() {
       : 0;
     const oldestGame = games.reduce((oldest, g) => (!oldest.yearPublished || (g.yearPublished && g.yearPublished < oldest.yearPublished)) ? g : oldest, games[0]);
     const newestGame = games.reduce((newest, g) => (!newest.yearPublished || (g.yearPublished && g.yearPublished > newest.yearPublished)) ? g : newest, games[0]);
-    const totalYears = newestGame.yearPublished && oldestGame.yearPublished ? newestGame.yearPublished - oldestGame.yearPublished : 0;
-    return { avgRating, oldestGame, newestGame, totalYears };
+
+    // Calculate total playtime potential (sum of avg playtime for each game)
+    const totalMinutes = games.reduce((acc, g) => {
+      const avgTime = g.minPlaytime && g.maxPlaytime ? (g.minPlaytime + g.maxPlaytime) / 2 : (g.minPlaytime || g.maxPlaytime || 60);
+      return acc + avgTime;
+    }, 0);
+    const totalHours = Math.round(totalMinutes / 60);
+
+    return { avgRating, oldestGame, newestGame, totalHours };
   }, [games]);
 
   // Pick a random game
@@ -80,47 +88,72 @@ export default function ExperiencePage() {
   useEffect(() => {
     const updateDimensions = () => {
       setWindowHeight(window.innerHeight);
-      setDocHeight(document.documentElement.scrollHeight);
+      if (containerRef.current) {
+        setDocHeight(containerRef.current.scrollHeight);
+      }
     };
 
     updateDimensions();
 
     const handleScroll = () => {
-      setScrollY(window.scrollY);
-      // Update doc height on scroll in case content changed
-      setDocHeight(document.documentElement.scrollHeight);
+      if (containerRef.current) {
+        setScrollY(containerRef.current.scrollTop);
+        setDocHeight(containerRef.current.scrollHeight);
+      }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("scroll", handleScroll, { passive: true });
+    }
     window.addEventListener("resize", updateDimensions);
+
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      if (container) {
+        container.removeEventListener("scroll", handleScroll);
+      }
       window.removeEventListener("resize", updateDimensions);
     };
   }, []);
 
-  const scrollProgress = docHeight > windowHeight ? scrollY / (docHeight - windowHeight) : 0;
+  // Calculate current section index for the "Story" progress bar
+  const totalSections = showcaseGames.length + 3; // Hero + Showcase + Stats + Dice + Collection
+  const currentSection = Math.min(
+    totalSections - 1,
+    Math.max(0, Math.floor((scrollY + windowHeight / 2) / windowHeight))
+  );
 
   return (
-    <div className="bg-black text-white overflow-x-hidden">
-      {/* Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-stone-900/50 z-50">
-        <div
-          className="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 transition-all duration-100"
-          style={{ width: `${Math.min(scrollProgress * 100, 100)}%` }}
-        />
+    <div
+      ref={containerRef}
+      className="bg-black text-white h-screen w-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar"
+    >
+      {/* Story Progress Bars */}
+      <div className="fixed top-4 left-4 right-4 z-50 flex gap-2">
+        {Array.from({ length: totalSections }).map((_, i) => (
+          <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className={`h-full bg-white transition-all duration-300 ${
+                i < currentSection ? 'w-full' : i === currentSection ? 'w-full opacity-100' : 'w-0'
+              }`}
+              style={{
+                 width: i < currentSection ? '100%' : i === currentSection ? `${Math.min(100, ((scrollY - i * windowHeight) / windowHeight) * 100 + 100)}%` : '0%'
+              }}
+            />
+          </div>
+        ))}
       </div>
 
       {/* Back Button */}
       <Link
         href="/"
-        className="fixed top-6 left-6 z-50 bg-black/60 backdrop-blur-md px-5 py-2.5 rounded-full text-sm font-medium hover:bg-black/80 transition-all border border-white/10"
+        className="fixed top-8 left-6 z-50 bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-full text-sm font-medium hover:bg-white/10 transition-all border border-white/10 group"
       >
-        ← Back
+        <span className="group-hover:-translate-x-1 inline-block transition-transform">←</span> Back
       </Link>
 
-      {/* ==================== HERO ==================== */}
-      <section className="h-screen flex items-center justify-center relative overflow-hidden">
+      {/* ==================== HERO (Slide 1) ==================== */}
+      <section className="h-screen w-full snap-start flex items-center justify-center relative overflow-hidden">
         {/* Mosaic of game covers as background */}
         <div
           className="absolute inset-0 grid grid-cols-5 md:grid-cols-8 gap-1 opacity-20"
@@ -136,28 +169,27 @@ export default function ExperiencePage() {
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-black" />
 
-        <div
-          className="relative z-10 text-center px-6"
-          style={{
-            transform: `translateY(${scrollY * 0.4}px)`,
-            opacity: Math.max(0, 1 - scrollY / (windowHeight * 0.6))
-          }}
-        >
-          <p className="text-amber-400 text-sm md:text-base font-semibold tracking-[0.4em] uppercase mb-6">
-            Your Collection
-          </p>
-          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight leading-[0.85]">
-            <span className="block">{totalGames}</span>
-            <span className="block text-4xl sm:text-5xl md:text-6xl text-stone-400 font-light mt-2">games</span>
-          </h1>
-          <p className="text-stone-500 text-lg mt-8">{stats.totalYears} years of adventures</p>
+          <div className="relative z-10 text-center px-6">
+            <p className="text-amber-400 text-sm md:text-base font-semibold tracking-[0.4em] uppercase mb-6 animate-fade-in-up">
+              The {username} Collection
+            </p>
+            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight leading-[0.85] mb-8 animate-fade-in-up delay-100">
+              <span className="block">{totalGames}</span>
+              <span className="block text-4xl sm:text-5xl md:text-6xl text-stone-400 font-light mt-2">worlds to explore</span>
+            </h1>
 
-          <div className="mt-24 animate-bounce">
-            <svg className="w-6 h-6 mx-auto text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            <div className="mt-12 opacity-0 animate-fade-in-up delay-300">
+              <p className="text-stone-500 text-lg italic">
+                "Every box holds a new universe."
+              </p>
+            </div>
+
+            <div className="mt-24 animate-bounce">
+              <svg className="w-6 h-6 mx-auto text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
           </div>
-        </div>
       </section>
 
       {/* ==================== GAME SHOWCASES ==================== */}
@@ -165,128 +197,126 @@ export default function ExperiencePage() {
         const galleryImages = (game as any).galleryImages || [];
         const isEven = index % 2 === 0;
 
+        // Calculate section-specific scroll progress (0 = entering, 1 = leaving)
+        const sectionStart = (index + 1) * windowHeight;
+        const sectionProgress = Math.max(0, Math.min(1, (scrollY - sectionStart + windowHeight) / windowHeight));
+
+        // Reveal progress (0 = hidden, 1 = fully visible) - triggers when section is ~30% visible
+        const revealProgress = Math.max(0, Math.min(1, (sectionProgress - 0.2) * 2.5));
+
+        // Easing function for smoother animations
+        const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+        const easedReveal = easeOut(revealProgress);
+
         return (
           <section
             key={game.id}
-            className="min-h-screen relative flex items-center overflow-hidden"
+            className="h-screen w-full snap-start relative flex items-center overflow-hidden"
           >
             {/* Gallery images as atmospheric background layers */}
             <div className="absolute inset-0">
-              {/* Primary gallery image - full bleed background */}
+              {/* Primary gallery image - full bleed background with parallax */}
               {galleryImages[0] && (
                 <div
-                  className="absolute inset-0 transition-all duration-700"
+                  className="absolute inset-0 transition-[filter] duration-700"
                   style={{
-                    transform: `scale(1.1) translateY(${(scrollY - (index + 1) * windowHeight) * 0.05}px)`,
-                    filter: hoveredGallery === `${game.id}-0` ? 'blur(0px)' : 'blur(2px)'
+                    transform: `scale(1.2) translateY(${(scrollY - sectionStart) * 0.1}px)`,
+                    filter: hoveredGallery === `${game.id}-0` ? 'blur(0px)' : 'blur(3px)',
+                    opacity: 0.3 + easedReveal * 0.3,
                   }}
                 >
                   <img
                     src={galleryImages[0]}
                     alt=""
-                    className={`w-full h-full object-cover transition-opacity duration-500 ${
-                      hoveredGallery === `${game.id}-0` ? 'opacity-70' : 'opacity-40'
-                    }`}
+                    className="w-full h-full object-cover"
                   />
                 </div>
               )}
 
-              {/* Secondary gallery images - floating panels with hover effects */}
-              {galleryImages[1] && (
-                <div
-                  className={`absolute ${isEven ? 'right-4 md:right-8' : 'left-4 md:left-8'} top-1/4 w-2/5 md:w-1/3 aspect-video hidden lg:block cursor-pointer group transition-all duration-500 ease-out`}
-                  style={{
-                    transform: hoveredGallery === `${game.id}-1`
-                      ? `translateY(${(scrollY - (index + 1) * windowHeight) * 0.02}px) rotate(0deg) scale(1.15)`
-                      : `translateY(${(scrollY - (index + 1) * windowHeight) * 0.08}px) rotate(${isEven ? 3 : -3}deg) scale(1)`,
-                    zIndex: hoveredGallery === `${game.id}-1` ? 30 : 10,
-                  }}
-                  onMouseEnter={() => setHoveredGallery(`${game.id}-1`)}
-                  onMouseLeave={() => setHoveredGallery(null)}
-                >
-                  <img
-                    src={galleryImages[1]}
-                    alt="Game component"
-                    className={`w-full h-full object-cover rounded-2xl shadow-2xl transition-all duration-500 ${
-                      hoveredGallery === `${game.id}-1`
-                        ? 'opacity-100 shadow-amber-500/30'
-                        : 'opacity-60'
-                    }`}
-                  />
-                  {/* Hover overlay with subtle info */}
-                  <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl transition-opacity duration-300 flex items-end p-4 ${
-                    hoveredGallery === `${game.id}-1` ? 'opacity-100' : 'opacity-0'
-                  }`}>
-                    <p className="text-white/80 text-sm font-medium">Game Components</p>
-                  </div>
-                </div>
-              )}
+              {/* Floating preview panel - only appears when hovering thumbnails */}
+              {galleryImages.length > 0 && (() => {
+                const hoveredIndex = hoveredGallery?.startsWith(`${game.id}-`)
+                  ? parseInt(hoveredGallery.split('-')[1])
+                  : null;
+                const isHovered = hoveredIndex !== null;
+                const displayImage = isHovered && galleryImages[hoveredIndex]
+                  ? galleryImages[hoveredIndex]
+                  : null;
 
-              {galleryImages[2] && (
-                <div
-                  className={`absolute ${isEven ? 'left-4 md:left-12' : 'right-4 md:right-12'} bottom-20 w-1/3 md:w-1/4 aspect-video hidden xl:block cursor-pointer transition-all duration-500 ease-out`}
-                  style={{
-                    transform: hoveredGallery === `${game.id}-2`
-                      ? `translateY(${(scrollY - (index + 1) * windowHeight) * -0.02}px) rotate(0deg) scale(1.2)`
-                      : `translateY(${(scrollY - (index + 1) * windowHeight) * -0.06}px) rotate(${isEven ? -5 : 5}deg) scale(1)`,
-                    zIndex: hoveredGallery === `${game.id}-2` ? 30 : 5,
-                  }}
-                  onMouseEnter={() => setHoveredGallery(`${game.id}-2`)}
-                  onMouseLeave={() => setHoveredGallery(null)}
-                >
-                  <img
-                    src={galleryImages[2]}
-                    alt="Game detail"
-                    className={`w-full h-full object-cover rounded-xl shadow-xl transition-all duration-500 ${
-                      hoveredGallery === `${game.id}-2`
-                        ? 'opacity-100 shadow-orange-500/30'
-                        : 'opacity-50'
-                    }`}
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-xl transition-opacity duration-300 flex items-end p-3 ${
-                    hoveredGallery === `${game.id}-2` ? 'opacity-100' : 'opacity-0'
-                  }`}>
-                    <p className="text-white/80 text-xs font-medium">Detail View</p>
+                return (
+                  <div
+                    className={`absolute ${isEven ? 'right-4 md:right-12' : 'left-4 md:left-12'} top-1/4 w-2/5 md:w-1/3 aspect-video hidden lg:block pointer-events-none transition-all duration-500 ease-out`}
+                    style={{
+                      transform: isHovered
+                        ? `translateY(${(scrollY - sectionStart) * 0.05}px) rotate(${isEven ? 3 : -3}deg) scale(1)`
+                        : `translateY(${(scrollY - sectionStart) * 0.05}px) rotate(${isEven ? 6 : -6}deg) scale(0.9)`,
+                      opacity: isHovered ? 1 : 0,
+                      zIndex: 30,
+                    }}
+                  >
+                    {displayImage && (
+                      <img
+                        src={displayImage}
+                        alt="Game component preview"
+                        className="w-full h-full object-cover rounded-2xl shadow-2xl shadow-amber-500/30 border border-amber-500/20"
+                      />
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Gradient overlays */}
               <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/60 pointer-events-none" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50 pointer-events-none" />
             </div>
 
-            {/* Main content */}
+            {/* Main content with staggered reveal animations */}
             <div className="relative z-20 max-w-7xl mx-auto px-6 py-24 w-full">
               <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12 lg:gap-20`}>
 
-                {/* Game Cover - THE HERO */}
-                <div className="w-full lg:w-2/5 flex-shrink-0">
+                {/* Game Cover - slides in from the side with parallax */}
+                <div
+                  className="w-full lg:w-2/5 flex-shrink-0 transition-[transform,opacity] duration-700 ease-out"
+                  style={{
+                    transform: `translateX(${(1 - easedReveal) * (isEven ? -100 : 100)}px) translateY(${(scrollY - sectionStart) * 0.03}px)`,
+                    opacity: easedReveal,
+                  }}
+                >
                   <div className="relative">
-                    {/* Rank badge */}
-                    <div className="absolute -top-6 -left-4 z-20 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                    {/* Rank badge - pops in with scale */}
+                    <div
+                      className="absolute -top-6 -left-4 z-20 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 transition-all duration-500"
+                      style={{
+                        transform: `scale(${0.5 + easedReveal * 0.5}) rotate(${(1 - easedReveal) * -20}deg)`,
+                        opacity: easedReveal,
+                      }}
+                    >
                       <span className="text-amber-400 font-black text-2xl">#{index + 1}</span>
                     </div>
 
                     {/* Main cover image */}
-                    <div className="relative aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 transform hover:scale-[1.02] transition-transform duration-500">
+                    <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 transform hover:scale-[1.02] transition-transform duration-500">
                       {game.image ? (
                         <img
                           src={game.image}
                           alt={game.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-auto max-h-[70vh] object-contain"
                         />
                       ) : (
-                        <div className="w-full h-full bg-stone-900 flex items-center justify-center">
+                        <div className="w-full aspect-[3/4] bg-stone-900 flex items-center justify-center">
                           <span className="text-8xl">🎲</span>
                         </div>
                       )}
 
-                      {/* Rating badge on cover */}
+                      {/* Rating badge - arrives with delay */}
                       {game.rating && (
                         <div
-                          className="absolute top-4 right-4 px-4 py-2 rounded-full font-black text-lg shadow-lg"
-                          style={{ backgroundColor: getRatingColor(game.rating) }}
+                          className="absolute top-4 right-4 px-4 py-2 rounded-full font-black text-lg shadow-lg transition-all duration-500"
+                          style={{
+                            backgroundColor: getRatingColor(game.rating),
+                            transform: `translateY(${(1 - easedReveal) * -30}px) scale(${0.8 + easedReveal * 0.2})`,
+                            opacity: easedReveal,
+                          }}
                         >
                           ★ {game.rating.toFixed(1)}
                         </div>
@@ -295,18 +325,40 @@ export default function ExperiencePage() {
                   </div>
                 </div>
 
-                {/* Game Info */}
+                {/* Game Info - staggered text reveals */}
                 <div className={`w-full lg:w-3/5 ${isEven ? 'lg:text-left' : 'lg:text-right'} text-center`}>
-                  <p className="text-amber-400 text-sm uppercase tracking-[0.3em] mb-4 font-medium">
+                  {/* Year - first to appear */}
+                  <p
+                    className="text-amber-400 text-sm uppercase tracking-[0.3em] mb-4 font-medium transition-all duration-500"
+                    style={{
+                      transform: `translateY(${(1 - easedReveal) * 30}px)`,
+                      opacity: easedReveal,
+                    }}
+                  >
                     {game.yearPublished}
                   </p>
-                  <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[0.95]">
+
+                  {/* Title - slides up with slight delay */}
+                  <h2
+                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[0.95] transition-all duration-700"
+                    style={{
+                      transform: `translateY(${(1 - easedReveal) * 50}px)`,
+                      opacity: easedReveal,
+                    }}
+                  >
                     {game.name}
                   </h2>
 
-                  <div className={`flex items-center gap-4 flex-wrap mb-8 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}>
+                  {/* Player/time badges - arrive with stagger */}
+                  <div
+                    className={`flex items-center gap-4 flex-wrap mb-8 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}
+                    style={{
+                      transform: `translateY(${(1 - easeOut(Math.max(0, (sectionProgress - 0.3) * 2))) * 40}px)`,
+                      opacity: easeOut(Math.max(0, (sectionProgress - 0.3) * 2)),
+                    }}
+                  >
                     {game.minPlayers && game.maxPlayers && (
-                      <div className="px-5 py-2.5 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm">
+                      <div className="px-5 py-2.5 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
                         👥 {game.minPlayers === game.maxPlayers
                           ? `${game.minPlayers} players`
                           : `${game.minPlayers}-${game.maxPlayers} players`
@@ -314,7 +366,7 @@ export default function ExperiencePage() {
                       </div>
                     )}
                     {game.minPlaytime && game.maxPlaytime && (
-                      <div className="px-5 py-2.5 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm">
+                      <div className="px-5 py-2.5 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
                         ⏱ {game.minPlaytime === game.maxPlaytime
                           ? `${game.minPlaytime} min`
                           : `${game.minPlaytime}-${game.maxPlaytime} min`
@@ -323,20 +375,29 @@ export default function ExperiencePage() {
                     )}
                   </div>
 
-                  {/* Context gallery strip - with hover effects */}
+                  {/* Gallery thumbnails - arrive last with individual stagger */}
                   {galleryImages.length > 0 && (
-                    <div className={`flex gap-3 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}>
-                      {galleryImages.slice(0, 3).map((img: string, i: number) => (
-                        <div
-                          key={i}
-                          className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border border-white/20 shadow-lg cursor-pointer transition-all duration-300 hover:scale-125 hover:z-10 hover:border-amber-500/50 hover:shadow-amber-500/20"
-                          style={{ transform: `rotate(${(i - 1) * 3}deg)` }}
-                          onMouseEnter={() => setHoveredGallery(`${game.id}-${i}`)}
-                          onMouseLeave={() => setHoveredGallery(null)}
-                        >
-                          <img src={img} alt="" className="w-full h-full object-cover" />
-                        </div>
-                      ))}
+                    <div className={`flex gap-3 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center items-center`}>
+                      {galleryImages.slice(0, 3).map((img: string, i: number) => {
+                        // Clamp the input to min(1) to stop animation overshooting
+                        const rawProgress = (sectionProgress - 0.35 - i * 0.05) * 3;
+                        const thumbReveal = easeOut(Math.max(0, Math.min(1, rawProgress)));
+
+                        return (
+                          <div
+                            key={i}
+                            className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border border-white/20 shadow-lg cursor-pointer transition-all duration-300 hover:scale-125 hover:z-10 hover:border-amber-500/50 hover:shadow-amber-500/30"
+                            style={{
+                              transform: `translateY(${(1 - thumbReveal) * 40}px) scale(${0.8 + thumbReveal * 0.2})`,
+                              opacity: thumbReveal,
+                            }}
+                            onMouseEnter={() => setHoveredGallery(`${game.id}-${i}`)}
+                            onMouseLeave={() => setHoveredGallery(null)}
+                          >
+                            <img src={img} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -347,7 +408,7 @@ export default function ExperiencePage() {
       })}
 
       {/* ==================== STATS INTERLUDE ==================== */}
-      <section className="min-h-screen flex items-center justify-center relative py-32 overflow-hidden">
+      <section className="h-screen w-full snap-start flex items-center justify-center relative overflow-hidden">
         {/* Subtle background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="grid grid-cols-6 gap-2 h-full">
@@ -375,8 +436,8 @@ export default function ExperiencePage() {
               <div className="text-stone-500 mt-2 text-sm uppercase tracking-wider">Avg Rating</div>
             </div>
             <div>
-              <div className="text-5xl md:text-6xl font-black text-rose-400">{stats.totalYears}</div>
-              <div className="text-stone-500 mt-2 text-sm uppercase tracking-wider">Years Span</div>
+              <div className="text-5xl md:text-6xl font-black text-rose-400">{stats.totalHours}</div>
+              <div className="text-stone-500 mt-2 text-sm uppercase tracking-wider">Hours of Fun</div>
             </div>
             <div>
               <div className="text-5xl md:text-6xl font-black text-pink-400">{stats.oldestGame.yearPublished}</div>
@@ -387,7 +448,7 @@ export default function ExperiencePage() {
       </section>
 
       {/* ==================== PICK A GAME ==================== */}
-      <section className="min-h-screen flex items-center justify-center py-32 relative overflow-hidden">
+      <section className="h-screen w-full snap-start flex items-center justify-center relative overflow-hidden">
         {/* Floating thumbnails background - stable positions with smooth CSS animations */}
         <div className="absolute inset-0">
           {sortedGames.slice(0, 20).map((game, i) => {
@@ -487,7 +548,7 @@ export default function ExperiencePage() {
       </section>
 
       {/* ==================== FULL COLLECTION MOSAIC ==================== */}
-      <section className="py-24 relative">
+      <section className="h-screen w-full snap-start overflow-y-auto relative py-24">
         <div className="max-w-7xl mx-auto px-6 mb-12 text-center">
           <h2 className="text-3xl md:text-4xl font-black text-stone-400">
             The Complete Collection
@@ -515,20 +576,20 @@ export default function ExperiencePage() {
             </div>
           ))}
         </div>
-      </section>
 
-      {/* ==================== FOOTER ==================== */}
-      <section className="py-32 text-center">
-        <p className="text-stone-600 text-sm uppercase tracking-widest mb-4">Thanks for exploring</p>
-        <h2 className="text-4xl md:text-6xl font-black mb-8">
-          Now go <span className="text-amber-400">play!</span>
-        </h2>
-        <Link
-          href="/"
-          className="inline-block bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all border border-white/10"
-        >
-          Back to Collection →
-        </Link>
+        {/* ==================== FOOTER ==================== */}
+        <div className="py-24 text-center">
+          <p className="text-stone-600 text-sm uppercase tracking-widest mb-4">Thanks for exploring</p>
+          <h2 className="text-4xl md:text-6xl font-black mb-8">
+            Now go <span className="text-amber-400">play!</span>
+          </h2>
+          <Link
+            href="/"
+            className="inline-block bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all border border-white/10"
+          >
+            Back to Collection →
+          </Link>
+        </div>
       </section>
 
       <style jsx>{`
@@ -549,6 +610,15 @@ export default function ExperiencePage() {
         .bg-gradient-radial {
           background: radial-gradient(circle at center, var(--tw-gradient-stops));
         }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-300 { animation-delay: 300ms; }
       `}</style>
     </div>
   );
