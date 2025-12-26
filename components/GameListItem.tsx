@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Game } from "@/types/game";
 
 interface GameListItemProps {
@@ -28,6 +29,12 @@ function getRatingColor(rating: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+function formatNumber(num: number): string {
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+  return num.toString();
+}
+
 export function GameListItem({ game }: GameListItemProps) {
   const imageUrl = game.image || game.thumbnail || null;
 
@@ -45,10 +52,23 @@ export function GameListItem({ game }: GameListItemProps) {
 
   const ratingColor = game.rating ? getRatingColor(game.rating) : undefined;
 
+  // Format best player count display
+  const bestPlayers = game.bestPlayerCount && game.bestPlayerCount.length > 0
+    ? game.bestPlayerCount.length === 1
+      ? `Best: ${game.bestPlayerCount[0]}P`
+      : `Best: ${game.bestPlayerCount[0]}-${game.bestPlayerCount[game.bestPlayerCount.length - 1]}P`
+    : null;
+
+  // Age display - prefer community age, fallback to publisher age
+  const ageDisplay = game.communityAge ?? game.minAge;
+
   return (
-    <div className="flex items-center gap-4 bg-white rounded-lg shadow-sm border border-stone-200 p-3 hover:shadow-md transition-shadow">
+    <Link
+      href={`/game/${game.id}`}
+      className="flex items-start gap-4 bg-white rounded-lg shadow-sm border border-stone-200 p-4 hover:shadow-md hover:border-amber-300 transition-all cursor-pointer"
+    >
       {/* Thumbnail */}
-      <div className="w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-stone-100">
+      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-stone-100 relative">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -57,36 +77,96 @@ export function GameListItem({ game }: GameListItemProps) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-2xl">
+          <div className="w-full h-full flex items-center justify-center text-3xl">
             🎲
+          </div>
+        )}
+        {/* Expansion badge */}
+        {game.isExpansion && (
+          <div className="absolute top-1 left-1 bg-purple-600 text-white text-[8px] font-bold px-1 py-0.5 rounded">
+            EXP
           </div>
         )}
       </div>
 
-      {/* Info */}
+      {/* Main Info */}
       <div className="flex-grow min-w-0">
-        <h3 className="font-semibold text-stone-800 text-sm truncate">
-          {game.name}
-        </h3>
-        {game.yearPublished && (
-          <p className="text-xs text-stone-400">{game.yearPublished}</p>
-        )}
-      </div>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-stone-800 text-base truncate">
+              {game.name}
+            </h3>
+            <div className="flex items-center gap-2 mt-0.5">
+              {game.yearPublished && (
+                <span className="text-xs text-stone-400">{game.yearPublished}</span>
+              )}
+              {ageDisplay && (
+                <span className="text-xs text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">
+                  {ageDisplay}+
+                </span>
+              )}
+              {game.usersRated && (
+                <span className="text-xs text-stone-400" title={`${game.usersRated.toLocaleString()} ratings`}>
+                  {formatNumber(game.usersRated)} ratings
+                </span>
+              )}
+            </div>
+          </div>
 
-      {/* Metadata */}
-      <div className="flex items-center gap-3 text-xs text-stone-500 flex-shrink-0">
-        {playerCount && <span>{playerCount}</span>}
-        {playtime && <span>{playtime}</span>}
-        {game.rating && (
-          <span
-            className="text-white font-bold px-1.5 py-0.5 rounded text-[10px]"
-            style={{ backgroundColor: ratingColor }}
-          >
-            {game.rating.toFixed(1)}
-          </span>
+          {/* Rating */}
+          {game.rating && (
+            <span
+              className="text-white font-bold px-2 py-1 rounded text-sm flex-shrink-0"
+              style={{ backgroundColor: ratingColor }}
+            >
+              ★ {game.rating.toFixed(1)}
+            </span>
+          )}
+        </div>
+
+        {/* Description */}
+        {game.description && (
+          <p className="text-xs text-stone-500 mt-2 line-clamp-1">
+            {game.description}
+          </p>
         )}
+
+        {/* Bottom row: metadata + categories */}
+        <div className="flex items-center gap-3 mt-2 flex-wrap">
+          {/* Game stats */}
+          <div className="flex items-center gap-2 text-xs text-stone-600">
+            {playerCount && (
+              <span className="bg-stone-100 px-2 py-0.5 rounded">
+                👥 {playerCount}
+              </span>
+            )}
+            {bestPlayers && (
+              <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-medium">
+                {bestPlayers}
+              </span>
+            )}
+            {playtime && (
+              <span className="bg-stone-100 px-2 py-0.5 rounded">
+                ⏱ {playtime}
+              </span>
+            )}
+          </div>
+
+          {/* Categories */}
+          {game.categories && game.categories.length > 0 && (
+            <div className="flex items-center gap-1">
+              {game.categories.slice(0, 3).map((cat, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded"
+                >
+                  {cat}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
-

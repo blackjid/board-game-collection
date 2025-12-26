@@ -124,104 +124,110 @@ async function fetchGameImage(page: any, game: any): Promise<GameDetails> {
   });
 }
 
-async function fetchRatingFromAPI(gameId: string): Promise<number | null> {
-  try {
-    const response = await fetch(`https://boardgamegeek.com/xmlapi2/thing?id=${gameId}&stats=1`);
-    const text = await response.text();
-    // Parse XML to find average rating
-    const avgMatch = text.match(/<average[^>]*value="([^"]+)"/);
-    if (avgMatch) {
-      const rating = parseFloat(avgMatch[1]);
-      if (!isNaN(rating) && rating >= 1 && rating <= 10) {
-        return Math.round(rating * 10) / 10;
-      }
-    }
-  } catch (e) {
-    // Ignore errors
-  }
-  return null;
+interface ExtendedGameData {
+  rating: number | null;
+  description: string | null;
+  minAge: number | null;
+  communityAge: number | null;
+  bestPlayerCount: number[] | null;
+  categories: string[];
+  mechanics: string[];
+  usersRated: number | null;
+  isExpansion: boolean;
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  minPlaytime: number | null;
+  maxPlaytime: number | null;
 }
 
-async function fetchGalleryImages(page: any, gameId: string, gameSlug: string): Promise<string[]> {
+// Strip HTML tags from text
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// Fetch gallery images from BGG's internal API
+async function fetchGalleryImagesFromAPI(gameId: string): Promise<string[]> {
   try {
-    // Navigate to the game's images page filtered by Components
-    const imagesUrl = `https://boardgamegeek.com/boardgame/${gameId}/${gameSlug}/images?pageid=1&tag=Components`;
-    await page.goto(imagesUrl, {
-      waitUntil: "domcontentloaded",
-      timeout: 10000
-    });
+    const response = await fetch(
+      `https://api.geekdo.com/api/images?ajax=1&foritempage=1&galleries[]=game&nosession=1&objectid=${gameId}&objecttype=thing&showcount=10&size=original&sort=hot`
+    );
+    const data = await response.json();
+    const images = data.images || [];
 
-    // Wait a bit for images to load
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Extract image IDs from the gallery links (e.g., /image/12345)
-    const imageIds = await page.evaluate(() => {
-      const ids: string[] = [];
-      const links = document.querySelectorAll('a[href*="/image/"]');
-      links.forEach((link) => {
-        const href = link.getAttribute("href") || "";
-        const match = href.match(/\/image\/(\d+)/);
-        if (match && !ids.includes(match[1]) && ids.length < 4) {
-          ids.push(match[1]);
-        }
-      });
-      return ids;
-    });
-
-    // For each image ID, navigate to the image page and get the original URL
-    const originalUrls: string[] = [];
-    for (const imageId of imageIds.slice(0, 4)) { // Limit to 4 to avoid being too slow
-      try {
-        await page.goto(`https://boardgamegeek.com/image/${imageId}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 8000
-        });
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const originalUrl = await page.evaluate(() => {
-          // Look for the full-size image on the image page
-          // Try multiple approaches to find the original URL
-
-          // Method 1: Look for __original in any img src
-          const originalImg = document.querySelector('img[src*="__original"]');
-          if (originalImg) {
-            return originalImg.getAttribute("src") || "";
-          }
-
-          // Method 2: Look for a link to the original image
-          const originalLink = document.querySelector('a[href*="__original"]');
-          if (originalLink) {
-            return originalLink.getAttribute("href") || "";
-          }
-
-          // Method 3: Look for a large image (imagepage size is still good)
-          const largeImg = document.querySelector('img[src*="__imagepage"][src*="cf.geekdo-images"]');
-          if (largeImg) {
-            return largeImg.getAttribute("src") || "";
-          }
-
-          // Method 4: Look for any large geekdo image
-          const anyImg = document.querySelector('img[src*="cf.geekdo-images"][src*="/pic"]');
-          if (anyImg) {
-            return anyImg.getAttribute("src") || "";
-          }
-
-          return "";
-        });
-
-        if (originalUrl && !originalUrls.includes(originalUrl)) {
-          originalUrls.push(originalUrl);
-        }
-      } catch (e) {
-        // Skip this image if we can't fetch it
-      }
-    }
-
-    return originalUrls;
+    // Get the large/original URLs, skip the first one (usually box art which we already have as main image)
+    return images
+      .slice(0, 5)
+      .map((img: any) => img.imageurl_lg || img.imageurl)
+      .filter((url: string) => url && url.includes("geekdo-images"));
   } catch (e) {
-    console.log(`    Gallery fetch error: ${e}`);
+    console.log(`    Images API error for ${gameId}: ${e}`);
     return [];
   }
+}
+
+// Fetch extended game data from BGG's internal JSON API (no auth required)
+async function fetchExtendedDataFromAPI(gameId: string): Promise<ExtendedGameData> {
+  const result: ExtendedGameData = {
+    rating: null,
+    description: null,
+    minAge: null,
+    communityAge: null,
+    bestPlayerCount: null,
+    categories: [],
+    mechanics: [],
+    usersRated: null,
+    isExpansion: false,
+    minPlayers: null,
+    maxPlayers: null,
+    minPlaytime: null,
+    maxPlaytime: null,
+  };
+
+  try {
+    const response = await fetch(`https://api.geekdo.com/api/geekitems?objecttype=thing&objectid=${gameId}`);
+    const data = await response.json();
+    const item = data.item;
+
+    if (!item) return result;
+
+    // Check if it's an expansion
+    result.isExpansion = item.subtype === "boardgameexpansion";
+
+    // Get description (prefer short_description, fallback to full description)
+    if (item.short_description) {
+      result.description = item.short_description;
+    } else if (item.description) {
+      let desc = stripHtml(item.description);
+      if (desc.length > 300) {
+        desc = desc.substring(0, 300).replace(/\s+\S*$/, "") + "...";
+      }
+      result.description = desc;
+    }
+
+    // Get player counts
+    if (item.minplayers) result.minPlayers = parseInt(item.minplayers, 10);
+    if (item.maxplayers) result.maxPlayers = parseInt(item.maxplayers, 10);
+
+    // Get playtime
+    if (item.minplaytime) result.minPlaytime = parseInt(item.minplaytime, 10);
+    if (item.maxplaytime) result.maxPlaytime = parseInt(item.maxplaytime, 10);
+
+    // Get minimum age
+    if (item.minage) result.minAge = parseInt(item.minage, 10);
+
+    // Get categories
+    const categories = item.links?.boardgamecategory || [];
+    result.categories = categories.map((c: any) => c.name);
+
+    // Get mechanics
+    const mechanics = item.links?.boardgamemechanic || [];
+    result.mechanics = mechanics.map((m: any) => m.name);
+
+  } catch (e) {
+    console.log(`    API fetch error for ${gameId}: ${e}`);
+  }
+
+  return result;
 }
 
 async function fetchGameDetails(games: Game[], page: any): Promise<Game[]> {
@@ -287,29 +293,34 @@ async function fetchGameDetails(games: Game[], page: any): Promise<Game[]> {
             originalGame.thumbnail = details.image;
           }
 
-          // Fetch gallery images from the Components images page (these are original URLs)
+          // Fetch gallery images from BGG's images API (faster than scraping)
           if (game.id) {
-            const gameSlug = game.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-            const galleryImages = await fetchGalleryImages(page, game.id, gameSlug);
+            const galleryImages = await fetchGalleryImagesFromAPI(game.id);
             // Filter out images that are the same as the cover
             const coverPicId = originalGame.image?.match(/pic\d+/)?.[0] || "NOMATCH";
             const filteredGallery = galleryImages.filter(img => !img.includes(coverPicId));
-            originalGame.galleryImages = filteredGallery;
+            originalGame.galleryImages = filteredGallery.slice(0, 4); // Keep max 4 gallery images
           } else {
             originalGame.galleryImages = [];
           }
 
-          // Get BGG community rating - try API if DOM scraping failed
-          let rating = details?.bggRating ?? null;
-          if (!rating && game.id) {
-            rating = await fetchRatingFromAPI(game.id);
+          // Fetch extended data from BGG's internal JSON API
+          if (game.id) {
+            const extendedData = await fetchExtendedDataFromAPI(game.id);
+            originalGame.rating = details?.bggRating ?? null; // Keep using page-scraped rating
+            originalGame.description = extendedData.description;
+            originalGame.minAge = extendedData.minAge;
+            originalGame.communityAge = extendedData.communityAge;
+            originalGame.bestPlayerCount = extendedData.bestPlayerCount;
+            originalGame.categories = extendedData.categories;
+            originalGame.mechanics = extendedData.mechanics;
+            originalGame.usersRated = extendedData.usersRated;
+            originalGame.isExpansion = extendedData.isExpansion || (game as any).isExpansion;
+            originalGame.minPlayers = extendedData.minPlayers ?? details?.minPlayers ?? originalGame.minPlayers;
+            originalGame.maxPlayers = extendedData.maxPlayers ?? details?.maxPlayers ?? originalGame.maxPlayers;
+            originalGame.minPlaytime = extendedData.minPlaytime ?? details?.minPlaytime ?? originalGame.minPlaytime;
+            originalGame.maxPlaytime = extendedData.maxPlaytime ?? details?.maxPlaytime ?? originalGame.maxPlaytime;
           }
-          originalGame.rating = rating;
-
-          originalGame.minPlayers = details?.minPlayers ?? originalGame.minPlayers;
-          originalGame.maxPlayers = details?.maxPlayers ?? originalGame.maxPlayers;
-          originalGame.minPlaytime = details?.minPlaytime ?? originalGame.minPlaytime;
-          originalGame.maxPlaytime = details?.maxPlaytime ?? originalGame.maxPlaytime;
           if (game.id) originalGame.id = game.id;
         }
 
@@ -329,6 +340,14 @@ async function fetchGameDetails(games: Game[], page: any): Promise<Game[]> {
     minPlaytime: game.minPlaytime ?? null,
     maxPlaytime: game.maxPlaytime ?? null,
     numPlays: game.numPlays ?? 0,
+    description: game.description ?? null,
+    minAge: game.minAge ?? null,
+    communityAge: game.communityAge ?? null,
+    bestPlayerCount: game.bestPlayerCount ?? null,
+    categories: game.categories ?? [],
+    mechanics: game.mechanics ?? [],
+    usersRated: game.usersRated ?? null,
+    isExpansion: game.isExpansion ?? false,
   }));
 }
 
@@ -394,6 +413,9 @@ async function main() {
         const idMatch = href.match(/\/(?:boardgame|boardgameexpansion)\/(\d+)/);
         const id = idMatch ? idMatch[1] : "";
 
+        // Check if it's an expansion from the URL
+        const isExpansion = href.includes("boardgameexpansion");
+
         // Extract year from the cell text (format: "Game Name (2020)")
         const cellText = nameCell.textContent || "";
         const yearMatch = cellText.match(/\((\d{4})\)/);
@@ -408,6 +430,14 @@ async function main() {
           thumbnail: "",
           galleryImages: [],
           rating: null, // Will be filled with BGG community rating
+          description: null,
+          minAge: null,
+          communityAge: null,
+          bestPlayerCount: null,
+          categories: [],
+          mechanics: [],
+          usersRated: null,
+          isExpansion,
         });
       });
 

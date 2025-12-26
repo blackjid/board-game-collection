@@ -327,20 +327,27 @@ export default function ExperiencePage() {
 
                 {/* Game Info - staggered text reveals */}
                 <div className={`w-full lg:w-3/5 ${isEven ? 'lg:text-left' : 'lg:text-right'} text-center`}>
-                  {/* Year - first to appear */}
-                  <p
-                    className="text-amber-400 text-sm uppercase tracking-[0.3em] mb-4 font-medium transition-all duration-500"
+                  {/* Year and type badge - first to appear */}
+                  <div
+                    className={`flex items-center gap-3 mb-4 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}
                     style={{
                       transform: `translateY(${(1 - easedReveal) * 30}px)`,
                       opacity: easedReveal,
                     }}
                   >
-                    {game.yearPublished}
-                  </p>
+                    <p className="text-amber-400 text-sm uppercase tracking-[0.3em] font-medium">
+                      {game.yearPublished}
+                    </p>
+                    {(game as any).isExpansion && (
+                      <span className="bg-purple-600/80 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                        Expansion
+                      </span>
+                    )}
+                  </div>
 
                   {/* Title - slides up with slight delay */}
                   <h2
-                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[0.95] transition-all duration-700"
+                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 leading-[0.95] transition-all duration-700"
                     style={{
                       transform: `translateY(${(1 - easedReveal) * 50}px)`,
                       opacity: easedReveal,
@@ -349,31 +356,91 @@ export default function ExperiencePage() {
                     {game.name}
                   </h2>
 
-                  {/* Player/time badges - arrive with stagger */}
+                  {/* Description */}
+                  {(game as any).description && (
+                    <p
+                      className="text-stone-400 text-sm md:text-base mb-6 line-clamp-2 max-w-xl mx-auto lg:mx-0"
+                      style={{
+                        transform: `translateY(${(1 - easedReveal) * 40}px)`,
+                        opacity: easedReveal * 0.9,
+                      }}
+                    >
+                      {(game as any).description}
+                    </p>
+                  )}
+
+                  {/* Player/time/age badges - arrive with stagger */}
                   <div
-                    className={`flex items-center gap-4 flex-wrap mb-8 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}
+                    className={`flex items-center gap-3 flex-wrap mb-4 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}
                     style={{
                       transform: `translateY(${(1 - easeOut(Math.max(0, (sectionProgress - 0.3) * 2))) * 40}px)`,
                       opacity: easeOut(Math.max(0, (sectionProgress - 0.3) * 2)),
                     }}
                   >
                     {game.minPlayers && game.maxPlayers && (
-                      <div className="px-5 py-2.5 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
+                      <div className="px-4 py-2 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
                         👥 {game.minPlayers === game.maxPlayers
                           ? `${game.minPlayers} players`
                           : `${game.minPlayers}-${game.maxPlayers} players`
                         }
                       </div>
                     )}
+                    {(game as any).bestPlayerCount && (game as any).bestPlayerCount.length > 0 && (
+                      <div className="px-4 py-2 bg-amber-500/20 rounded-full text-sm font-medium backdrop-blur-sm border border-amber-500/30 text-amber-300">
+                        ⭐ Best: {(game as any).bestPlayerCount.length === 1
+                          ? `${(game as any).bestPlayerCount[0]}P`
+                          : `${(game as any).bestPlayerCount[0]}-${(game as any).bestPlayerCount[(game as any).bestPlayerCount.length - 1]}P`
+                        }
+                      </div>
+                    )}
                     {game.minPlaytime && game.maxPlaytime && (
-                      <div className="px-5 py-2.5 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
+                      <div className="px-4 py-2 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
                         ⏱ {game.minPlaytime === game.maxPlaytime
                           ? `${game.minPlaytime} min`
                           : `${game.minPlaytime}-${game.maxPlaytime} min`
                         }
                       </div>
                     )}
+                    {((game as any).communityAge || (game as any).minAge) && (
+                      <div className="px-4 py-2 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
+                        {(game as any).communityAge ?? (game as any).minAge}+
+                      </div>
+                    )}
                   </div>
+
+                  {/* Categories & mechanics */}
+                  {((game as any).categories?.length > 0 || (game as any).mechanics?.length > 0) && (
+                    <div
+                      className={`flex items-center gap-2 flex-wrap mb-6 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}
+                      style={{
+                        transform: `translateY(${(1 - easeOut(Math.max(0, (sectionProgress - 0.32) * 2))) * 35}px)`,
+                        opacity: easeOut(Math.max(0, (sectionProgress - 0.32) * 2)),
+                      }}
+                    >
+                      {(game as any).categories?.slice(0, 2).map((cat: string, i: number) => (
+                        <span key={`cat-${i}`} className="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">
+                          {cat}
+                        </span>
+                      ))}
+                      {(game as any).mechanics?.slice(0, 2).map((mech: string, i: number) => (
+                        <span key={`mech-${i}`} className="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30">
+                          {mech}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Users rated */}
+                  {(game as any).usersRated && (
+                    <p
+                      className={`text-stone-500 text-xs mb-6 ${isEven ? 'lg:text-left' : 'lg:text-right'}`}
+                      style={{
+                        opacity: easeOut(Math.max(0, (sectionProgress - 0.35) * 2)),
+                      }}
+                    >
+                      {(game as any).usersRated.toLocaleString()} community ratings
+                    </p>
+                  )}
 
                   {/* Gallery thumbnails - arrive last with individual stagger */}
                   {galleryImages.length > 0 && (
@@ -491,9 +558,9 @@ export default function ExperiencePage() {
             <div className="mt-16 animate-scale-in">
               <p className="text-stone-600 uppercase tracking-widest text-sm mb-8">Tonight&apos;s pick...</p>
 
-              <div className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-3xl p-8 border border-stone-800 max-w-md mx-auto shadow-2xl">
+              <div className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-3xl p-8 border border-stone-800 max-w-lg mx-auto shadow-2xl">
                 {/* Cover as hero */}
-                <div className="w-40 h-52 mx-auto rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-6 transform -rotate-2 hover:rotate-0 transition-transform duration-300">
+                <div className="w-40 h-52 mx-auto rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-6 transform -rotate-2 hover:rotate-0 transition-transform duration-300 relative">
                   {suggestedGame.image ? (
                     <img
                       src={suggestedGame.image}
@@ -503,12 +570,24 @@ export default function ExperiencePage() {
                   ) : (
                     <div className="w-full h-full bg-stone-800 flex items-center justify-center text-5xl">🎲</div>
                   )}
+                  {(suggestedGame as any).isExpansion && (
+                    <div className="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                      EXP
+                    </div>
+                  )}
                 </div>
 
                 <h3 className="text-2xl md:text-3xl font-black mb-2">{suggestedGame.name}</h3>
                 <p className="text-stone-500 mb-4">{suggestedGame.yearPublished}</p>
 
-                <div className="flex items-center justify-center gap-4 flex-wrap">
+                {/* Description */}
+                {(suggestedGame as any).description && (
+                  <p className="text-stone-400 text-sm mb-4 line-clamp-2">
+                    {(suggestedGame as any).description}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-center gap-3 flex-wrap mb-4">
                   {suggestedGame.rating && (
                     <span
                       className="px-4 py-2 rounded-full font-bold"
@@ -518,15 +597,44 @@ export default function ExperiencePage() {
                     </span>
                   )}
                   {suggestedGame.minPlayers && suggestedGame.maxPlayers && (
-                    <span className="text-stone-400 text-sm">
-                      {suggestedGame.minPlayers}-{suggestedGame.maxPlayers} players
+                    <span className="text-stone-300 text-sm bg-white/10 px-3 py-1.5 rounded-full">
+                      👥 {suggestedGame.minPlayers}-{suggestedGame.maxPlayers}P
+                    </span>
+                  )}
+                  {(suggestedGame as any).bestPlayerCount && (suggestedGame as any).bestPlayerCount.length > 0 && (
+                    <span className="text-amber-300 text-sm bg-amber-500/20 px-3 py-1.5 rounded-full border border-amber-500/30">
+                      ⭐ Best: {(suggestedGame as any).bestPlayerCount.length === 1
+                        ? `${(suggestedGame as any).bestPlayerCount[0]}P`
+                        : `${(suggestedGame as any).bestPlayerCount[0]}-${(suggestedGame as any).bestPlayerCount[(suggestedGame as any).bestPlayerCount.length - 1]}P`
+                      }
+                    </span>
+                  )}
+                  {suggestedGame.minPlaytime && suggestedGame.maxPlaytime && (
+                    <span className="text-stone-300 text-sm bg-white/10 px-3 py-1.5 rounded-full">
+                      ⏱ {suggestedGame.minPlaytime}-{suggestedGame.maxPlaytime}m
+                    </span>
+                  )}
+                  {((suggestedGame as any).communityAge || (suggestedGame as any).minAge) && (
+                    <span className="text-stone-300 text-sm bg-white/10 px-3 py-1.5 rounded-full">
+                      {(suggestedGame as any).communityAge ?? (suggestedGame as any).minAge}+
                     </span>
                   )}
                 </div>
 
+                {/* Categories */}
+                {(suggestedGame as any).categories?.length > 0 && (
+                  <div className="flex gap-2 justify-center flex-wrap mb-4">
+                    {(suggestedGame as any).categories.slice(0, 3).map((cat: string, i: number) => (
+                      <span key={i} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {/* Gallery context */}
                 {(suggestedGame as any).galleryImages?.length > 0 && (
-                  <div className="flex gap-2 mt-6 justify-center">
+                  <div className="flex gap-2 mt-4 justify-center">
                     {(suggestedGame as any).galleryImages.slice(0, 3).map((img: string, i: number) => (
                       <div key={i} className="w-14 h-14 rounded-lg overflow-hidden opacity-70 hover:opacity-100 hover:scale-110 transition-all cursor-pointer">
                         <img src={img} alt="" className="w-full h-full object-cover" />

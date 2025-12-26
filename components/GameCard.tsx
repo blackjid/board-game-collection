@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Game } from "@/types/game";
 
 interface GameCardProps {
@@ -55,7 +56,10 @@ export function GameCard({ game }: GameCardProps) {
   const ratingColor = game.rating ? getRatingColor(game.rating) : undefined;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden flex flex-col print:shadow-none print:border-stone-300 print:break-inside-avoid">
+    <Link
+      href={`/game/${game.id}`}
+      className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden flex flex-col print:shadow-none print:border-stone-300 print:break-inside-avoid hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer"
+    >
       {/* Game Cover Image with Blurred Background */}
       <div className="aspect-square relative overflow-hidden bg-stone-800">
         {imageUrl ? (
@@ -126,6 +130,6 @@ export function GameCard({ game }: GameCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
