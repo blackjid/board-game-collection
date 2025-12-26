@@ -11,6 +11,12 @@ vi.mock("@/lib/prisma", () => ({
       create: vi.fn(),
       upsert: vi.fn(),
     },
+    game: {
+      deleteMany: vi.fn(),
+    },
+    syncLog: {
+      deleteMany: vi.fn(),
+    },
   },
 }));
 
@@ -20,6 +26,16 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 import { requireAdmin } from "@/lib/auth";
+
+const mockAdminUser = {
+  id: "admin-1",
+  email: "admin@example.com",
+  name: "Admin",
+  role: "admin",
+  passwordHash: "hashed",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 describe("Settings API Route", () => {
   beforeEach(() => {
@@ -99,7 +115,8 @@ describe("Settings API Route", () => {
     });
 
     it("should update bggUsername", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(undefined);
+      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
+      vi.mocked(prisma.settings.findUnique).mockResolvedValue(null);
 
       const updatedSettings = {
         id: "default",
@@ -132,8 +149,88 @@ describe("Settings API Route", () => {
       );
     });
 
+    it("should clear games when changing bggUsername to a different value", async () => {
+      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
+
+      // Mock existing settings with a username
+      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
+        id: "default",
+        collectionName: null,
+        bggUsername: "olduser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastScheduledSync: null,
+        updatedAt: new Date(),
+      });
+
+      const updatedSettings = {
+        id: "default",
+        collectionName: null,
+        bggUsername: "newuser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastScheduledSync: null,
+        updatedAt: new Date(),
+      };
+
+      vi.mocked(prisma.settings.upsert).mockResolvedValue(updatedSettings);
+      vi.mocked(prisma.game.deleteMany).mockResolvedValue({ count: 10 });
+      vi.mocked(prisma.syncLog.deleteMany).mockResolvedValue({ count: 5 });
+
+      const request = new NextRequest("http://localhost:3000/api/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ bggUsername: "newuser" }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.bggUsername).toBe("newuser");
+      expect(prisma.game.deleteMany).toHaveBeenCalledWith({});
+      expect(prisma.syncLog.deleteMany).toHaveBeenCalledWith({});
+    });
+
+    it("should not clear games when setting same bggUsername", async () => {
+      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
+
+      // Mock existing settings with the same username
+      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
+        id: "default",
+        collectionName: null,
+        bggUsername: "sameuser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastScheduledSync: null,
+        updatedAt: new Date(),
+      });
+
+      const updatedSettings = {
+        id: "default",
+        collectionName: null,
+        bggUsername: "sameuser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastScheduledSync: null,
+        updatedAt: new Date(),
+      };
+
+      vi.mocked(prisma.settings.upsert).mockResolvedValue(updatedSettings);
+
+      const request = new NextRequest("http://localhost:3000/api/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ bggUsername: "sameuser" }),
+      });
+
+      const response = await PATCH(request);
+
+      expect(response.status).toBe(200);
+      expect(prisma.game.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.syncLog.deleteMany).not.toHaveBeenCalled();
+    });
+
     it("should update syncSchedule", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(undefined);
+      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
 
       const updatedSettings = {
         id: "default",
@@ -160,7 +257,7 @@ describe("Settings API Route", () => {
     });
 
     it("should update autoScrapeNewGames", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(undefined);
+      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
 
       const updatedSettings = {
         id: "default",
@@ -187,7 +284,7 @@ describe("Settings API Route", () => {
     });
 
     it("should update multiple fields at once", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(undefined);
+      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
 
       const updatedSettings = {
         id: "default",

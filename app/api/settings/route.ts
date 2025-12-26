@@ -29,6 +29,27 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json();
   const { collectionName, bggUsername, syncSchedule, autoScrapeNewGames } = body;
 
+  // Check if BGG username is being changed
+  if (bggUsername !== undefined) {
+    const currentSettings = await prisma.settings.findUnique({
+      where: { id: SETTINGS_ID },
+    });
+
+    // If username is changing from one value to a different value, clear the games database
+    if (
+      currentSettings?.bggUsername &&
+      bggUsername !== currentSettings.bggUsername
+    ) {
+      console.log(
+        `[Settings] BGG username changing from "${currentSettings.bggUsername}" to "${bggUsername}". Clearing games database.`
+      );
+
+      // Delete all games and sync logs
+      await prisma.game.deleteMany({});
+      await prisma.syncLog.deleteMany({});
+    }
+  }
+
   const settings = await prisma.settings.upsert({
     where: { id: SETTINGS_ID },
     update: {
