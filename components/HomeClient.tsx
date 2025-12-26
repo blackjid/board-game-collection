@@ -120,7 +120,7 @@ export function HomeClient({
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">
                 <span className="text-white">{collectionName || (bggUsername ? `${bggUsername}'s` : "Board Game")}</span>
                 <span className="text-amber-500/80 font-light ml-2 italic">Collection</span>
-              </h1>
+            </h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-stone-400 text-sm">
                   {totalGames} game{totalGames !== 1 ? "s" : ""}
@@ -134,10 +134,10 @@ export function HomeClient({
                   </>
                 )}
               </div>
-            </div>
+          </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
               {/* Quick Sync - Admin only */}
               {isAdmin && (
                 <button
@@ -159,14 +159,14 @@ export function HomeClient({
               )}
 
               {/* Experience Button */}
-              <Link
-                href="/experience"
+            <Link
+              href="/experience"
                 className="px-3 sm:px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
                 <span className="hidden sm:inline">Experience</span>
               </Link>
 
@@ -183,7 +183,7 @@ export function HomeClient({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span className="hidden sm:inline">Login</span>
-                </Link>
+            </Link>
               )}
             </div>
           </div>
@@ -232,35 +232,35 @@ export function HomeClient({
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             {/* Left: View toggle and sort */}
             <div className="flex items-center gap-3 sm:gap-4">
-              {/* View Toggle */}
+            {/* View Toggle */}
               <div className="flex items-center gap-0.5 bg-stone-800/80 rounded-lg p-0.5">
-                <button
-                  onClick={() => setViewMode("grid")}
+              <button
+                onClick={() => setViewMode("grid")}
                   className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded transition-colors ${
-                    viewMode === "grid"
-                      ? "bg-amber-600 text-white"
-                      : "text-stone-400 hover:text-white"
-                  }`}
-                  title="Grid view"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
+                  viewMode === "grid"
+                    ? "bg-amber-600 text-white"
+                    : "text-stone-400 hover:text-white"
+                }`}
+                title="Grid view"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
                   className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded transition-colors ${
-                    viewMode === "list"
-                      ? "bg-amber-600 text-white"
-                      : "text-stone-400 hover:text-white"
-                  }`}
-                  title="List view"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
+                  viewMode === "list"
+                    ? "bg-amber-600 text-white"
+                    : "text-stone-400 hover:text-white"
+                }`}
+                title="List view"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
 
               {/* Sort Dropdown */}
               <div className="flex items-center gap-1.5">
@@ -450,16 +450,16 @@ export function HomeClient({
             />
           </a>
           <div className="flex items-center gap-3 text-stone-600 text-xs">
-            {bggUsername && (
+          {bggUsername && (
               <>
-                <a
-                  href={`https://boardgamegeek.com/collection/user/${bggUsername}`}
+              <a
+                href={`https://boardgamegeek.com/collection/user/${bggUsername}`}
                   className="hover:text-amber-400 transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                   View on BGG
-                </a>
+              </a>
                 <span>•</span>
               </>
             )}
@@ -470,7 +470,7 @@ export function HomeClient({
               >
                 Print Collection
               </button>
-            )}
+          )}
           </div>
         </div>
       </footer>

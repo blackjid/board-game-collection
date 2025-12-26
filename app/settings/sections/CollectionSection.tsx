@@ -276,7 +276,7 @@ export function CollectionSection() {
 
       // If queue is processing, also refresh game data
       if (data.isProcessing) {
-        fetchData();
+    fetchData();
       }
     } catch (error) {
       console.error("Failed to fetch queue status:", error);
@@ -470,7 +470,7 @@ export function CollectionSection() {
             <div className="bg-stone-800 rounded-lg p-3">
               <div className="text-2xl font-bold text-white">{syncStatus.stats.total}</div>
               <div className="text-stone-400 text-xs">Total Games</div>
-            </div>
+              </div>
             <div className="bg-stone-800 rounded-lg p-3">
               <div className="text-2xl font-bold text-amber-400">{syncStatus.stats.active}</div>
               <div className="text-stone-400 text-xs">Active</div>
@@ -478,7 +478,7 @@ export function CollectionSection() {
             <div className="bg-stone-800 rounded-lg p-3">
               <div className="text-2xl font-bold text-emerald-400">{syncStatus.stats.scraped}</div>
               <div className="text-stone-400 text-xs">Scraped</div>
-            </div>
+              </div>
             <div className="bg-stone-800 rounded-lg p-3">
               <div className="text-xs text-white">
                 {syncStatus.lastSync
@@ -498,7 +498,7 @@ export function CollectionSection() {
               <div>
                 <label htmlFor="sync-schedule" className="text-stone-200 text-sm font-medium">
                   Auto-sync
-                </label>
+            </label>
                 <p className="text-stone-500 text-xs mt-0.5">
                   Schedule automatic syncs
                 </p>
@@ -571,7 +571,7 @@ export function CollectionSection() {
               Last auto-sync: {new Date(settings.lastScheduledSync).toLocaleString()}
             </p>
           )}
-        </div>
+            </div>
       </div>
 
       {/* Scrape Queue Status */}
@@ -623,9 +623,9 @@ export function CollectionSection() {
                 </span>
                 {queueStatus.isStopping && (
                   <span className="text-amber-400 text-xs">(will stop after this)</span>
-                )}
-              </div>
-            </div>
+          )}
+        </div>
+      </div>
           )}
 
           <div className="flex items-center gap-4 text-xs text-stone-400">

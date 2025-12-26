@@ -1,750 +1,1070 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
-import gamesData from "@/data/games.json";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 
-// Calculate rating color
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface GameData {
+  id: string;
+  name: string;
+  yearPublished: number | null;
+  image: string | null;
+  description: string | null;
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  minPlaytime: number | null;
+  maxPlaytime: number | null;
+  rating: number | null;
+  minAge: number | null;
+  isExpansion: boolean;
+  categories: string[];
+  mechanics: string[];
+  componentImages: string[];
+  availableImages: string[];
+}
+
+interface Filters {
+  players: number | null;
+  kidsPlaying: boolean | null;
+  time: "quick" | "medium" | "long" | "epic" | null;
+  categories: string[];
+  includeExpansions: boolean;
+}
+
+type WizardStep = "welcome" | "players" | "kids" | "time" | "mood" | "expansions" | "swipe" | "picked";
+
+// ============================================================================
+// SVG ICONS
+// ============================================================================
+
+const Icons = {
+  dice: (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+      <circle cx="16" cy="8" r="1.5" fill="currentColor" />
+      <circle cx="8" cy="16" r="1.5" fill="currentColor" />
+      <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  ),
+  users: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  clock: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  star: (
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  ),
+  x: (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  heart: (
+    <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ),
+  sparkles: (
+    <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+      <path d="M12 8l1.5 3 3.5.5-2.5 2.5.5 3.5-3-1.5-3 1.5.5-3.5-2.5-2.5 3.5-.5L12 8z" fill="currentColor" />
+    </svg>
+  ),
+  arrowLeft: (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </svg>
+  ),
+  gamepad: (
+    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <line x1="6" y1="12" x2="10" y2="12" />
+      <line x1="8" y1="10" x2="8" y2="14" />
+      <circle cx="16" cy="10" r="1" fill="currentColor" />
+      <circle cx="18" cy="12" r="1" fill="currentColor" />
+    </svg>
+  ),
+  package: (
+    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  ),
+  child: (
+    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="6" r="3" />
+      <path d="M12 9v3" />
+      <path d="M9 21v-6a3 3 0 0 1 6 0v6" />
+      <path d="M7 12h10" />
+    </svg>
+  ),
+  adults: (
+    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="8" cy="5" r="2.5" />
+      <circle cx="16" cy="5" r="2.5" />
+      <path d="M4 21v-5a4 4 0 0 1 8 0v5" />
+      <path d="M12 21v-5a4 4 0 0 1 8 0v5" />
+    </svg>
+  ),
+  lightning: (
+    <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  clockMedium: (
+    <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 15 15" />
+    </svg>
+  ),
+  clockLong: (
+    <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 8 16" />
+    </svg>
+  ),
+  castle: (
+    <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 21h18" />
+      <path d="M5 21V7l3-3 3 3 2-2 2 2 3-3 3 3v14" />
+      <path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" />
+    </svg>
+  ),
+  shrug: (
+    <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="8" r="5" />
+      <path d="M12 13v8" />
+      <path d="M5 17l7-4 7 4" />
+      <circle cx="10" cy="7" r="0.5" fill="currentColor" />
+      <circle cx="14" cy="7" r="0.5" fill="currentColor" />
+      <path d="M10 9.5h4" />
+    </svg>
+  ),
+  check: (
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+};
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const TIME_RANGES = {
+  quick: { min: 0, max: 30, label: "Quick", sublabel: "Under 30 min" },
+  medium: { min: 30, max: 60, label: "Medium", sublabel: "30 to 60 min" },
+  long: { min: 60, max: 120, label: "Long", sublabel: "1 to 2 hours" },
+  epic: { min: 120, max: 999, label: "Epic", sublabel: "2+ hours" },
+};
+
+const PLAYER_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+function getPrimaryImage(game: GameData): string | null {
+  return game.image;
+}
+
 function getRatingColor(rating: number): string {
   const clampedRating = Math.max(4, Math.min(8, rating));
   const normalized = (clampedRating - 4) / 4;
-  let r, g, b;
   if (normalized < 0.5) {
     const t = normalized * 2;
-    r = 220;
-    g = Math.round(80 + t * 140);
-    b = Math.round(60 - t * 20);
+    return `rgb(220, ${Math.round(80 + t * 140)}, ${Math.round(60 - t * 20)})`;
   } else {
     const t = (normalized - 0.5) * 2;
-    r = Math.round(220 - t * 140);
-    g = Math.round(180 + t * 20);
-    b = Math.round(40 + t * 40);
+    return `rgb(${Math.round(220 - t * 140)}, ${Math.round(180 + t * 20)}, ${Math.round(40 + t * 40)})`;
   }
-  return `rgb(${r}, ${g}, ${b})`;
 }
 
-// Seeded random for consistent positioning
-function seededRandom(seed: number) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
-export default function ExperiencePage() {
-  const { games, totalGames } = gamesData;
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollY, setScrollY] = useState(0);
-  const [windowHeight, setWindowHeight] = useState(1);
-  const [docHeight, setDocHeight] = useState(1);
-  const [suggestedGame, setSuggestedGame] = useState<typeof games[0] | null>(null);
-  const [hoveredGallery, setHoveredGallery] = useState<string | null>(null);
-  const [collectionName, setCollectionName] = useState<string | null>(null);
-
-  // Fetch collection settings
-  useEffect(() => {
-    fetch("/api/settings")
-      .then((res) => res.json())
-      .then((data) => {
-        setCollectionName(data.collectionName || (data.bggUsername ? `${data.bggUsername}'s` : "My"));
-      })
-      .catch(() => {});
-  }, []);
-
-  // Sort games by rating
-  const sortedGames = useMemo(() =>
-    [...games].sort((a, b) => {
-      if (a.rating === null) return 1;
-      if (b.rating === null) return -1;
-      return b.rating - a.rating;
-    }), [games]
-  );
-
-  // Pre-calculate floating thumbnail positions (stable across renders)
-  const floatingPositions = useMemo(() =>
-    sortedGames.slice(0, 20).map((game, i) => ({
-      left: 5 + (i % 5) * 18 + seededRandom(i * 7) * 8,
-      top: 5 + Math.floor(i / 5) * 22 + seededRandom(i * 13) * 8,
-      rotation: -12 + seededRandom(i * 17) * 24,
-      delay: seededRandom(i * 23) * 2,
-    })), [sortedGames]
-  );
-
-  // Top games for showcase
-  const showcaseGames = sortedGames.slice(0, 12);
-
-  // Calculate stats
-  const stats = useMemo(() => {
-    const withRating = games.filter(g => g.rating);
-    const avgRating = withRating.length > 0
-      ? withRating.reduce((acc, g) => acc + (g.rating || 0), 0) / withRating.length
-      : 0;
-    const oldestGame = games.reduce((oldest, g) => (!oldest.yearPublished || (g.yearPublished && g.yearPublished < oldest.yearPublished)) ? g : oldest, games[0]);
-    const newestGame = games.reduce((newest, g) => (!newest.yearPublished || (g.yearPublished && g.yearPublished > newest.yearPublished)) ? g : newest, games[0]);
-
-    // Calculate total playtime potential (sum of avg playtime for each game)
-    const totalMinutes = games.reduce((acc, g) => {
-      const avgTime = g.minPlaytime && g.maxPlaytime ? (g.minPlaytime + g.maxPlaytime) / 2 : (g.minPlaytime || g.maxPlaytime || 60);
-      return acc + avgTime;
-    }, 0);
-    const totalHours = Math.round(totalMinutes / 60);
-
-    return { avgRating, oldestGame, newestGame, totalHours };
-  }, [games]);
-
-  // Pick a random game
-  const pickRandomGame = () => {
-    const randomIndex = Math.floor(Math.random() * games.length);
-    setSuggestedGame(games[randomIndex]);
-  };
-
-  useEffect(() => {
-    const updateDimensions = () => {
-      setWindowHeight(window.innerHeight);
-      if (containerRef.current) {
-        setDocHeight(containerRef.current.scrollHeight);
+function filterGames(games: GameData[], filters: Filters): GameData[] {
+  return games.filter((game) => {
+    if (filters.players !== null) {
+      const min = game.minPlayers || 1;
+      const max = game.maxPlayers || 99;
+      if (filters.players < min || filters.players > max) {
+        return false;
       }
-    };
-
-    updateDimensions();
-
-    const handleScroll = () => {
-      if (containerRef.current) {
-        setScrollY(containerRef.current.scrollTop);
-        setDocHeight(containerRef.current.scrollHeight);
-      }
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener("scroll", handleScroll, { passive: true });
     }
-    window.addEventListener("resize", updateDimensions);
 
-    return () => {
-      if (container) {
-        container.removeEventListener("scroll", handleScroll);
+    if (filters.kidsPlaying === true) {
+      const minAge = game.minAge || 0;
+      if (minAge > 10) {
+        return false;
       }
-      window.removeEventListener("resize", updateDimensions);
-    };
-  }, []);
+    }
 
-  // Calculate current section index for the "Story" progress bar
-  const totalSections = showcaseGames.length + 3; // Hero + Showcase + Stats + Dice + Collection
-  const currentSection = Math.min(
-    totalSections - 1,
-    Math.max(0, Math.floor((scrollY + windowHeight / 2) / windowHeight))
-  );
+    if (filters.time !== null) {
+      const range = TIME_RANGES[filters.time];
+      const gameTime = game.maxPlaytime || game.minPlaytime || 60;
+      if (gameTime < range.min || gameTime > range.max) {
+        return false;
+      }
+    }
+
+    if (filters.categories.length > 0) {
+      const gameCategories = game.categories.map((c) => c.toLowerCase());
+      const hasMatch = filters.categories.some((cat) =>
+        gameCategories.some((gc) => gc.includes(cat.toLowerCase()))
+      );
+      if (!hasMatch) {
+        return false;
+      }
+    }
+
+    if (!filters.includeExpansions && game.isExpansion) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+// ============================================================================
+// SWIPE CARD COMPONENT
+// ============================================================================
+
+interface SwipeCardProps {
+  game: GameData;
+  onSwipeLeft: () => void;
+  onSwipeRight: () => void;
+  onSwipeUp: () => void;
+  isTop: boolean;
+}
+
+function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+
+  const handleStart = useCallback((clientX: number, clientY: number) => {
+    if (!isTop) return;
+    setIsDragging(true);
+    setStartPos({ x: clientX, y: clientY });
+  }, [isTop]);
+
+  const handleMove = useCallback((clientX: number, clientY: number) => {
+    if (!isDragging) return;
+    setPosition({
+      x: clientX - startPos.x,
+      y: clientY - startPos.y,
+    });
+  }, [isDragging, startPos]);
+
+  const handleEnd = useCallback(() => {
+    if (!isDragging) return;
+    setIsDragging(false);
+
+    const threshold = 100;
+    const upThreshold = 80;
+
+    if (position.y < -upThreshold && Math.abs(position.x) < threshold) {
+      onSwipeUp();
+    } else if (position.x > threshold) {
+      onSwipeRight();
+    } else if (position.x < -threshold) {
+      onSwipeLeft();
+    } else {
+      setPosition({ x: 0, y: 0 });
+    }
+  }, [isDragging, position, onSwipeLeft, onSwipeRight, onSwipeUp]);
+
+  const handleMouseDown = (e: React.MouseEvent) => handleStart(e.clientX, e.clientY);
+  const handleMouseMove = (e: React.MouseEvent) => handleMove(e.clientX, e.clientY);
+  const handleMouseUp = () => handleEnd();
+  const handleMouseLeave = () => { if (isDragging) handleEnd(); };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleStart(touch.clientX, touch.clientY);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleMove(touch.clientX, touch.clientY);
+  };
+  const handleTouchEnd = () => handleEnd();
+
+  const rotation = position.x * 0.1;
+  const opacity = isTop ? 1 : 0.5;
+  const scale = isTop ? 1 : 0.95;
+
+  const showLike = position.x > 50;
+  const showNope = position.x < -50;
+  const showPick = position.y < -50;
 
   return (
     <div
-      ref={containerRef}
-      className="bg-black text-white h-screen w-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar"
+      ref={cardRef}
+      className={`absolute inset-0 bg-gradient-to-b from-stone-800 to-stone-900 rounded-2xl shadow-2xl overflow-hidden cursor-grab active:cursor-grabbing transition-transform ${isDragging ? "" : "duration-300"}`}
+      style={{
+        transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale})`,
+        opacity,
+        zIndex: isTop ? 10 : 5,
+      }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      {/* Story Progress Bars - hidden on mobile, simplified on tablet */}
-      <div className="fixed top-2 sm:top-4 left-2 sm:left-4 right-2 sm:right-4 z-50 hidden sm:flex gap-1 sm:gap-2">
-        {Array.from({ length: totalSections }).map((_, i) => (
-          <div key={i} className="h-0.5 sm:h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className={`h-full bg-white transition-all duration-300 ${
-                i < currentSection ? 'w-full' : i === currentSection ? 'w-full opacity-100' : 'w-0'
-              }`}
-              style={{
-                 width: i < currentSection ? '100%' : i === currentSection ? `${Math.min(100, ((scrollY - i * windowHeight) / windowHeight) * 100 + 100)}%` : '0%'
-              }}
-            />
+      {/* Game Image */}
+      <div className="h-3/5 relative bg-stone-800">
+        {getPrimaryImage(game) ? (
+          <img
+            src={getPrimaryImage(game)!}
+            alt={game.name}
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+        ) : (
+          <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
+            {Icons.dice}
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Mobile progress indicator - simple dot-based */}
-      <div className="fixed top-3 right-3 z-50 sm:hidden flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full">
-        <span className="text-white text-xs font-medium">{currentSection + 1}</span>
-        <span className="text-white/40 text-xs">/</span>
-        <span className="text-white/60 text-xs">{totalSections}</span>
-      </div>
-
-      {/* Back Button */}
-      <Link
-        href="/"
-        className="fixed top-3 left-3 sm:top-8 sm:left-6 z-50 bg-black/40 backdrop-blur-md px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium hover:bg-white/10 transition-all border border-white/10 group"
-      >
-        <span className="group-hover:-translate-x-1 inline-block transition-transform">←</span> <span className="hidden sm:inline">Back</span>
-      </Link>
-
-      {/* ==================== HERO (Slide 1) ==================== */}
-      <section className="h-screen w-full snap-start flex items-center justify-center relative overflow-hidden">
-        {/* Mosaic of game covers as background */}
-        <div
-          className="absolute inset-0 grid grid-cols-5 md:grid-cols-8 gap-1 opacity-20"
-          style={{ transform: `scale(1.2) translateY(${scrollY * 0.15}px)` }}
-        >
-          {sortedGames.slice(0, 40).map((game) => (
-            <div key={game.id} className="aspect-square overflow-hidden">
-              {game.image && (
-                <img src={game.image} alt="" className="w-full h-full object-cover" />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-black" />
-
-          <div className="relative z-10 text-center px-4 sm:px-6">
-            <p className="text-amber-400 text-xs sm:text-sm md:text-base font-semibold tracking-[0.2em] sm:tracking-[0.4em] uppercase mb-4 sm:mb-6 animate-fade-in-up">
-              {collectionName ? `${collectionName} Collection` : "The Collection"}
-            </p>
-            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tight leading-[0.85] mb-6 sm:mb-8 animate-fade-in-up delay-100">
-              <span className="block">{totalGames}</span>
-              <span className="block text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-stone-400 font-light mt-1 sm:mt-2">worlds to explore</span>
-            </h1>
-
-            <div className="mt-8 sm:mt-12 opacity-0 animate-fade-in-up delay-300">
-              <p className="text-stone-500 text-base sm:text-lg italic">
-                &quot;Every box holds a new universe.&quot;
-              </p>
-            </div>
-
-            <div className="mt-16 sm:mt-24 animate-bounce">
-              <svg className="w-5 sm:w-6 h-5 sm:h-6 mx-auto text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </div>
+        {/* Swipe indicators */}
+        {showLike && (
+          <div className="absolute top-6 left-4 bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[-15deg] border-2 border-white">
+            MAYBE
           </div>
-      </section>
+        )}
+        {showNope && (
+          <div className="absolute top-6 right-4 bg-red-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[15deg] border-2 border-white">
+            NOPE
+          </div>
+        )}
+        {showPick && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-black px-6 py-2 rounded-lg text-lg font-black border-2 border-white flex items-center gap-2">
+            THIS ONE! <span className="text-amber-900 w-5 h-5">{Icons.star}</span>
+          </div>
+        )}
 
-      {/* ==================== GAME SHOWCASES ==================== */}
-      {showcaseGames.map((game, index) => {
-        const galleryImages = (game as any).galleryImages || [];
-        const isEven = index % 2 === 0;
-
-        // Calculate section-specific scroll progress (0 = entering, 1 = leaving)
-        const sectionStart = (index + 1) * windowHeight;
-        const sectionProgress = Math.max(0, Math.min(1, (scrollY - sectionStart + windowHeight) / windowHeight));
-
-        // Reveal progress (0 = hidden, 1 = fully visible) - triggers when section is ~30% visible
-        const revealProgress = Math.max(0, Math.min(1, (sectionProgress - 0.2) * 2.5));
-
-        // Easing function for smoother animations
-        const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-        const easedReveal = easeOut(revealProgress);
-
-        return (
-          <section
-            key={game.id}
-            className="h-screen w-full snap-start relative flex items-center overflow-hidden"
+        {/* Rating badge */}
+        {game.rating && (
+          <div
+            className="absolute top-3 right-3 px-2.5 py-1 rounded-full font-bold text-sm shadow-lg flex items-center gap-1"
+            style={{ backgroundColor: getRatingColor(game.rating) }}
           >
-            {/* Gallery images as atmospheric background layers */}
-            <div className="absolute inset-0">
-              {/* Primary gallery image - full bleed background with parallax */}
-              {galleryImages[0] && (
-                <div
-                  className="absolute inset-0 transition-[filter] duration-700"
-                  style={{
-                    transform: `scale(1.2) translateY(${(scrollY - sectionStart) * 0.1}px)`,
-                    filter: hoveredGallery === `${game.id}-0` ? 'blur(0px)' : 'blur(3px)',
-                    opacity: 0.3 + easedReveal * 0.3,
-                  }}
-                >
-                  <img
-                    src={galleryImages[0]}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+            <span className="w-3.5 h-3.5">{Icons.star}</span>
+            {game.rating.toFixed(1)}
+          </div>
+        )}
 
-              {/* Floating preview panel - only appears when hovering thumbnails */}
-              {galleryImages.length > 0 && (() => {
-                const hoveredIndex = hoveredGallery?.startsWith(`${game.id}-`)
-                  ? parseInt(hoveredGallery.split('-')[1])
-                  : null;
-                const isHovered = hoveredIndex !== null;
-                const displayImage = isHovered && galleryImages[hoveredIndex]
-                  ? galleryImages[hoveredIndex]
-                  : null;
+        {/* Expansion badge */}
+        {game.isExpansion && (
+          <div className="absolute top-3 left-3 bg-purple-600 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+            Expansion
+          </div>
+        )}
+      </div>
 
-                return (
-                  <div
-                    className={`absolute ${isEven ? 'right-4 md:right-12' : 'left-4 md:left-12'} top-1/4 w-2/5 md:w-1/3 aspect-video hidden lg:block pointer-events-none transition-all duration-500 ease-out`}
-                    style={{
-                      transform: isHovered
-                        ? `translateY(${(scrollY - sectionStart) * 0.05}px) rotate(${isEven ? 3 : -3}deg) scale(1)`
-                        : `translateY(${(scrollY - sectionStart) * 0.05}px) rotate(${isEven ? 6 : -6}deg) scale(0.9)`,
-                      opacity: isHovered ? 1 : 0,
-                      zIndex: 30,
-                    }}
-                  >
-                    {displayImage && (
-                      <img
-                        src={displayImage}
-                        alt="Game component preview"
-                        className="w-full h-full object-cover rounded-2xl shadow-2xl shadow-amber-500/30 border border-amber-500/20"
-                      />
-                    )}
-                  </div>
-                );
-              })()}
+      {/* Game Info */}
+      <div className="h-2/5 p-4 flex flex-col justify-between">
+        <div>
+          <h2 className="text-xl font-black text-white mb-1 line-clamp-2">
+            {game.name}
+          </h2>
+          {game.yearPublished && (
+            <p className="text-stone-500 text-sm mb-2">{game.yearPublished}</p>
+          )}
+        </div>
 
-              {/* Gradient overlays */}
-              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/60 pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50 pointer-events-none" />
-            </div>
+        <div>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {game.minPlayers && game.maxPlayers && (
+              <span className="bg-white/10 px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
+                <span className="text-stone-400 w-3.5 h-3.5">{Icons.users}</span>
+                {game.minPlayers === game.maxPlayers ? game.minPlayers : `${game.minPlayers}-${game.maxPlayers}`}
+              </span>
+            )}
+            {(game.minPlaytime || game.maxPlaytime) && (
+              <span className="bg-white/10 px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
+                <span className="text-stone-400 w-3.5 h-3.5">{Icons.clock}</span>
+                {game.minPlaytime || game.maxPlaytime}m
+              </span>
+            )}
+            {game.minAge && (
+              <span className="bg-white/10 px-2.5 py-1 rounded-full text-xs">
+                {game.minAge}+
+              </span>
+            )}
+          </div>
 
-            {/* Main content with staggered reveal animations */}
-            <div className="relative z-20 max-w-7xl mx-auto px-6 py-24 w-full">
-              <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12 lg:gap-20`}>
-
-                {/* Game Cover - slides in from the side with parallax */}
-                <div
-                  className="w-full lg:w-2/5 flex-shrink-0 transition-[transform,opacity] duration-700 ease-out"
-                  style={{
-                    transform: `translateX(${(1 - easedReveal) * (isEven ? -100 : 100)}px) translateY(${(scrollY - sectionStart) * 0.03}px)`,
-                    opacity: easedReveal,
-                  }}
-                >
-                  <div className="relative">
-                    {/* Rank badge - pops in with scale */}
-                    <div
-                      className="absolute -top-6 -left-4 z-20 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 transition-all duration-500"
-                      style={{
-                        transform: `scale(${0.5 + easedReveal * 0.5}) rotate(${(1 - easedReveal) * -20}deg)`,
-                        opacity: easedReveal,
-                      }}
-                    >
-                      <span className="text-amber-400 font-black text-2xl">#{index + 1}</span>
-                    </div>
-
-                    {/* Main cover image */}
-                    <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 transform hover:scale-[1.02] transition-transform duration-500">
-                      {game.image ? (
-                        <img
-                          src={game.image}
-                          alt={game.name}
-                          className="w-full h-auto max-h-[70vh] object-contain"
-                        />
-                      ) : (
-                        <div className="w-full aspect-[3/4] bg-stone-900 flex items-center justify-center">
-                          <span className="text-8xl">🎲</span>
-                        </div>
-                      )}
-
-                      {/* Rating badge - arrives with delay */}
-                      {game.rating && (
-                        <div
-                          className="absolute top-4 right-4 px-4 py-2 rounded-full font-black text-lg shadow-lg transition-all duration-500"
-                          style={{
-                            backgroundColor: getRatingColor(game.rating),
-                            transform: `translateY(${(1 - easedReveal) * -30}px) scale(${0.8 + easedReveal * 0.2})`,
-                            opacity: easedReveal,
-                          }}
-                        >
-                          ★ {game.rating.toFixed(1)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Game Info - staggered text reveals */}
-                <div className={`w-full lg:w-3/5 ${isEven ? 'lg:text-left' : 'lg:text-right'} text-center`}>
-                  {/* Year and type badge - first to appear */}
-                  <div
-                    className={`flex items-center gap-3 mb-4 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}
-                    style={{
-                      transform: `translateY(${(1 - easedReveal) * 30}px)`,
-                      opacity: easedReveal,
-                    }}
-                  >
-                    <p className="text-amber-400 text-sm uppercase tracking-[0.3em] font-medium">
-                      {game.yearPublished}
-                    </p>
-                    {(game as any).isExpansion && (
-                      <span className="bg-purple-600/80 text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                        Expansion
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Title - slides up with slight delay */}
-                  <h2
-                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 leading-[0.95] transition-all duration-700"
-                    style={{
-                      transform: `translateY(${(1 - easedReveal) * 50}px)`,
-                      opacity: easedReveal,
-                    }}
-                  >
-                    {game.name}
-                  </h2>
-
-                  {/* Description */}
-                  {(game as any).description && (
-                    <p
-                      className="text-stone-400 text-sm md:text-base mb-6 line-clamp-2 max-w-xl mx-auto lg:mx-0"
-                      style={{
-                        transform: `translateY(${(1 - easedReveal) * 40}px)`,
-                        opacity: easedReveal * 0.9,
-                      }}
-                    >
-                      {(game as any).description}
-                    </p>
-                  )}
-
-                  {/* Player/time/age badges - arrive with stagger */}
-                  <div
-                    className={`flex items-center gap-3 flex-wrap mb-4 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}
-                    style={{
-                      transform: `translateY(${(1 - easeOut(Math.max(0, (sectionProgress - 0.3) * 2))) * 40}px)`,
-                      opacity: easeOut(Math.max(0, (sectionProgress - 0.3) * 2)),
-                    }}
-                  >
-                    {game.minPlayers && game.maxPlayers && (
-                      <div className="px-4 py-2 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
-                        👥 {game.minPlayers === game.maxPlayers
-                          ? `${game.minPlayers} players`
-                          : `${game.minPlayers}-${game.maxPlayers} players`
-                        }
-                      </div>
-                    )}
-                    {(game as any).bestPlayerCount && (game as any).bestPlayerCount.length > 0 && (
-                      <div className="px-4 py-2 bg-amber-500/20 rounded-full text-sm font-medium backdrop-blur-sm border border-amber-500/30 text-amber-300">
-                        ⭐ Best: {(game as any).bestPlayerCount.length === 1
-                          ? `${(game as any).bestPlayerCount[0]}P`
-                          : `${(game as any).bestPlayerCount[0]}-${(game as any).bestPlayerCount[(game as any).bestPlayerCount.length - 1]}P`
-                        }
-                      </div>
-                    )}
-                    {game.minPlaytime && game.maxPlaytime && (
-                      <div className="px-4 py-2 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
-                        ⏱ {game.minPlaytime === game.maxPlaytime
-                          ? `${game.minPlaytime} min`
-                          : `${game.minPlaytime}-${game.maxPlaytime} min`
-                        }
-                      </div>
-                    )}
-                    {((game as any).communityAge || (game as any).minAge) && (
-                      <div className="px-4 py-2 bg-white/10 rounded-full text-sm font-medium backdrop-blur-sm border border-white/5">
-                        {(game as any).communityAge ?? (game as any).minAge}+
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Categories & mechanics */}
-                  {((game as any).categories?.length > 0 || (game as any).mechanics?.length > 0) && (
-                    <div
-                      className={`flex items-center gap-2 flex-wrap mb-6 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center`}
-                      style={{
-                        transform: `translateY(${(1 - easeOut(Math.max(0, (sectionProgress - 0.32) * 2))) * 35}px)`,
-                        opacity: easeOut(Math.max(0, (sectionProgress - 0.32) * 2)),
-                      }}
-                    >
-                      {(game as any).categories?.slice(0, 2).map((cat: string, i: number) => (
-                        <span key={`cat-${i}`} className="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">
-                          {cat}
-                        </span>
-                      ))}
-                      {(game as any).mechanics?.slice(0, 2).map((mech: string, i: number) => (
-                        <span key={`mech-${i}`} className="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30">
-                          {mech}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Users rated */}
-                  {(game as any).usersRated && (
-                    <p
-                      className={`text-stone-500 text-xs mb-6 ${isEven ? 'lg:text-left' : 'lg:text-right'}`}
-                      style={{
-                        opacity: easeOut(Math.max(0, (sectionProgress - 0.35) * 2)),
-                      }}
-                    >
-                      {(game as any).usersRated.toLocaleString()} community ratings
-                    </p>
-                  )}
-
-                  {/* Gallery thumbnails - arrive last with individual stagger */}
-                  {galleryImages.length > 0 && (
-                    <div className={`flex gap-3 ${isEven ? 'lg:justify-start' : 'lg:justify-end'} justify-center items-center`}>
-                      {galleryImages.slice(0, 3).map((img: string, i: number) => {
-                        // Clamp the input to min(1) to stop animation overshooting
-                        const rawProgress = (sectionProgress - 0.35 - i * 0.05) * 3;
-                        const thumbReveal = easeOut(Math.max(0, Math.min(1, rawProgress)));
-
-                        return (
-                          <div
-                            key={i}
-                            className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border border-white/20 shadow-lg cursor-pointer transition-all duration-300 hover:scale-125 hover:z-10 hover:border-amber-500/50 hover:shadow-amber-500/30"
-                            style={{
-                              transform: `translateY(${(1 - thumbReveal) * 40}px) scale(${0.8 + thumbReveal * 0.2})`,
-                              opacity: thumbReveal,
-                            }}
-                            onMouseEnter={() => setHoveredGallery(`${game.id}-${i}`)}
-                            onMouseLeave={() => setHoveredGallery(null)}
-                          >
-                            <img src={img} alt="" className="w-full h-full object-cover" />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-      })}
-
-      {/* ==================== STATS INTERLUDE ==================== */}
-      <section className="h-screen w-full snap-start flex items-center justify-center relative overflow-hidden">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1 sm:gap-2 h-full">
-            {sortedGames.slice(12, 36).map((game) => (
-              <div key={game.id} className="aspect-square">
-                {game.image && <img src={game.image} alt="" className="w-full h-full object-cover" />}
-              </div>
+          <div className="flex flex-wrap gap-1">
+            {game.categories.slice(0, 2).map((cat, i) => (
+              <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded text-xs">
+                {cat}
+              </span>
             ))}
           </div>
         </div>
-        <div className="absolute inset-0 bg-black/90" />
+      </div>
+    </div>
+  );
+}
 
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black mb-10 sm:mb-20 text-stone-400">
-            Your collection in numbers
-          </h2>
+// ============================================================================
+// WIZARD SCREEN COMPONENTS
+// ============================================================================
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
-            <div>
-              <div className="text-4xl sm:text-5xl md:text-6xl font-black text-amber-400">{totalGames}</div>
-              <div className="text-stone-500 mt-1 sm:mt-2 text-xs sm:text-sm uppercase tracking-wider">Games</div>
-            </div>
-            <div>
-              <div className="text-4xl sm:text-5xl md:text-6xl font-black text-orange-400">{stats.avgRating.toFixed(1)}</div>
-              <div className="text-stone-500 mt-1 sm:mt-2 text-xs sm:text-sm uppercase tracking-wider">Avg Rating</div>
-            </div>
-            <div>
-              <div className="text-4xl sm:text-5xl md:text-6xl font-black text-rose-400">{stats.totalHours}</div>
-              <div className="text-stone-500 mt-1 sm:mt-2 text-xs sm:text-sm uppercase tracking-wider">Hours of Fun</div>
-            </div>
-            <div>
-              <div className="text-4xl sm:text-5xl md:text-6xl font-black text-pink-400">{stats.oldestGame.yearPublished}</div>
-              <div className="text-stone-500 mt-1 sm:mt-2 text-xs sm:text-sm uppercase tracking-wider">Oldest</div>
-            </div>
-          </div>
+interface WizardScreenProps {
+  onNext: () => void;
+  onBack?: () => void;
+  children: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  showSkip?: boolean;
+  onSkip?: () => void;
+}
+
+function WizardScreen({ onBack, children, title, subtitle, showSkip, onSkip }: WizardScreenProps) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center px-6 py-12 animate-fade-in">
+      <div className="max-w-2xl w-full text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-stone-400 text-lg mb-8">{subtitle}</p>
+        )}
+
+        <div className="mb-8">
+          {children}
         </div>
-      </section>
 
-      {/* ==================== PICK A GAME ==================== */}
-      <section className="h-screen w-full snap-start flex items-center justify-center relative overflow-hidden">
-        {/* Floating thumbnails background - stable positions with smooth CSS animations */}
-        <div className="absolute inset-0">
-          {sortedGames.slice(0, 20).map((game, i) => {
-            const pos = floatingPositions[i];
-            return (
-              <div
-                key={game.id}
-                className="absolute w-20 h-28 md:w-28 md:h-36 rounded-xl overflow-hidden opacity-20 floating-card"
-                style={{
-                  left: `${pos.left}%`,
-                  top: `${pos.top}%`,
-                  transform: `rotate(${pos.rotation}deg)`,
-                  animationDelay: `${pos.delay}s`,
-                }}
-              >
-                {game.image && <img src={game.image} alt="" className="w-full h-full object-cover" />}
-              </div>
-            );
-          })}
-        </div>
-        <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/70 to-black pointer-events-none" />
-
-        <div className="relative z-10 text-center px-4 sm:px-6 max-w-3xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6">
-            What to <span className="text-amber-400">play</span> tonight?
-          </h2>
-          <p className="text-stone-400 text-sm sm:text-lg mb-8 sm:mb-12">
-            Let the dice decide from your {totalGames} games
-          </p>
-
-          <button
-            onClick={pickRandomGame}
-            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black px-8 sm:px-12 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-black transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/30"
-          >
-            🎲 Roll the Dice
-          </button>
-
-          {/* Suggested game card */}
-          {suggestedGame && (
-            <div className="mt-10 sm:mt-16 animate-scale-in">
-              <p className="text-stone-600 uppercase tracking-widest text-xs sm:text-sm mb-4 sm:mb-8">Tonight&apos;s pick...</p>
-
-              <div className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-stone-800 max-w-lg mx-auto shadow-2xl">
-                {/* Cover as hero */}
-                <div className="w-28 h-36 sm:w-40 sm:h-52 mx-auto rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-4 sm:mb-6 transform -rotate-2 hover:rotate-0 transition-transform duration-300 relative">
-                  {suggestedGame.image ? (
-                    <img
-                      src={suggestedGame.image}
-                      alt={suggestedGame.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-stone-800 flex items-center justify-center text-4xl sm:text-5xl">🎲</div>
-                  )}
-                  {(suggestedGame as any).isExpansion && (
-                    <div className="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                      EXP
-                    </div>
-                  )}
-                </div>
-
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-black mb-1 sm:mb-2">{suggestedGame.name}</h3>
-                <p className="text-stone-500 text-sm sm:text-base mb-3 sm:mb-4">{suggestedGame.yearPublished}</p>
-
-                {/* Description */}
-                {(suggestedGame as any).description && (
-                  <p className="text-stone-400 text-sm mb-4 line-clamp-2">
-                    {(suggestedGame as any).description}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-center gap-3 flex-wrap mb-4">
-                  {suggestedGame.rating && (
-                    <span
-                      className="px-4 py-2 rounded-full font-bold"
-                      style={{ backgroundColor: getRatingColor(suggestedGame.rating) }}
-                    >
-                      ★ {suggestedGame.rating.toFixed(1)}
-                    </span>
-                  )}
-                  {suggestedGame.minPlayers && suggestedGame.maxPlayers && (
-                    <span className="text-stone-300 text-sm bg-white/10 px-3 py-1.5 rounded-full">
-                      👥 {suggestedGame.minPlayers}-{suggestedGame.maxPlayers}P
-                    </span>
-                  )}
-                  {(suggestedGame as any).bestPlayerCount && (suggestedGame as any).bestPlayerCount.length > 0 && (
-                    <span className="text-amber-300 text-sm bg-amber-500/20 px-3 py-1.5 rounded-full border border-amber-500/30">
-                      ⭐ Best: {(suggestedGame as any).bestPlayerCount.length === 1
-                        ? `${(suggestedGame as any).bestPlayerCount[0]}P`
-                        : `${(suggestedGame as any).bestPlayerCount[0]}-${(suggestedGame as any).bestPlayerCount[(suggestedGame as any).bestPlayerCount.length - 1]}P`
-                      }
-                    </span>
-                  )}
-                  {suggestedGame.minPlaytime && suggestedGame.maxPlaytime && (
-                    <span className="text-stone-300 text-sm bg-white/10 px-3 py-1.5 rounded-full">
-                      ⏱ {suggestedGame.minPlaytime}-{suggestedGame.maxPlaytime}m
-                    </span>
-                  )}
-                  {((suggestedGame as any).communityAge || (suggestedGame as any).minAge) && (
-                    <span className="text-stone-300 text-sm bg-white/10 px-3 py-1.5 rounded-full">
-                      {(suggestedGame as any).communityAge ?? (suggestedGame as any).minAge}+
-                    </span>
-                  )}
-                </div>
-
-                {/* Categories */}
-                {(suggestedGame as any).categories?.length > 0 && (
-                  <div className="flex gap-2 justify-center flex-wrap mb-4">
-                    {(suggestedGame as any).categories.slice(0, 3).map((cat: string, i: number) => (
-                      <span key={i} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">
-                        {cat}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Gallery context */}
-                {(suggestedGame as any).galleryImages?.length > 0 && (
-                  <div className="flex gap-2 mt-4 justify-center">
-                    {(suggestedGame as any).galleryImages.slice(0, 3).map((img: string, i: number) => (
-                      <div key={i} className="w-14 h-14 rounded-lg overflow-hidden opacity-70 hover:opacity-100 hover:scale-110 transition-all cursor-pointer">
-                        <img src={img} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={pickRandomGame}
-                className="mt-8 text-stone-500 hover:text-amber-400 transition-colors text-sm uppercase tracking-widest"
-              >
-                ↻ Roll again
-              </button>
-            </div>
+        <div className="flex items-center justify-center gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="px-6 py-3 text-stone-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              {Icons.arrowLeft} Back
+            </button>
+          )}
+          {showSkip && onSkip && (
+            <button
+              onClick={onSkip}
+              className="px-6 py-3 text-stone-500 hover:text-stone-300 transition-colors text-sm"
+            >
+              Skip
+            </button>
           )}
         </div>
-      </section>
+      </div>
+    </div>
+  );
+}
 
-      {/* ==================== FULL COLLECTION MOSAIC ==================== */}
-      <section className="h-screen w-full snap-start overflow-y-auto relative py-12 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-6 sm:mb-12 text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-400">
-            The Complete Collection
-          </h2>
+
+// ============================================================================
+// TIME ICON
+// ============================================================================
+
+function TimeIcon({ time }: { time: "quick" | "medium" | "long" | "epic" }) {
+  switch (time) {
+    case "quick": return <span className="text-amber-400">{Icons.lightning}</span>;
+    case "medium": return <span className="text-amber-400">{Icons.clockMedium}</span>;
+    case "long": return <span className="text-amber-400">{Icons.clockLong}</span>;
+    case "epic": return <span className="text-amber-400">{Icons.castle}</span>;
+  }
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export default function ExperiencePage() {
+  const [games, setGames] = useState<GameData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [collectionName, setCollectionName] = useState("My");
+
+  const [step, setStep] = useState<WizardStep>("welcome");
+  const [filters, setFilters] = useState<Filters>({
+    players: null,
+    kidsPlaying: null,
+    time: null,
+    categories: [],
+    includeExpansions: false,
+  });
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [maybePile, setMaybePile] = useState<GameData[]>([]);
+  const [pickedGame, setPickedGame] = useState<GameData | null>(null);
+
+  const availableCategories = useMemo(() => {
+    const catCount: Record<string, number> = {};
+    games.forEach((g) => {
+      g.categories.forEach((c) => {
+        catCount[c] = (catCount[c] || 0) + 1;
+      });
+    });
+    return Object.entries(catCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([cat]) => cat);
+  }, [games]);
+
+  const filteredGames = useMemo(() => {
+    return filterGames(games, filters);
+  }, [games, filters]);
+
+  useEffect(() => {
+    fetch("/api/experience")
+      .then((res) => res.json())
+      .then((data) => {
+        setGames(data.games || []);
+        setCollectionName(data.collectionName || "My");
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (step === "swipe") {
+      setCurrentIndex(0);
+      setMaybePile([]);
+      setPickedGame(null);
+    }
+  }, [step]);
+
+  const goToStep = (newStep: WizardStep) => setStep(newStep);
+
+  const setPlayers = (n: number | null) => {
+    setFilters((f) => ({ ...f, players: n }));
+    if (n === 1) {
+      goToStep("time");
+    } else {
+      goToStep("kids");
+    }
+  };
+
+  const setKids = (hasKids: boolean | null) => {
+    setFilters((f) => ({ ...f, kidsPlaying: hasKids }));
+    goToStep("time");
+  };
+
+  const setTime = (t: Filters["time"]) => {
+    setFilters((f) => ({ ...f, time: t }));
+    goToStep("mood");
+  };
+
+  const toggleCategory = (cat: string) => {
+    setFilters((f) => ({
+      ...f,
+      categories: f.categories.includes(cat)
+        ? f.categories.filter((c) => c !== cat)
+        : [...f.categories, cat],
+    }));
+  };
+
+  const setExpansions = (include: boolean) => {
+    setFilters((f) => ({ ...f, includeExpansions: include }));
+    goToStep("swipe");
+  };
+
+  const handleSwipeLeft = useCallback(() => {
+    setCurrentIndex((i) => i + 1);
+  }, []);
+
+  const handleSwipeRight = useCallback(() => {
+    const game = filteredGames[currentIndex];
+    if (game) {
+      setMaybePile((pile) => [...pile, game]);
+    }
+    setCurrentIndex((i) => i + 1);
+  }, [filteredGames, currentIndex]);
+
+  const handleSwipeUp = useCallback(() => {
+    const game = filteredGames[currentIndex];
+    if (game) {
+      setPickedGame(game);
+      goToStep("picked");
+    }
+  }, [filteredGames, currentIndex]);
+
+  useEffect(() => {
+    if (step !== "swipe") return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") handleSwipeLeft();
+      if (e.key === "ArrowRight") handleSwipeRight();
+      if (e.key === "ArrowUp" || e.key === " ") {
+        e.preventDefault();
+        handleSwipeUp();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [step, handleSwipeLeft, handleSwipeRight, handleSwipeUp]);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+          <p className="text-stone-400 text-lg">Loading your collection...</p>
         </div>
+      </div>
+    );
+  }
 
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-1 px-1 sm:px-2">
-          {sortedGames.map((game) => (
-            <div
-              key={game.id}
-              className="aspect-[3/4] rounded overflow-hidden relative group cursor-pointer"
-            >
-              {game.image ? (
-                <img
-                  src={game.image}
-                  alt={game.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-              ) : (
-                <div className="w-full h-full bg-stone-900 flex items-center justify-center text-xs sm:text-sm">🎲</div>
+  if (games.length === 0) {
+    return (
+      <div className="h-screen w-screen bg-black flex items-center justify-center">
+        <div className="text-center px-6">
+          <h1 className="text-4xl font-black text-white mb-4">No Games Yet</h1>
+          <p className="text-stone-400 mb-8">Import and scrape some games first!</p>
+          <Link
+            href="/settings?section=collection"
+            className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-full font-bold transition-colors"
+          >
+            Go to Settings
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen w-screen bg-black text-white overflow-hidden relative">
+      {/* Floating background */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="grid grid-cols-6 md:grid-cols-8 gap-2 p-4">
+          {games.slice(0, 24).map((game) => (
+            <div key={game.id} className="aspect-square rounded-lg overflow-hidden">
+              {getPrimaryImage(game) && (
+                <img src={getPrimaryImage(game)!} alt="" className="w-full h-full object-cover" />
               )}
-              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-0.5 sm:p-1">
-                <p className="text-[6px] sm:text-[8px] font-bold text-center leading-tight">{game.name}</p>
-              </div>
             </div>
           ))}
         </div>
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-black" />
 
-        {/* ==================== FOOTER ==================== */}
-        <div className="py-12 sm:py-24 text-center px-4">
-          <p className="text-stone-600 text-xs sm:text-sm uppercase tracking-widest mb-2 sm:mb-4">Thanks for exploring</p>
-          <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-6 sm:mb-8">
-            Now go <span className="text-amber-400">play!</span>
-          </h2>
-          <Link
-            href="/"
-            className="inline-block bg-white/10 hover:bg-white/20 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold transition-all border border-white/10"
+      {/* Back button */}
+      <Link
+        href="/"
+        className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
+      >
+        {Icons.arrowLeft} Back
+      </Link>
+
+      {/* Main content */}
+      <div className="relative z-10 h-full">
+        {/* ==================== WELCOME ==================== */}
+        {step === "welcome" && (
+          <WizardScreen
+            onNext={() => goToStep("players")}
+            title="What should we play tonight?"
+            subtitle={`Choose from ${games.length} games in ${collectionName} Collection`}
           >
-            Back to Collection →
-          </Link>
-        </div>
-      </section>
+            <button
+              onClick={() => goToStep("players")}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black px-10 py-5 rounded-full text-xl font-black transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/30 flex items-center gap-3 mx-auto"
+            >
+              Let&apos;s Find Out <span className="text-amber-900">{Icons.dice}</span>
+            </button>
+
+            <div className="mt-6">
+              <button
+                onClick={() => goToStep("swipe")}
+                className="text-stone-500 hover:text-amber-400 transition-colors text-sm"
+              >
+                Feeling lucky? Skip filters
+              </button>
+            </div>
+          </WizardScreen>
+        )}
+
+        {/* ==================== PLAYER COUNT ==================== */}
+        {step === "players" && (
+          <WizardScreen
+            onNext={() => goToStep("kids")}
+            onBack={() => goToStep("welcome")}
+            title="How many players?"
+            showSkip
+            onSkip={() => { setFilters(f => ({ ...f, players: null })); goToStep("kids"); }}
+          >
+            <div className="flex flex-wrap justify-center gap-3 max-w-lg mx-auto">
+              {PLAYER_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setPlayers(n)}
+                  className="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 hover:bg-amber-500 border border-white/20 hover:border-amber-500 rounded-full flex items-center justify-center transition-all hover:scale-110 group"
+                >
+                  <span className="text-2xl sm:text-3xl font-black text-white group-hover:text-black">
+                    {n === 7 ? "7+" : n}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </WizardScreen>
+        )}
+
+        {/* ==================== KIDS PLAYING ==================== */}
+        {step === "kids" && (
+          <WizardScreen
+            onNext={() => goToStep("time")}
+            onBack={() => goToStep("players")}
+            title="Any kids playing?"
+            subtitle="We'll find age-appropriate games"
+            showSkip
+            onSkip={() => { setKids(null); }}
+          >
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => setKids(true)}
+                className="bg-white/10 hover:bg-emerald-500/20 border-2 border-transparent hover:border-emerald-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
+              >
+                <span className="text-emerald-400 flex justify-center mb-2">{Icons.child}</span>
+                <span className="text-xl font-bold block">Yes</span>
+                <span className="text-stone-400 text-sm block">Age 10 and under</span>
+              </button>
+              <button
+                onClick={() => setKids(false)}
+                className="bg-white/10 hover:bg-amber-500/20 border-2 border-transparent hover:border-amber-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
+              >
+                <span className="text-amber-400 flex justify-center mb-2">{Icons.adults}</span>
+                <span className="text-xl font-bold block">No</span>
+                <span className="text-stone-400 text-sm block">Adults only</span>
+              </button>
+            </div>
+          </WizardScreen>
+        )}
+
+        {/* ==================== TIME AVAILABLE ==================== */}
+        {step === "time" && (
+          <WizardScreen
+            onNext={() => goToStep("mood")}
+            onBack={() => filters.players === 1 ? goToStep("players") : goToStep("kids")}
+            title="How much time do you have?"
+            showSkip
+            onSkip={() => { setTime(null); }}
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+              {(Object.entries(TIME_RANGES) as [keyof typeof TIME_RANGES, typeof TIME_RANGES.quick][]).map(([key, value]) => (
+                <button
+                  key={key}
+                  onClick={() => setTime(key)}
+                  className="bg-white/10 hover:bg-amber-500/20 border-2 border-transparent hover:border-amber-500 rounded-2xl px-6 py-6 transition-all hover:scale-105"
+                >
+                  <span className="flex justify-center mb-2"><TimeIcon time={key} /></span>
+                  <span className="text-lg font-bold block">{value.label}</span>
+                  <span className="text-stone-400 text-sm">{value.sublabel}</span>
+                </button>
+              ))}
+            </div>
+          </WizardScreen>
+        )}
+
+        {/* ==================== MOOD / CATEGORY ==================== */}
+        {step === "mood" && (
+          <WizardScreen
+            onNext={() => goToStep("expansions")}
+            onBack={() => goToStep("time")}
+            title="What are you in the mood for?"
+            subtitle="Select one or more categories"
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto mb-6">
+              {availableCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => toggleCategory(cat)}
+                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                    filters.categories.includes(cat)
+                      ? "bg-amber-500 text-black"
+                      : "bg-white/10 hover:bg-white/20 text-white"
+                  }`}
+                >
+                  {filters.categories.includes(cat) && Icons.check}
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => goToStep("expansions")}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 text-black px-8 py-3 rounded-full font-bold transition-all hover:scale-105"
+            >
+              {filters.categories.length > 0 ? "Continue" : "Surprise Me!"}
+            </button>
+          </WizardScreen>
+        )}
+
+        {/* ==================== EXPANSIONS ==================== */}
+        {step === "expansions" && (
+          <WizardScreen
+            onNext={() => goToStep("swipe")}
+            onBack={() => goToStep("mood")}
+            title="Include expansions?"
+          >
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => setExpansions(true)}
+                className="bg-white/10 hover:bg-purple-500/20 border-2 border-transparent hover:border-purple-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
+              >
+                <span className="text-purple-400 flex justify-center mb-2">{Icons.package}</span>
+                <span className="text-xl font-bold block">Yes</span>
+                <span className="text-stone-400 text-sm block">Show everything</span>
+              </button>
+              <button
+                onClick={() => setExpansions(false)}
+                className="bg-white/10 hover:bg-amber-500/20 border-2 border-transparent hover:border-amber-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
+              >
+                <span className="text-amber-400 flex justify-center mb-2">{Icons.gamepad}</span>
+                <span className="text-xl font-bold block">No</span>
+                <span className="text-stone-400 text-sm block">Base games only</span>
+              </button>
+            </div>
+          </WizardScreen>
+        )}
+
+        {/* ==================== SWIPE CARDS ==================== */}
+        {step === "swipe" && (
+          <div className="h-full flex flex-col">
+            {/* Header with filter pills */}
+            <div className="p-4 flex flex-wrap gap-2 items-center justify-center">
+              <span className="text-stone-500 text-sm">
+                {filteredGames.length} matches
+              </span>
+              {filters.players && (
+                <span className="bg-white/10 px-3 py-1 rounded-full text-xs flex items-center gap-1">
+                  <span className="text-stone-400 w-3 h-3">{Icons.users}</span> {filters.players}
+                </span>
+              )}
+              {filters.time && (
+                <span className="bg-white/10 px-3 py-1 rounded-full text-xs">
+                  {TIME_RANGES[filters.time].label}
+                </span>
+              )}
+              {filters.categories.length > 0 && (
+                <span className="bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full text-xs">
+                  {filters.categories.length} categories
+                </span>
+              )}
+              <button
+                onClick={() => goToStep("welcome")}
+                className="text-stone-500 hover:text-white text-xs underline"
+              >
+                Reset
+              </button>
+            </div>
+
+            {/* Card stack - centered with max dimensions */}
+            <div className="flex-1 flex items-center justify-center p-4">
+              <div className="relative w-full max-w-sm h-full max-h-[32rem]">
+              {filteredGames.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center px-6">
+                    <span className="text-stone-600 flex justify-center mb-4">{Icons.shrug}</span>
+                    <h2 className="text-2xl font-bold mb-2">No matches found</h2>
+                    <p className="text-stone-400 mb-6">Try different filters</p>
+                    <button
+                      onClick={() => goToStep("welcome")}
+                      className="bg-amber-500 text-black px-6 py-3 rounded-full font-bold"
+                    >
+                      Start Over
+                    </button>
+                  </div>
+                </div>
+              ) : currentIndex >= filteredGames.length ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center px-6">
+                    <span className="text-amber-400 flex justify-center mb-4">{Icons.sparkles}</span>
+                    <h2 className="text-2xl font-bold mb-2">You&apos;ve seen them all!</h2>
+                    {maybePile.length > 0 ? (
+                      <>
+                        <p className="text-stone-400 mb-6">
+                          You have {maybePile.length} games in your maybe pile
+                        </p>
+                        <button
+                          onClick={() => {
+                            const random = maybePile[Math.floor(Math.random() * maybePile.length)];
+                            setPickedGame(random);
+                            goToStep("picked");
+                          }}
+                          className="bg-amber-500 text-black px-6 py-3 rounded-full font-bold flex items-center gap-2 mx-auto"
+                        >
+                          <span className="text-amber-900">{Icons.dice}</span>
+                          Pick from Maybe Pile
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => goToStep("welcome")}
+                        className="bg-amber-500 text-black px-6 py-3 rounded-full font-bold"
+                      >
+                        Start Over
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {filteredGames.slice(currentIndex, currentIndex + 2).map((game, i) => (
+                    <SwipeCard
+                      key={game.id}
+                      game={game}
+                      isTop={i === 0}
+                      onSwipeLeft={handleSwipeLeft}
+                      onSwipeRight={handleSwipeRight}
+                      onSwipeUp={handleSwipeUp}
+                    />
+                  ))}
+                </>
+              )}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            {currentIndex < filteredGames.length && (
+              <div className="p-6 flex items-center justify-center gap-6">
+                <button
+                  onClick={handleSwipeLeft}
+                  className="w-16 h-16 bg-red-500/20 hover:bg-red-500/40 rounded-full flex items-center justify-center text-red-400 transition-all hover:scale-110"
+                >
+                  {Icons.x}
+                </button>
+                <button
+                  onClick={handleSwipeUp}
+                  className="w-20 h-20 bg-amber-500 hover:bg-amber-400 rounded-full flex items-center justify-center text-amber-900 transition-all hover:scale-110 shadow-lg shadow-amber-500/30"
+                >
+                  {Icons.star}
+                </button>
+                <button
+                  onClick={handleSwipeRight}
+                  className="w-16 h-16 bg-emerald-500/20 hover:bg-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400 transition-all hover:scale-110"
+                >
+                  {Icons.heart}
+                </button>
+              </div>
+            )}
+
+            {/* Keyboard hint */}
+            <div className="pb-4 text-center text-stone-600 text-xs hidden sm:block">
+              Use arrow keys: Left = Skip, Up = Pick, Right = Maybe
+            </div>
+          </div>
+        )}
+
+        {/* ==================== PICKED GAME ==================== */}
+        {step === "picked" && pickedGame && (
+          <div className="h-full flex items-center justify-center p-6">
+            <div className="max-w-md w-full text-center animate-scale-in">
+              <span className="text-amber-400 flex justify-center mb-4">{Icons.sparkles}</span>
+
+              <h1 className="text-2xl font-bold text-stone-400 mb-6">Tonight you&apos;re playing...</h1>
+
+              {/* Game card */}
+              <div className="bg-gradient-to-b from-stone-800 to-stone-900 rounded-3xl overflow-hidden shadow-2xl mb-8">
+                <div className="aspect-[4/3] relative bg-stone-800">
+                  {getPrimaryImage(pickedGame) ? (
+                    <img
+                      src={getPrimaryImage(pickedGame)!}
+                      alt={pickedGame.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
+                      {Icons.dice}
+                    </div>
+                  )}
+                  {pickedGame.rating && (
+                    <div
+                      className="absolute top-4 right-4 px-4 py-2 rounded-full font-black text-xl flex items-center gap-1"
+                      style={{ backgroundColor: getRatingColor(pickedGame.rating) }}
+                    >
+                      <span className="w-5 h-5">{Icons.star}</span>
+                      {pickedGame.rating.toFixed(1)}
+                    </div>
+                  )}
+                </div>
+                <div className="p-6">
+                  <h2 className="text-3xl font-black text-white mb-2">{pickedGame.name}</h2>
+                  <p className="text-stone-400 mb-4">{pickedGame.yearPublished}</p>
+
+                  <div className="flex flex-wrap gap-2 justify-center mb-4">
+                    {pickedGame.minPlayers && pickedGame.maxPlayers && (
+                      <span className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
+                        <span className="text-stone-400">{Icons.users}</span>
+                        {pickedGame.minPlayers}-{pickedGame.maxPlayers}
+                      </span>
+                    )}
+                    {(pickedGame.minPlaytime || pickedGame.maxPlaytime) && (
+                      <span className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
+                        <span className="text-stone-400">{Icons.clock}</span>
+                        {pickedGame.minPlaytime || pickedGame.maxPlaytime} min
+                      </span>
+                    )}
+                  </div>
+
+                  {pickedGame.description && (
+                    <p className="text-stone-400 text-sm line-clamp-3">
+                      {pickedGame.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => goToStep("swipe")}
+                  className="px-6 py-3 text-stone-400 hover:text-white transition-colors flex items-center gap-2 justify-center"
+                >
+                  {Icons.arrowLeft} Go Back
+                </button>
+                <button
+                  onClick={() => goToStep("welcome")}
+                  className="bg-amber-500 hover:bg-amber-400 text-black px-8 py-3 rounded-full font-bold transition-all flex items-center gap-2 justify-center"
+                >
+                  Play This! <span className="text-amber-700">{Icons.gamepad}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         @keyframes scale-in {
           from { opacity: 0; transform: scale(0.9); }
           to { opacity: 1; transform: scale(1); }
         }
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(var(--rotation, 0deg)); }
-          50% { transform: translateY(-15px) rotate(var(--rotation, 0deg)); }
+        .animate-fade-in {
+          animation: fade-in 0.4s ease-out;
         }
         .animate-scale-in {
-          animation: scale-in 0.4s ease-out forwards;
+          animation: scale-in 0.5s ease-out;
         }
-        .floating-card {
-          animation: float 4s ease-in-out infinite;
-        }
-        .bg-gradient-radial {
-          background: radial-gradient(circle at center, var(--tw-gradient-stops));
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.8s ease-out forwards;
-        }
-        .delay-100 { animation-delay: 100ms; }
-        .delay-300 { animation-delay: 300ms; }
       `}</style>
     </div>
   );
