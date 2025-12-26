@@ -139,10 +139,10 @@ export default function ExperiencePage() {
       ref={containerRef}
       className="bg-black text-white h-screen w-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar"
     >
-      {/* Story Progress Bars */}
-      <div className="fixed top-4 left-4 right-4 z-50 flex gap-2">
+      {/* Story Progress Bars - hidden on mobile, simplified on tablet */}
+      <div className="fixed top-2 sm:top-4 left-2 sm:left-4 right-2 sm:right-4 z-50 hidden sm:flex gap-1 sm:gap-2">
         {Array.from({ length: totalSections }).map((_, i) => (
-          <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+          <div key={i} className="h-0.5 sm:h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
             <div
               className={`h-full bg-white transition-all duration-300 ${
                 i < currentSection ? 'w-full' : i === currentSection ? 'w-full opacity-100' : 'w-0'
@@ -155,12 +155,19 @@ export default function ExperiencePage() {
         ))}
       </div>
 
+      {/* Mobile progress indicator - simple dot-based */}
+      <div className="fixed top-3 right-3 z-50 sm:hidden flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full">
+        <span className="text-white text-xs font-medium">{currentSection + 1}</span>
+        <span className="text-white/40 text-xs">/</span>
+        <span className="text-white/60 text-xs">{totalSections}</span>
+      </div>
+
       {/* Back Button */}
       <Link
         href="/"
-        className="fixed top-8 left-6 z-50 bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-full text-sm font-medium hover:bg-white/10 transition-all border border-white/10 group"
+        className="fixed top-3 left-3 sm:top-8 sm:left-6 z-50 bg-black/40 backdrop-blur-md px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium hover:bg-white/10 transition-all border border-white/10 group"
       >
-        <span className="group-hover:-translate-x-1 inline-block transition-transform">←</span> Back
+        <span className="group-hover:-translate-x-1 inline-block transition-transform">←</span> <span className="hidden sm:inline">Back</span>
       </Link>
 
       {/* ==================== HERO (Slide 1) ==================== */}
@@ -180,23 +187,23 @@ export default function ExperiencePage() {
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-black" />
 
-          <div className="relative z-10 text-center px-6">
-            <p className="text-amber-400 text-sm md:text-base font-semibold tracking-[0.4em] uppercase mb-6 animate-fade-in-up">
+          <div className="relative z-10 text-center px-4 sm:px-6">
+            <p className="text-amber-400 text-xs sm:text-sm md:text-base font-semibold tracking-[0.2em] sm:tracking-[0.4em] uppercase mb-4 sm:mb-6 animate-fade-in-up">
               {collectionName ? `${collectionName} Collection` : "The Collection"}
             </p>
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight leading-[0.85] mb-8 animate-fade-in-up delay-100">
+            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tight leading-[0.85] mb-6 sm:mb-8 animate-fade-in-up delay-100">
               <span className="block">{totalGames}</span>
-              <span className="block text-4xl sm:text-5xl md:text-6xl text-stone-400 font-light mt-2">worlds to explore</span>
+              <span className="block text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-stone-400 font-light mt-1 sm:mt-2">worlds to explore</span>
             </h1>
 
-            <div className="mt-12 opacity-0 animate-fade-in-up delay-300">
-              <p className="text-stone-500 text-lg italic">
-                "Every box holds a new universe."
+            <div className="mt-8 sm:mt-12 opacity-0 animate-fade-in-up delay-300">
+              <p className="text-stone-500 text-base sm:text-lg italic">
+                &quot;Every box holds a new universe.&quot;
               </p>
             </div>
 
-            <div className="mt-24 animate-bounce">
-              <svg className="w-6 h-6 mx-auto text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mt-16 sm:mt-24 animate-bounce">
+              <svg className="w-5 sm:w-6 h-5 sm:h-6 mx-auto text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
             </div>
@@ -489,7 +496,7 @@ export default function ExperiencePage() {
       <section className="h-screen w-full snap-start flex items-center justify-center relative overflow-hidden">
         {/* Subtle background pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="grid grid-cols-6 gap-2 h-full">
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1 sm:gap-2 h-full">
             {sortedGames.slice(12, 36).map((game) => (
               <div key={game.id} className="aspect-square">
                 {game.image && <img src={game.image} alt="" className="w-full h-full object-cover" />}
@@ -499,27 +506,27 @@ export default function ExperiencePage() {
         </div>
         <div className="absolute inset-0 bg-black/90" />
 
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-5xl font-black mb-20 text-stone-400">
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black mb-10 sm:mb-20 text-stone-400">
             Your collection in numbers
           </h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
             <div>
-              <div className="text-5xl md:text-6xl font-black text-amber-400">{totalGames}</div>
-              <div className="text-stone-500 mt-2 text-sm uppercase tracking-wider">Games</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-black text-amber-400">{totalGames}</div>
+              <div className="text-stone-500 mt-1 sm:mt-2 text-xs sm:text-sm uppercase tracking-wider">Games</div>
             </div>
             <div>
-              <div className="text-5xl md:text-6xl font-black text-orange-400">{stats.avgRating.toFixed(1)}</div>
-              <div className="text-stone-500 mt-2 text-sm uppercase tracking-wider">Avg Rating</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-black text-orange-400">{stats.avgRating.toFixed(1)}</div>
+              <div className="text-stone-500 mt-1 sm:mt-2 text-xs sm:text-sm uppercase tracking-wider">Avg Rating</div>
             </div>
             <div>
-              <div className="text-5xl md:text-6xl font-black text-rose-400">{stats.totalHours}</div>
-              <div className="text-stone-500 mt-2 text-sm uppercase tracking-wider">Hours of Fun</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-black text-rose-400">{stats.totalHours}</div>
+              <div className="text-stone-500 mt-1 sm:mt-2 text-xs sm:text-sm uppercase tracking-wider">Hours of Fun</div>
             </div>
             <div>
-              <div className="text-5xl md:text-6xl font-black text-pink-400">{stats.oldestGame.yearPublished}</div>
-              <div className="text-stone-500 mt-2 text-sm uppercase tracking-wider">Oldest</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-black text-pink-400">{stats.oldestGame.yearPublished}</div>
+              <div className="text-stone-500 mt-1 sm:mt-2 text-xs sm:text-sm uppercase tracking-wider">Oldest</div>
             </div>
           </div>
         </div>
@@ -549,29 +556,29 @@ export default function ExperiencePage() {
         </div>
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/70 to-black pointer-events-none" />
 
-        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-black mb-6">
+        <div className="relative z-10 text-center px-4 sm:px-6 max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6">
             What to <span className="text-amber-400">play</span> tonight?
           </h2>
-          <p className="text-stone-400 text-lg mb-12">
+          <p className="text-stone-400 text-sm sm:text-lg mb-8 sm:mb-12">
             Let the dice decide from your {totalGames} games
           </p>
 
           <button
             onClick={pickRandomGame}
-            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black px-12 py-5 rounded-full text-xl font-black transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/30"
+            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black px-8 sm:px-12 py-4 sm:py-5 rounded-full text-lg sm:text-xl font-black transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/30"
           >
             🎲 Roll the Dice
           </button>
 
           {/* Suggested game card */}
           {suggestedGame && (
-            <div className="mt-16 animate-scale-in">
-              <p className="text-stone-600 uppercase tracking-widest text-sm mb-8">Tonight&apos;s pick...</p>
+            <div className="mt-10 sm:mt-16 animate-scale-in">
+              <p className="text-stone-600 uppercase tracking-widest text-xs sm:text-sm mb-4 sm:mb-8">Tonight&apos;s pick...</p>
 
-              <div className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-3xl p-8 border border-stone-800 max-w-lg mx-auto shadow-2xl">
+              <div className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-stone-800 max-w-lg mx-auto shadow-2xl">
                 {/* Cover as hero */}
-                <div className="w-40 h-52 mx-auto rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-6 transform -rotate-2 hover:rotate-0 transition-transform duration-300 relative">
+                <div className="w-28 h-36 sm:w-40 sm:h-52 mx-auto rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-4 sm:mb-6 transform -rotate-2 hover:rotate-0 transition-transform duration-300 relative">
                   {suggestedGame.image ? (
                     <img
                       src={suggestedGame.image}
@@ -579,7 +586,7 @@ export default function ExperiencePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-stone-800 flex items-center justify-center text-5xl">🎲</div>
+                    <div className="w-full h-full bg-stone-800 flex items-center justify-center text-4xl sm:text-5xl">🎲</div>
                   )}
                   {(suggestedGame as any).isExpansion && (
                     <div className="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
@@ -588,8 +595,8 @@ export default function ExperiencePage() {
                   )}
                 </div>
 
-                <h3 className="text-2xl md:text-3xl font-black mb-2">{suggestedGame.name}</h3>
-                <p className="text-stone-500 mb-4">{suggestedGame.yearPublished}</p>
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-black mb-1 sm:mb-2">{suggestedGame.name}</h3>
+                <p className="text-stone-500 text-sm sm:text-base mb-3 sm:mb-4">{suggestedGame.yearPublished}</p>
 
                 {/* Description */}
                 {(suggestedGame as any).description && (
@@ -667,14 +674,14 @@ export default function ExperiencePage() {
       </section>
 
       {/* ==================== FULL COLLECTION MOSAIC ==================== */}
-      <section className="h-screen w-full snap-start overflow-y-auto relative py-24">
-        <div className="max-w-7xl mx-auto px-6 mb-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-black text-stone-400">
+      <section className="h-screen w-full snap-start overflow-y-auto relative py-12 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-6 sm:mb-12 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-400">
             The Complete Collection
           </h2>
         </div>
 
-        <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-9 lg:grid-cols-12 gap-1 px-2">
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-1 px-1 sm:px-2">
           {sortedGames.map((game) => (
             <div
               key={game.id}
@@ -687,24 +694,24 @@ export default function ExperiencePage() {
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
               ) : (
-                <div className="w-full h-full bg-stone-900 flex items-center justify-center text-sm">🎲</div>
+                <div className="w-full h-full bg-stone-900 flex items-center justify-center text-xs sm:text-sm">🎲</div>
               )}
-              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-1">
-                <p className="text-[8px] font-bold text-center leading-tight">{game.name}</p>
+              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-0.5 sm:p-1">
+                <p className="text-[6px] sm:text-[8px] font-bold text-center leading-tight">{game.name}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* ==================== FOOTER ==================== */}
-        <div className="py-24 text-center">
-          <p className="text-stone-600 text-sm uppercase tracking-widest mb-4">Thanks for exploring</p>
-          <h2 className="text-4xl md:text-6xl font-black mb-8">
+        <div className="py-12 sm:py-24 text-center px-4">
+          <p className="text-stone-600 text-xs sm:text-sm uppercase tracking-widest mb-2 sm:mb-4">Thanks for exploring</p>
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-6 sm:mb-8">
             Now go <span className="text-amber-400">play!</span>
           </h2>
           <Link
             href="/"
-            className="inline-block bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all border border-white/10"
+            className="inline-block bg-white/10 hover:bg-white/20 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold transition-all border border-white/10"
           >
             Back to Collection →
           </Link>

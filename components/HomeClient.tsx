@@ -45,31 +45,32 @@ export function HomeClient({ games, totalGames, collectionName, bggUsername }: H
     <div className="min-h-screen bg-stone-950 print:bg-white">
       {/* Header */}
       <header className="bg-stone-900 border-b border-stone-800 print:hidden">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {displayName}
             </h1>
-            <p className="mt-1 text-stone-400">
+            <p className="mt-0.5 sm:mt-1 text-stone-400 text-sm sm:text-base">
               {totalGames} games
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/admin"
-              className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-sm font-medium transition-colors border border-stone-700"
+              className="px-3 sm:px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-sm font-medium transition-colors border border-stone-700"
             >
               Admin
             </Link>
             <Link
               href="/experience"
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Experience
+              <span className="hidden xs:inline">Experience</span>
+              <span className="xs:hidden">Exp</span>
             </Link>
           </div>
         </div>
@@ -86,9 +87,9 @@ export function HomeClient({ games, totalGames, collectionName, bggUsername }: H
       </div>
 
       {/* Action Bar */}
-      <div className="bg-stone-900/50 border-b border-stone-800 py-4 px-6 print:hidden">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
+      <div className="bg-stone-900/50 border-b border-stone-800 py-3 sm:py-4 px-4 sm:px-6 print:hidden">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6">
             {/* View Toggle */}
             <div className="flex items-center gap-1 bg-stone-800 rounded-lg p-0.5">
               <button
@@ -119,9 +120,9 @@ export function HomeClient({ games, totalGames, collectionName, bggUsername }: H
               </button>
             </div>
 
-            {/* Card Size */}
+            {/* Card Size - hidden on mobile */}
             {viewMode === "grid" && (
-              <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3">
                 <label htmlFor="card-size" className="text-stone-400 text-sm whitespace-nowrap">
                   Size:
                 </label>
@@ -139,14 +140,14 @@ export function HomeClient({ games, totalGames, collectionName, bggUsername }: H
             )}
 
             <div className="flex items-center gap-2">
-              <label htmlFor="sort-by" className="text-stone-400 text-sm whitespace-nowrap">
+              <label htmlFor="sort-by" className="text-stone-400 text-sm whitespace-nowrap hidden sm:inline">
                 Sort:
               </label>
               <select
                 id="sort-by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="bg-stone-800 border border-stone-700 rounded-lg px-2 sm:px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
               >
                 <option value="name">Name (A-Z)</option>
                 <option value="year">Year (Newest)</option>
@@ -156,7 +157,7 @@ export function HomeClient({ games, totalGames, collectionName, bggUsername }: H
           </div>
           <button
             onClick={() => window.print()}
-            className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-sm font-medium transition-colors border border-stone-700"
+            className="px-3 sm:px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-sm font-medium transition-colors border border-stone-700 hidden sm:block"
           >
             Print
           </button>
@@ -180,14 +181,22 @@ export function HomeClient({ games, totalGames, collectionName, bggUsername }: H
             </Link>
           </div>
         ) : viewMode === "grid" ? (
-          <div
-            className="grid gap-4 print:grid-cols-6 print:gap-2"
-            style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-          >
-            {sortedGames.map((game) => (
-              <GameCard key={game.id} game={game} />
-            ))}
-          </div>
+          <>
+            <style>{`
+              @media (min-width: 640px) {
+                .game-grid-custom {
+                  grid-template-columns: repeat(${columns}, minmax(0, 1fr)) !important;
+                }
+              }
+            `}</style>
+            <div
+              className="game-grid-custom grid gap-3 sm:gap-4 grid-cols-2 print:grid-cols-6 print:gap-2"
+            >
+              {sortedGames.map((game) => (
+                <GameCard key={game.id} game={game} />
+              ))}
+            </div>
+          </>
         ) : (
           <div className="flex flex-col gap-2">
             {sortedGames.map((game) => (

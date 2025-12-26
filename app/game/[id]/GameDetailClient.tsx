@@ -77,23 +77,24 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
         )}
 
         {/* Navigation */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 py-6">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-stone-400 hover:text-white transition-colors group"
+            className="inline-flex items-center gap-2 text-stone-400 hover:text-white transition-colors group text-sm sm:text-base"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            Back to Collection
+            <span className="hidden sm:inline">Back to Collection</span>
+            <span className="sm:hidden">Back</span>
           </Link>
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 pb-16">
-          <div className="flex flex-col lg:flex-row gap-12">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-8 sm:pb-16">
+          <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-12">
             {/* Left: Image Gallery */}
             <div className="lg:w-2/5 flex-shrink-0">
               {/* Main Image */}
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-stone-800 aspect-[3/4]">
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-stone-800 aspect-square sm:aspect-[3/4]">
                 {displayImage ? (
                   <img
                     src={displayImage}
@@ -108,7 +109,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
 
                 {/* Expansion badge */}
                 {game.isExpansion && (
-                  <div className="absolute top-4 left-4 bg-purple-600 text-white text-sm font-bold px-3 py-1 rounded-lg">
+                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-purple-600 text-white text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 rounded-lg">
                     Expansion
                   </div>
                 )}
@@ -116,7 +117,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                 {/* Rating badge */}
                 {game.rating && (
                   <div
-                    className="absolute top-4 right-4 px-4 py-2 rounded-xl font-black text-xl shadow-lg"
+                    className="absolute top-2 sm:top-4 right-2 sm:right-4 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl font-black text-base sm:text-xl shadow-lg"
                     style={{ backgroundColor: getRatingColor(game.rating) }}
                   >
                     ★ {game.rating.toFixed(1)}
@@ -126,12 +127,12 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
 
               {/* Thumbnail Gallery */}
               {allImages.length > 1 && (
-                <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
+                <div className="flex gap-2 sm:gap-3 mt-3 sm:mt-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
                   {allImages.map((img: string, i: number) => (
                     <button
                       key={i}
                       onClick={() => setSelectedImage(img)}
-                      className={`w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`w-14 h-14 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
                         (selectedImage || mainImage) === img
                           ? "border-amber-500 ring-2 ring-amber-500/30"
                           : "border-white/10 hover:border-white/30"
@@ -147,36 +148,36 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
             {/* Right: Game Info */}
             <div className="lg:w-3/5">
               {/* Header */}
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-3">
+              <div className="mb-4 sm:mb-6">
+                <div className="flex items-center gap-3 mb-2 sm:mb-3">
                   {game.yearPublished && (
-                    <span className="text-amber-400 text-sm font-semibold tracking-wider">
+                    <span className="text-amber-400 text-xs sm:text-sm font-semibold tracking-wider">
                       {game.yearPublished}
                     </span>
                   )}
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-4">
+                <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-2 sm:mb-4">
                   {game.name}
                 </h1>
               </div>
 
               {/* Quick Stats */}
-              <div className="flex flex-wrap gap-3 mb-8">
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8">
                 {playerCount && (
-                  <div className="px-5 py-3 bg-white/10 rounded-xl text-sm font-medium backdrop-blur-sm border border-white/5">
-                    <span className="text-stone-400 block text-xs mb-1">Players</span>
+                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-white/10 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-white/5">
+                    <span className="text-stone-400 block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Players</span>
                     <span className="text-white">👥 {playerCount}</span>
                   </div>
                 )}
                 {playtime && (
-                  <div className="px-5 py-3 bg-white/10 rounded-xl text-sm font-medium backdrop-blur-sm border border-white/5">
-                    <span className="text-stone-400 block text-xs mb-1">Playtime</span>
+                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-white/10 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-white/5">
+                    <span className="text-stone-400 block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Playtime</span>
                     <span className="text-white">⏱ {playtime}</span>
                   </div>
                 )}
                 {ageDisplay && (
-                  <div className="px-5 py-3 bg-white/10 rounded-xl text-sm font-medium backdrop-blur-sm border border-white/5">
-                    <span className="text-stone-400 block text-xs mb-1">Age</span>
+                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-white/10 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-white/5">
+                    <span className="text-stone-400 block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Age</span>
                     <span className="text-white">{ageDisplay}+</span>
                   </div>
                 )}
@@ -184,9 +185,9 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
 
               {/* Description */}
               {game.description && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-semibold text-stone-300 mb-3">About</h2>
-                  <p className="text-stone-400 leading-relaxed">
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-base sm:text-lg font-semibold text-stone-300 mb-2 sm:mb-3">About</h2>
+                  <p className="text-stone-400 leading-relaxed text-sm sm:text-base">
                     {game.description}
                   </p>
                 </div>
@@ -194,9 +195,9 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
 
               {/* Component Images */}
               {componentImages.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-semibold text-stone-300 mb-3">Game Components</h2>
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-base sm:text-lg font-semibold text-stone-300 mb-2 sm:mb-3">Game Components</h2>
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     {componentImages.map((img: string, i: number) => (
                       <button
                         key={i}
@@ -212,13 +213,13 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
 
               {/* Categories */}
               {game.categories && game.categories.length > 0 && (
-                <div className="mb-6">
-                  <h2 className="text-lg font-semibold text-stone-300 mb-3">Categories</h2>
-                  <div className="flex flex-wrap gap-2">
+                <div className="mb-4 sm:mb-6">
+                  <h2 className="text-base sm:text-lg font-semibold text-stone-300 mb-2 sm:mb-3">Categories</h2>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {game.categories.map((cat: string, i: number) => (
                       <span
                         key={i}
-                        className="px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm border border-blue-500/30"
+                        className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-500/20 text-blue-300 rounded-lg text-xs sm:text-sm border border-blue-500/30"
                       >
                         {cat}
                       </span>
@@ -229,13 +230,13 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
 
               {/* Mechanics */}
               {game.mechanics && game.mechanics.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-semibold text-stone-300 mb-3">Mechanics</h2>
-                  <div className="flex flex-wrap gap-2">
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-base sm:text-lg font-semibold text-stone-300 mb-2 sm:mb-3">Mechanics</h2>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {game.mechanics.map((mech: string, i: number) => (
                       <span
                         key={i}
-                        className="px-4 py-2 bg-emerald-500/20 text-emerald-300 rounded-lg text-sm border border-emerald-500/30"
+                        className="px-2 sm:px-4 py-1 sm:py-2 bg-emerald-500/20 text-emerald-300 rounded-lg text-xs sm:text-sm border border-emerald-500/30"
                       >
                         {mech}
                       </span>
@@ -245,20 +246,20 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               )}
 
               {/* External Link */}
-              <div className="pt-6 border-t border-white/10 flex items-center gap-4">
+              <div className="pt-4 sm:pt-6 border-t border-white/10 flex items-center gap-4">
                 <a
                   href={`https://boardgamegeek.com/boardgame/${game.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-orange-500/50 transition-all"
+                  className="group flex items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-orange-500/50 transition-all"
                 >
                   <img
                     src="/powered-by-bgg.svg"
                     alt="Powered by BoardGameGeek"
-                    className="h-6 opacity-80 group-hover:opacity-100 transition-opacity"
+                    className="h-5 sm:h-6 opacity-80 group-hover:opacity-100 transition-opacity"
                   />
                   <svg
-                    className="w-4 h-4 text-stone-500 group-hover:text-amber-400 transition-colors"
+                    className="w-3 sm:w-4 h-3 sm:h-4 text-stone-500 group-hover:text-amber-400 transition-colors"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
