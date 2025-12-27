@@ -624,18 +624,20 @@ export default function GamePickerPage() {
   }, []);
 
   // Navigate to a new wizard step, resetting swipe state when entering swipe mode
-  const goToStep = useCallback((newStep: WizardStep) => {
+  const goToStep = useCallback((newStep: WizardStep, overrideFilters?: Partial<Filters>) => {
     if (newStep === "swipe") {
       // Reset swipe state when entering swipe mode
       setCurrentIndex(0);
       setMaybePile([]);
       setPickedGame(null);
       setPickedViaLucky(false);
-      // Shuffle all filtered games
-      setSwipeGames(shuffleArray(filteredGames));
+      // Compute filtered games with any overrides (for async state updates)
+      const effectiveFilters = overrideFilters ? { ...filters, ...overrideFilters } : filters;
+      const gamesToSwipe = filterGames(games, effectiveFilters);
+      setSwipeGames(shuffleArray(gamesToSwipe));
     }
     setStep(newStep);
-  }, [filteredGames]);
+  }, [filters, games]);
 
   const setPlayers = (n: number | null) => {
     setFilters((f) => ({ ...f, players: n }));
@@ -667,7 +669,7 @@ export default function GamePickerPage() {
 
   const setExpansions = (include: boolean) => {
     setFilters((f) => ({ ...f, includeExpansions: include }));
-    goToStep("swipe");
+    goToStep("swipe", { includeExpansions: include });
   };
 
   const handleSwipeLeft = useCallback(() => {
