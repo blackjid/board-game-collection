@@ -3,8 +3,8 @@ import prisma from "@/lib/prisma";
 import {
   hashPassword,
   createSession,
-  setSessionCookie,
   isFirstUser,
+  SESSION_COOKIE_OPTIONS,
 } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -60,11 +60,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create session and set cookie
+    // Create session and set cookie on response
     const sessionId = await createSession(user.id);
-    await setSessionCookie(sessionId);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
@@ -72,6 +71,10 @@ export async function POST(request: NextRequest) {
         role: user.role,
       },
     });
+
+    response.cookies.set("session_id", sessionId, SESSION_COOKIE_OPTIONS);
+
+    return response;
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(

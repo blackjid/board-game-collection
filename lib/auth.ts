@@ -5,6 +5,15 @@ import prisma from "./prisma";
 const SESSION_COOKIE_NAME = "session_id";
 const SESSION_EXPIRY_DAYS = 7;
 
+// Cookie options for session - exported for use in API routes
+export const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,
+};
+
 // Password utilities
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
