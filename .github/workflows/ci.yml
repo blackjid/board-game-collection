@@ -45,10 +45,8 @@ jobs:
         uses: davelosert/vitest-coverage-report-action@v2
 
   build:
-    name: Build & Push
+    name: Build Docker Image
     needs: test
-    # Only build on push to main (not on PRs)
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -84,7 +82,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ github.event_name == 'push' }}
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
