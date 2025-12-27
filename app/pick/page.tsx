@@ -768,7 +768,7 @@ export default function GamePickerPage() {
               goToStep("welcome");
               return;
             }
-            
+
             const stepOrder: Step[] = ["welcome", "players", "kids", "time", "mood", "expansions", "swipe", "picked"];
             const currentIdx = stepOrder.indexOf(step);
             if (currentIdx > 0) {
