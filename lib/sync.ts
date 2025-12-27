@@ -69,6 +69,15 @@ async function scrapeCollection(username: string): Promise<ScrapedGame[]> {
   const browser = await chromium.launch({
     headless: true,
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-software-rasterizer",
+      "--single-process",
+      "--no-zygote",
+    ],
   });
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -356,6 +365,15 @@ async function scrapeGamePage(gameId: string, isExpansion: boolean) {
   const browser = await chromium.launch({
     headless: true,
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-software-rasterizer",
+      "--single-process",
+      "--no-zygote",
+    ],
   });
   const context = await browser.newContext();
   const page = await context.newPage();
