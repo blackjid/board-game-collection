@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+vitest.config.ts
+vitest.setup.ts
+coverage
+
+# Development files
+.env*.local
+.env.development
+prisma/dev.db
+prisma/dev.db-journal
+
+# Documentation
+README.md
+*.md
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+
+# GitHub
+.github
+
+# Cursor
+.cursor
