@@ -330,31 +330,34 @@ function GameCardDisplay({ game, showDescription = false, swipeIndicators }: Gam
         </div>
 
         <div className="mt-auto">
-          {/* Stats badges */}
-          <div className="flex flex-wrap gap-2 justify-center mb-3">
+          {/* Stats badges - rating prominent, others subtle */}
+          <div className="flex flex-wrap gap-1.5 justify-center items-center mb-3">
             {game.rating && (
               <span
-                className="px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-sm"
-                style={{ backgroundColor: getRatingColor(game.rating) }}
+                className="px-3 py-1 rounded-full flex items-center gap-1.5 font-black text-base shadow-md"
+                style={{ 
+                  backgroundColor: getRatingColor(game.rating),
+                  boxShadow: `0 2px 12px ${getRatingColor(game.rating)}50`
+                }}
               >
                 <span className="w-4 h-4">{Icons.star}</span>
                 {game.rating.toFixed(1)}
               </span>
             )}
             {game.minPlayers && game.maxPlayers && (
-              <span className="bg-white/10 px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5">
-                <span className="text-stone-400 w-4 h-4">{Icons.users}</span>
+              <span className="bg-white/5 text-stone-400 px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                <span className="w-3 h-3">{Icons.users}</span>
                 {game.minPlayers === game.maxPlayers ? game.minPlayers : `${game.minPlayers}-${game.maxPlayers}`}
               </span>
             )}
             {(game.minPlaytime || game.maxPlaytime) && (
-              <span className="bg-white/10 px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5">
-                <span className="text-stone-400 w-4 h-4">{Icons.clock}</span>
-                {game.minPlaytime || game.maxPlaytime} min
+              <span className="bg-white/5 text-stone-400 px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                <span className="w-3 h-3">{Icons.clock}</span>
+                {game.minPlaytime || game.maxPlaytime}m
               </span>
             )}
             {game.minAge && (
-              <span className="bg-white/10 px-3 py-1.5 rounded-full text-sm">
+              <span className="bg-white/5 text-stone-400 px-2 py-1 rounded-full text-xs">
                 {game.minAge}+
               </span>
             )}
@@ -1170,10 +1173,7 @@ export default function GamePickerPage() {
         {step === "picked" && pickedGame && (
           <div className="h-full flex flex-col pt-16 pb-4 px-4 sm:justify-center sm:pt-6 sm:px-6" data-allow-scroll>
             <div className="max-w-md w-full mx-auto text-center animate-scale-in flex-1 flex flex-col justify-center overflow-auto">
-              <div className="flex-shrink-0">
-                <span className="text-amber-400 flex justify-center mb-2 sm:mb-4 w-10 h-10 sm:w-16 sm:h-16 mx-auto">{Icons.sparkles}</span>
-                <h1 className="text-lg sm:text-2xl font-bold text-stone-400 mb-3 sm:mb-6">Tonight you&apos;re playing...</h1>
-              </div>
+              <h1 className="text-sm sm:text-lg font-medium text-stone-500 mb-2 sm:mb-4 flex-shrink-0">Tonight you&apos;re playing...</h1>
 
               {/* Game card - using shared component */}
               <div className="shadow-2xl rounded-2xl overflow-hidden mb-4 sm:mb-8 flex-shrink min-h-0">
