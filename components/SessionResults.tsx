@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { GameThumbnail, GameThumbnailIcons } from "./GameThumbnail";
 
 interface GameResult {
   id: string;
@@ -88,21 +88,13 @@ function GameResultCard({ game, rank, totalPlayers }: { game: GameResult; rank?:
       </div>
 
       {/* Game Image */}
-      <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-stone-700">
-        {game.image ? (
-          <Image
-            src={game.image}
-            alt={game.name}
-            width={64}
-            height={64}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-stone-500">
-            <span className="w-8 h-8">{Icons.star}</span>
-          </div>
-        )}
-      </div>
+      <GameThumbnail
+        src={game.image}
+        alt={game.name}
+        size="md"
+        className="flex-shrink-0"
+        fallbackIcon={GameThumbnailIcons.star}
+      />
 
       {/* Game Info */}
       <div className="flex-1 min-w-0">
@@ -183,21 +175,13 @@ export default function SessionResults({
         {topPick && (
           <div className="bg-gradient-to-b from-amber-500/10 to-transparent rounded-2xl p-6 mb-6 flex-shrink-0 border border-amber-500/20">
             <div className="flex items-center gap-4">
-              <div className="w-24 h-24 rounded-xl overflow-hidden bg-stone-700 flex-shrink-0">
-                {topPick.image ? (
-                  <Image
-                    src={topPick.image}
-                    alt={topPick.name}
-                    width={96}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-stone-500">
-                    <span className="w-10 h-10">{Icons.star}</span>
-                  </div>
-                )}
-              </div>
+              <GameThumbnail
+                src={topPick.image}
+                alt={topPick.name}
+                size="lg"
+                className="flex-shrink-0 rounded-xl"
+                fallbackIcon={GameThumbnailIcons.star}
+              />
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-6 h-6 text-amber-400">{Icons.trophy}</span>

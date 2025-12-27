@@ -467,6 +467,58 @@ Include print-optimized styles:
 <button disabled className="... disabled:opacity-50 disabled:cursor-not-allowed">
 ```
 
+### Game Thumbnail Pattern
+
+**Always use the `GameThumbnail` component** for displaying game images/thumbnails, unless the specific use case requires different behavior (e.g., small list item thumbnails where cropping is acceptable).
+
+The `GameThumbnail` component displays images with:
+- **No cropping** (`object-contain`) - preserves the natural aspect ratio
+- **Blurred background** - fills the container with a saturated, blurred version of the same image
+- **Consistent styling** - drop shadow, vignette overlay for depth
+
+```tsx
+import { GameThumbnail, GameThumbnailIcons } from "@/components/GameThumbnail";
+
+// Basic usage with size preset
+<GameThumbnail src={game.image} alt={game.name} size="lg" />
+
+// Full width with custom aspect ratio
+<GameThumbnail
+  src={game.image}
+  alt={game.name}
+  size="full"
+  aspectRatio="4/3"
+/>
+
+// With custom fallback icon
+<GameThumbnail
+  src={game.image}
+  alt={game.name}
+  size="md"
+  fallbackIcon={GameThumbnailIcons.star}
+/>
+
+// With hover scale effect (for interactive cards)
+<GameThumbnail
+  src={game.image}
+  alt={game.name}
+  size="lg"
+  hoverScale
+/>
+```
+
+**Size presets:**
+- `sm` (48x48px) - Small thumbnails
+- `md` (64x64px) - Medium thumbnails (default)
+- `lg` (96x96px) - Large thumbnails
+- `xl` (128x128px) - Extra large thumbnails
+- `full` - Fills container, use with `aspectRatio` prop
+
+**When NOT to use GameThumbnail:**
+- Small list items where `object-cover` cropping is acceptable (e.g., `GameListItem`)
+- Gallery/picker thumbnails where uniform sizing is more important than preserving aspect ratio
+- Background images or decorative uses
+
 ---
 
 ## Real-time Features (Socket.IO)
