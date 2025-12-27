@@ -603,27 +603,27 @@ export default function GamePickerPage() {
     const originalPosition = document.body.style.position;
     const originalHeight = document.body.style.height;
     const originalWidth = document.body.style.width;
-    
+
     document.body.style.overflow = "hidden";
     document.body.style.position = "fixed";
     document.body.style.height = "100%";
     document.body.style.width = "100%";
-    
+
     // Prevent pull-to-refresh and overscroll
     const preventOverscroll = (e: TouchEvent) => {
       // Allow scrolling within elements that need it
       const target = e.target as HTMLElement;
       if (target.closest("[data-allow-scroll]")) return;
-      
+
       if (e.touches.length > 1) return; // Allow pinch zoom
       e.preventDefault();
     };
-    
+
     document.addEventListener("touchmove", preventOverscroll, { passive: false });
-    
+
     // Scroll down to hide URL bar on mobile
     window.scrollTo(0, 1);
-    
+
     return () => {
       document.body.style.overflow = originalOverflow;
       document.body.style.position = originalPosition;
@@ -1163,20 +1163,12 @@ export default function GamePickerPage() {
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={() => goToStep("swipe")}
-                  className="px-6 py-3 text-stone-400 hover:text-white transition-colors flex items-center gap-2 justify-center"
-                >
-                  <span className="w-4 h-4">{Icons.arrowLeft}</span> Go Back
-                </button>
-                <button
-                  onClick={() => goToStep("welcome")}
-                  className="bg-amber-500 hover:bg-amber-400 text-black px-8 py-3 rounded-full font-bold transition-all flex items-center gap-2 justify-center"
-                >
-                  Play This! <span className="text-amber-700 w-5 h-5">{Icons.play}</span>
-                </button>
-              </div>
+              <button
+                onClick={() => goToStep("welcome")}
+                className="bg-amber-500 hover:bg-amber-400 text-black px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center gap-2 justify-center mx-auto"
+              >
+                Play This! <span className="text-amber-700 w-5 h-5">{Icons.play}</span>
+              </button>
             </div>
           </div>
         )}
