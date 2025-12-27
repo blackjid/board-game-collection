@@ -596,6 +596,43 @@ export default function GamePickerPage() {
       .catch(() => setLoading(false));
   }, []);
 
+  // Lock body scroll and enable fullscreen-like experience on mobile
+  useEffect(() => {
+    // Prevent body scroll
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalHeight = document.body.style.height;
+    const originalWidth = document.body.style.width;
+    
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.height = "100%";
+    document.body.style.width = "100%";
+    
+    // Prevent pull-to-refresh and overscroll
+    const preventOverscroll = (e: TouchEvent) => {
+      // Allow scrolling within elements that need it
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-allow-scroll]")) return;
+      
+      if (e.touches.length > 1) return; // Allow pinch zoom
+      e.preventDefault();
+    };
+    
+    document.addEventListener("touchmove", preventOverscroll, { passive: false });
+    
+    // Scroll down to hide URL bar on mobile
+    window.scrollTo(0, 1);
+    
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.height = originalHeight;
+      document.body.style.width = originalWidth;
+      document.removeEventListener("touchmove", preventOverscroll);
+    };
+  }, []);
+
   // Navigate to a new wizard step, resetting swipe state when entering swipe mode
   const goToStep = useCallback((newStep: WizardStep) => {
     if (newStep === "swipe") {
@@ -707,7 +744,7 @@ export default function GamePickerPage() {
   }
 
   return (
-    <div className="h-screen w-screen bg-black text-white overflow-hidden relative">
+    <div className="fixed inset-0 bg-black text-white overflow-hidden touch-pan-x touch-pan-y" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       {/* Floating background */}
       <div className="absolute inset-0 opacity-10">
         <div className="grid grid-cols-6 md:grid-cols-8 gap-2 p-4">
@@ -726,7 +763,8 @@ export default function GamePickerPage() {
       {step === "welcome" ? (
         <Link
           href="/"
-          className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
+          className="absolute top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
+          style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
         >
           <span className="w-4 h-4">{Icons.arrowLeft}</span> Back
         </Link>
@@ -746,7 +784,8 @@ export default function GamePickerPage() {
               goToStep("welcome");
             }
           }}
-          className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
+          className="absolute top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
+          style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
         >
           <span className="w-4 h-4">{Icons.arrowLeft}</span> Back
         </button>
