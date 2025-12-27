@@ -1078,7 +1078,7 @@ export default function GamePickerPage() {
             {currentIndex < swipeGames.length && (
               <div className="px-4 py-3 sm:p-6">
                 {/* Maybe pile indicator - clickable when has games */}
-                <div className="flex items-center justify-center gap-2 mb-2 sm:mb-4">
+                <div className="flex items-center justify-center mb-4 sm:mb-5">
                   {maybePile.length > 0 ? (
                     <button
                       onClick={() => {
@@ -1086,39 +1086,18 @@ export default function GamePickerPage() {
                         setPickedGame(random);
                         goToStep("picked");
                       }}
-                      className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105"
+                      className="flex items-center justify-center gap-2 px-4 py-2 rounded-full transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105 border border-emerald-500/30"
                     >
-                      <span className="w-3.5 h-3.5 sm:w-4 sm:h-4">{Icons.heart}</span>
-                      <span className="text-xs sm:text-sm font-medium">
-                        {maybePile.length} in maybe pile
+                      <span className="w-4 h-4">{Icons.heart}</span>
+                      <span className="text-sm font-medium">
+                        {maybePile.length} {maybePile.length === 1 ? 'maybe' : 'maybes'}
                       </span>
-                      <div className="flex -space-x-2 ml-1 hidden sm:flex">
-                        {maybePile.slice(-3).map((game, i) => (
-                          <div
-                            key={game.id}
-                            className="w-6 h-6 rounded-full bg-stone-700 border-2 border-stone-900 overflow-hidden"
-                            style={{ zIndex: i }}
-                          >
-                            {getPrimaryImage(game) ? (
-                              <Image
-                                src={getPrimaryImage(game)!}
-                                alt=""
-                                width={24}
-                                height={24}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-emerald-500/30" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <span className="text-emerald-300 text-xs ml-1">→ Pick!</span>
+                      <span className="text-emerald-300 font-bold">• Pick one!</span>
                     </button>
                   ) : (
-                    <div className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-stone-800/50 text-stone-500">
-                      <span className="w-3.5 h-3.5 sm:w-4 sm:h-4">{Icons.heart}</span>
-                      <span className="text-xs sm:text-sm font-medium">Maybe pile empty</span>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-stone-800/50 text-stone-500">
+                      <span className="w-4 h-4">{Icons.heart}</span>
+                      <span className="text-sm">Swipe right to save games</span>
                     </div>
                   )}
                 </div>
