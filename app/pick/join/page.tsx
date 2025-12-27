@@ -49,38 +49,39 @@ function JoinPageContent() {
 
   // Validate session code when provided
   useEffect(() => {
-    if (code.length === 6) {
-      validateSession(code);
-    } else {
-      setSessionInfo(null);
-    }
-  }, [code]);
+    const validateSession = async () => {
+      if (code.length !== 6) {
+        setSessionInfo(null);
+        return;
+      }
 
-  const validateSession = async (sessionCode: string) => {
-    try {
-      const response = await fetch(`/api/pick/sessions/${sessionCode}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.session.status !== "active") {
-          setError("This session has ended");
-          setSessionInfo(null);
+      try {
+        const response = await fetch(`/api/pick/sessions/${code}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.session.status !== "active") {
+            setError("This session has ended");
+            setSessionInfo(null);
+          } else {
+            setSessionInfo({
+              hostName: data.session.hostName,
+              totalGames: data.games.length,
+              playerCount: data.players.length,
+            });
+            setError("");
+          }
         } else {
-          setSessionInfo({
-            hostName: data.session.hostName,
-            totalGames: data.games.length,
-            playerCount: data.players.length,
-          });
-          setError("");
+          setError("Session not found");
+          setSessionInfo(null);
         }
-      } else {
-        setError("Session not found");
+      } catch {
+        setError("Failed to validate session");
         setSessionInfo(null);
       }
-    } catch {
-      setError("Failed to validate session");
-      setSessionInfo(null);
-    }
-  };
+    };
+
+    validateSession();
+  }, [code]);
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();

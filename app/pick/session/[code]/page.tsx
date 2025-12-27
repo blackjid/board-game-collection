@@ -394,7 +394,6 @@ export default function SessionPage({ params }: { params: Promise<PageParams> })
   const [results, setResults] = useState<ResultsData | null>(null);
 
   const [playerId, setPlayerId] = useState<string>("");
-  const [playerName, setPlayerName] = useState<string>("");
   const [isHost, setIsHost] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -415,7 +414,6 @@ export default function SessionPage({ params }: { params: Promise<PageParams> })
 
       const playerData = JSON.parse(storedPlayer);
       setPlayerId(playerData.playerId);
-      setPlayerName(playerData.playerName);
       setIsHost(playerData.isHost);
 
       // Fetch session data
@@ -530,6 +528,26 @@ export default function SessionPage({ params }: { params: Promise<PageParams> })
     };
   }, [code, playerId, phase]);
 
+  // Mark player as done (can be called when finishing all games or clicking "Done" early)
+  const markPlayerDone = useCallback(async () => {
+    try {
+      await fetch(`/api/pick/sessions/${code}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId }),
+      });
+
+      socketRef.current?.emit("player-done", {
+        sessionCode: code,
+        playerId,
+      });
+
+      setPhase("waiting");
+    } catch (error) {
+      console.error("Failed to mark player as done:", error);
+    }
+  }, [code, playerId]);
+
   // Handle swipe actions (collaborative mode only uses like/skip)
   const handleSwipe = useCallback(async (decision: "like" | "skip") => {
     if (currentIndex >= games.length) return;
@@ -566,27 +584,7 @@ export default function SessionPage({ params }: { params: Promise<PageParams> })
     } catch (error) {
       console.error("Failed to submit vote:", error);
     }
-  }, [code, currentIndex, games, playerId]);
-
-  // Mark player as done (can be called when finishing all games or clicking "Done" early)
-  const markPlayerDone = useCallback(async () => {
-    try {
-      await fetch(`/api/pick/sessions/${code}/complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId }),
-      });
-
-      socketRef.current?.emit("player-done", {
-        sessionCode: code,
-        playerId,
-      });
-
-      setPhase("waiting");
-    } catch (error) {
-      console.error("Failed to mark player as done:", error);
-    }
-  }, [code, playerId]);
+  }, [code, currentIndex, games, playerId, markPlayerDone]);
 
   const handleSwipeLeft = useCallback(() => handleSwipe("skip"), [handleSwipe]);
   const handleSwipeRight = useCallback(() => handleSwipe("like"), [handleSwipe]);

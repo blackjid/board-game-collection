@@ -597,10 +597,6 @@ export default function GamePickerPage() {
       .map(([cat]) => cat);
   }, [games]);
 
-  const filteredGames = useMemo(() => {
-    return filterGames(games, filters);
-  }, [games, filters]);
-
   useEffect(() => {
     fetch("/api/pick")
       .then((res) => res.json())
