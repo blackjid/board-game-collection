@@ -45,7 +45,28 @@ function parseJsonField(value: string | null): string[] {
   }
 }
 
-function transformGame(game: any): GameData {
+interface RawGame {
+  id: string;
+  name: string;
+  yearPublished: number | null;
+  image: string | null;
+  thumbnail: string | null;
+  selectedThumbnail: string | null;
+  description: string | null;
+  minPlayers: number | null;
+  maxPlayers: number | null;
+  minPlaytime: number | null;
+  maxPlaytime: number | null;
+  rating: number | null;
+  minAge: number | null;
+  isExpansion: boolean;
+  categories: string | null;
+  mechanics: string | null;
+  componentImages: string | null;
+  availableImages: string | null;
+}
+
+function transformGame(game: RawGame): GameData {
   // Use the main game image (box art), not component images
   // Priority: selectedThumbnail (user choice) > image (full size) > thumbnail
   const mainImage = game.selectedThumbnail || game.image || game.thumbnail;

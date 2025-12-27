@@ -83,6 +83,7 @@ describe("Login API Route", () => {
         name: "Test User",
         role: "user",
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
@@ -108,6 +109,7 @@ describe("Login API Route", () => {
         name: "Test User",
         role: "admin",
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
@@ -142,6 +144,7 @@ describe("Login API Route", () => {
         name: "Test User",
         role: "user",
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);

@@ -544,15 +544,16 @@ export default function ExperiencePage() {
       .catch(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (step === "swipe") {
+  // Navigate to a new wizard step, resetting swipe state when entering swipe mode
+  const goToStep = useCallback((newStep: WizardStep) => {
+    if (newStep === "swipe") {
+      // Reset swipe state when entering swipe mode
       setCurrentIndex(0);
       setMaybePile([]);
       setPickedGame(null);
     }
-  }, [step]);
-
-  const goToStep = (newStep: WizardStep) => setStep(newStep);
+    setStep(newStep);
+  }, []);
 
   const setPlayers = (n: number | null) => {
     setFilters((f) => ({ ...f, players: n }));

@@ -59,14 +59,18 @@ describe("Users API Route", () => {
           email: "admin@example.com",
           name: "Admin",
           role: "admin",
+          passwordHash: "hash",
           createdAt: new Date("2024-01-01"),
+          updatedAt: new Date("2024-01-01"),
         },
         {
           id: "user-2",
           email: "user@example.com",
           name: "User",
           role: "user",
+          passwordHash: "hash",
           createdAt: new Date("2024-01-02"),
+          updatedAt: new Date("2024-01-02"),
         },
       ];
 
@@ -77,6 +81,7 @@ describe("Users API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.user.findMany).mockResolvedValue(mockUsers);
 
@@ -117,6 +122,7 @@ describe("Users API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const request = new NextRequest("http://localhost:3000/api/auth/users", {
@@ -139,6 +145,7 @@ describe("Users API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const request = new NextRequest("http://localhost:3000/api/auth/users", {
@@ -161,6 +168,7 @@ describe("Users API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const request = new NextRequest("http://localhost:3000/api/auth/users", {
@@ -187,6 +195,7 @@ describe("Users API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: "existing-user",
@@ -195,6 +204,7 @@ describe("Users API Route", () => {
         role: "user",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const request = new NextRequest("http://localhost:3000/api/auth/users", {
@@ -217,6 +227,7 @@ describe("Users API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
       vi.mocked(hashPassword).mockResolvedValue("hashed-password");
@@ -227,6 +238,7 @@ describe("Users API Route", () => {
         role: "user",
         passwordHash: "hashed-password",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const request = new NextRequest("http://localhost:3000/api/auth/users", {
@@ -261,6 +273,7 @@ describe("Users API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
       vi.mocked(hashPassword).mockResolvedValue("hashed-password");
@@ -271,6 +284,7 @@ describe("Users API Route", () => {
         role: "admin",
         passwordHash: "hashed-password",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const request = new NextRequest("http://localhost:3000/api/auth/users", {

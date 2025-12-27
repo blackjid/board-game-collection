@@ -66,7 +66,10 @@ export async function getSettings() {
 async function scrapeCollection(username: string): Promise<ScrapedGame[]> {
   const collectionUrl = `https://boardgamegeek.com/collection/user/${username}?own=1&subtype=boardgame&ff=1`;
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+  });
   const context = await browser.newContext();
   const page = await context.newPage();
 
@@ -221,7 +224,7 @@ export async function performSyncWithAutoScrape(
 
   // Count of games queued for auto-scrape
   let autoScraped = 0;
-  let autoScrapeFailed = 0;
+  const autoScrapeFailed = 0;
 
   // Auto-scrape new games if enabled and not skipped
   if (
@@ -350,7 +353,10 @@ async function fetchExtendedDataFromAPI(gameId: string) {
 
 // Scrape main image from game page
 async function scrapeGamePage(gameId: string, isExpansion: boolean) {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+  });
   const context = await browser.newContext();
   const page = await context.newPage();
 

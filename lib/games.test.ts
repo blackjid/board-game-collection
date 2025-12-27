@@ -49,6 +49,8 @@ describe("lib/games", () => {
     lastScraped: new Date(),
     availableImages: '["img1.jpg", "img2.jpg"]',
     componentImages: '["comp1.jpg"]',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   // ============================================================================

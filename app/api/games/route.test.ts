@@ -44,6 +44,8 @@ describe("Games API Route", () => {
         lastScraped: new Date(),
         availableImages: '["img1.jpg", "img2.jpg"]',
         componentImages: "[]",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         id: "2",
@@ -66,6 +68,8 @@ describe("Games API Route", () => {
         lastScraped: null,
         availableImages: null,
         componentImages: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ];
 

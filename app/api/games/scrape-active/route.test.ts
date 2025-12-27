@@ -30,10 +30,12 @@ describe("Scrape Active Games API Route", () => {
     vi.clearAllMocks();
     vi.mocked(getQueueStatus).mockResolvedValue({
       isProcessing: true,
+      isStopping: false,
       currentJob: null,
       pendingCount: 0,
       completedCount: 0,
       failedCount: 0,
+      cancelledCount: 0,
       recentJobs: [],
     });
   });
@@ -61,6 +63,7 @@ describe("Scrape Active Games API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findMany).mockResolvedValue([]);
 
@@ -75,9 +78,9 @@ describe("Scrape Active Games API Route", () => {
 
     it("should queue all active games for scraping", async () => {
       const mockActiveGames = [
-        { id: "1", name: "Game One" },
-        { id: "2", name: "Game Two" },
-        { id: "3", name: "Game Three" },
+        { id: "1", name: "Game One", yearPublished: 2020, image: null, thumbnail: null, selectedThumbnail: null, description: null, minPlayers: null, maxPlayers: null, minPlaytime: null, maxPlaytime: null, rating: null, minAge: null, categories: null, mechanics: null, isExpansion: false, isActive: true, lastScraped: null, availableImages: null, componentImages: null, createdAt: new Date(), updatedAt: new Date() },
+        { id: "2", name: "Game Two", yearPublished: 2020, image: null, thumbnail: null, selectedThumbnail: null, description: null, minPlayers: null, maxPlayers: null, minPlaytime: null, maxPlaytime: null, rating: null, minAge: null, categories: null, mechanics: null, isExpansion: false, isActive: true, lastScraped: null, availableImages: null, componentImages: null, createdAt: new Date(), updatedAt: new Date() },
+        { id: "3", name: "Game Three", yearPublished: 2020, image: null, thumbnail: null, selectedThumbnail: null, description: null, minPlayers: null, maxPlayers: null, minPlaytime: null, maxPlaytime: null, rating: null, minAge: null, categories: null, mechanics: null, isExpansion: false, isActive: true, lastScraped: null, availableImages: null, componentImages: null, createdAt: new Date(), updatedAt: new Date() },
       ];
       const mockJobs = [
         { id: "job-1", gameId: "1", gameName: "Game One", status: "pending" as const, createdAt: new Date() },
@@ -92,15 +95,18 @@ describe("Scrape Active Games API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findMany).mockResolvedValue(mockActiveGames);
       vi.mocked(enqueueScrapeMany).mockResolvedValue(mockJobs);
       vi.mocked(getQueueStatus).mockResolvedValue({
         isProcessing: true,
+        isStopping: false,
         currentJob: mockJobs[0],
         pendingCount: 2,
         completedCount: 0,
         failedCount: 0,
+        cancelledCount: 0,
         recentJobs: mockJobs,
       });
 
@@ -128,6 +134,7 @@ describe("Scrape Active Games API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findMany).mockResolvedValue([]);
 
@@ -141,7 +148,7 @@ describe("Scrape Active Games API Route", () => {
 
     it("should return immediately without waiting for scraping to complete", async () => {
       const mockActiveGames = [
-        { id: "1", name: "Game One" },
+        { id: "1", name: "Game One", yearPublished: 2020, image: null, thumbnail: null, selectedThumbnail: null, description: null, minPlayers: null, maxPlayers: null, minPlaytime: null, maxPlaytime: null, rating: null, minAge: null, categories: null, mechanics: null, isExpansion: false, isActive: true, lastScraped: null, availableImages: null, componentImages: null, createdAt: new Date(), updatedAt: new Date() },
       ];
       const mockJobs = [
         { id: "job-1", gameId: "1", gameName: "Game One", status: "pending" as const, createdAt: new Date() },
@@ -154,6 +161,7 @@ describe("Scrape Active Games API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findMany).mockResolvedValue(mockActiveGames);
       vi.mocked(enqueueScrapeMany).mockResolvedValue(mockJobs);

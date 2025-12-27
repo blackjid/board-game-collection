@@ -50,6 +50,8 @@ describe("Game [id] API Route", () => {
     lastScraped: new Date(),
     availableImages: '["img1.jpg"]',
     componentImages: '["comp1.jpg"]',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   // ============================================================================
@@ -131,6 +133,7 @@ describe("Game [id] API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findUnique).mockResolvedValue(null);
 
@@ -154,6 +157,7 @@ describe("Game [id] API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
       vi.mocked(prisma.game.update).mockResolvedValue({
@@ -184,6 +188,7 @@ describe("Game [id] API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
       vi.mocked(prisma.game.update).mockResolvedValue({
@@ -212,6 +217,7 @@ describe("Game [id] API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
       vi.mocked(prisma.game.update).mockResolvedValue(mockGame);

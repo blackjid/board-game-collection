@@ -106,6 +106,7 @@ describe("Register API Route", () => {
         name: null,
         role: "admin",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const request = new NextRequest("http://localhost:3000/api/auth/register", {
@@ -131,6 +132,7 @@ describe("Register API Route", () => {
         name: "Admin User",
         role: "admin",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(createSession).mockResolvedValue("session-id-123");
       vi.mocked(setSessionCookie).mockResolvedValue(undefined);
@@ -170,6 +172,7 @@ describe("Register API Route", () => {
         name: null,
         role: "admin",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(createSession).mockResolvedValue("session-id");
       vi.mocked(setSessionCookie).mockResolvedValue(undefined);

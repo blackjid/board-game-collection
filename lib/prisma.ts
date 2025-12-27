@@ -2,11 +2,16 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import path from "path";
 
-// Get database URL from environment variable or fallback to local dev.db
+// Get database URL from environment variables
+// Priority: DATABASE_URL > DATA_PATH/games.db > local prisma/dev.db
 const getDatabaseUrl = () => {
   if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL;
   }
+  if (process.env.DATA_PATH) {
+    return `file:${process.env.DATA_PATH}/games.db`;
+  }
+  // Default for local development
   return `file:${path.join(process.cwd(), "prisma", "dev.db")}`;
 };
 

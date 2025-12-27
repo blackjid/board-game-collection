@@ -61,6 +61,7 @@ describe("Game Scrape API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findUnique).mockResolvedValue(null);
 
@@ -79,7 +80,26 @@ describe("Game Scrape API Route", () => {
       const mockGame = {
         id: "123",
         name: "Wingspan",
+        yearPublished: 2019,
+        image: null,
+        thumbnail: null,
+        selectedThumbnail: null,
+        description: null,
+        minPlayers: null,
+        maxPlayers: null,
+        minPlaytime: null,
+        maxPlaytime: null,
+        rating: null,
+        minAge: null,
+        categories: null,
+        mechanics: null,
         isExpansion: false,
+        isActive: true,
+        lastScraped: null,
+        availableImages: null,
+        componentImages: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       const mockJob = {
         id: "job-1",
@@ -96,6 +116,7 @@ describe("Game Scrape API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
       vi.mocked(enqueueScrape).mockResolvedValue(mockJob);
@@ -121,7 +142,26 @@ describe("Game Scrape API Route", () => {
       const mockGame = {
         id: "123",
         name: "Wingspan",
+        yearPublished: 2019,
+        image: null,
+        thumbnail: null,
+        selectedThumbnail: null,
+        description: null,
+        minPlayers: null,
+        maxPlayers: null,
+        minPlaytime: null,
+        maxPlaytime: null,
+        rating: null,
+        minAge: null,
+        categories: null,
+        mechanics: null,
         isExpansion: false,
+        isActive: true,
+        lastScraped: null,
+        availableImages: null,
+        componentImages: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       const existingJob = {
         id: "existing-job",
@@ -139,6 +179,7 @@ describe("Game Scrape API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
       vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
       // enqueueScrape returns existing job if already in queue

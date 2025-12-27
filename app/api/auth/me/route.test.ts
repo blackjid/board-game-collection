@@ -36,6 +36,7 @@ describe("Me API Route", () => {
         role: "admin",
         passwordHash: "hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       vi.mocked(getCurrentUser).mockResolvedValue(mockUser);
@@ -60,6 +61,7 @@ describe("Me API Route", () => {
         role: "user",
         passwordHash: "secret-hash",
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       vi.mocked(getCurrentUser).mockResolvedValue(mockUser);

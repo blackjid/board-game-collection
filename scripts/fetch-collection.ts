@@ -1,4 +1,4 @@
-import { chromium } from "playwright";
+import { chromium, Page } from "playwright";
 import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import type { Game, GamesData } from "../types/game";
@@ -19,7 +19,33 @@ interface GameDetails {
   maxPlaytime: number | null;
 }
 
-async function fetchGameImage(page: any, game: any): Promise<GameDetails> {
+// Type for scraped game data before it's enriched with details
+interface ScrapedGameData {
+  id: string;
+  name: string;
+  yearPublished: number | null;
+  image: string;
+  thumbnail: string;
+  galleryImages: string[];
+  rating: number | null;
+  description: string | null;
+  minAge: number | null;
+  communityAge: number | null;
+  bestPlayerCount: number[] | null;
+  categories: string[];
+  mechanics: string[];
+  usersRated: number | null;
+  isExpansion: boolean;
+  // Optional fields that will be filled in during enrichment
+  minPlayers?: number | null;
+  maxPlayers?: number | null;
+  minPlaytime?: number | null;
+  maxPlaytime?: number | null;
+  numPlays?: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function fetchGameImage(page: Page, _game: ScrapedGameData): Promise<GameDetails> {
   // Extract game details from the current page
   return await page.evaluate(() => {
     // Get the main game image - try multiple selectors
@@ -43,7 +69,7 @@ async function fetchGameImage(page: any, game: any): Promise<GameDetails> {
         // Keep the original URL but try to get a larger version
         // BGG URL format: https://cf.geekdo-images.com/HASH__SIZE/img/HASH2/picNNNN.ext
         // Replace small sizes with larger ones
-        let fullSrc = src
+        const fullSrc = src
           .replace(/__square\d+\//, "__imagepagezoom/")
           .replace(/__thumb\//, "__imagepagezoom/")
           .replace(/__micro\//, "__imagepagezoom/")
@@ -79,7 +105,9 @@ async function fetchGameImage(page: any, game: any): Promise<GameDetails> {
         if (jsonData.aggregateRating?.ratingValue) {
           bggRating = Math.round(parseFloat(jsonData.aggregateRating.ratingValue) * 10) / 10;
         }
-      } catch (e) {}
+      } catch {
+        // Ignore JSON parse errors
+      }
     }
 
     // Method 2: Look for the rating value in various possible selectors
@@ -157,8 +185,8 @@ async function fetchGalleryImagesFromAPI(gameId: string): Promise<string[]> {
     // Get the large/original URLs, skip the first one (usually box art which we already have as main image)
     return images
       .slice(0, 5)
-      .map((img: any) => img.imageurl_lg || img.imageurl)
-      .filter((url: string) => url && url.includes("geekdo-images"));
+      .map((img: { imageurl_lg?: string; imageurl?: string }) => img.imageurl_lg || img.imageurl)
+      .filter((url: string | undefined): url is string => !!url && url.includes("geekdo-images"));
   } catch (e) {
     console.log(`    Images API error for ${gameId}: ${e}`);
     return [];
@@ -217,11 +245,11 @@ async function fetchExtendedDataFromAPI(gameId: string): Promise<ExtendedGameDat
 
     // Get categories
     const categories = item.links?.boardgamecategory || [];
-    result.categories = categories.map((c: any) => c.name);
+    result.categories = categories.map((c: { name: string }) => c.name);
 
     // Get mechanics
     const mechanics = item.links?.boardgamemechanic || [];
-    result.mechanics = mechanics.map((m: any) => m.name);
+    result.mechanics = mechanics.map((m: { name: string }) => m.name);
 
   } catch (e) {
     console.log(`    API fetch error for ${gameId}: ${e}`);
@@ -230,7 +258,7 @@ async function fetchExtendedDataFromAPI(gameId: string): Promise<ExtendedGameDat
   return result;
 }
 
-async function fetchGameDetails(games: Game[], page: any): Promise<Game[]> {
+async function fetchGameDetails(games: ScrapedGameData[], page: Page): Promise<Game[]> {
   // All games need images
   const gamesNeedingDetails = games.filter(g => !g.image);
 
@@ -315,7 +343,7 @@ async function fetchGameDetails(games: Game[], page: any): Promise<Game[]> {
             originalGame.categories = extendedData.categories;
             originalGame.mechanics = extendedData.mechanics;
             originalGame.usersRated = extendedData.usersRated;
-            originalGame.isExpansion = extendedData.isExpansion || (game as any).isExpansion;
+            originalGame.isExpansion = extendedData.isExpansion || game.isExpansion;
             originalGame.minPlayers = extendedData.minPlayers ?? details?.minPlayers ?? originalGame.minPlayers;
             originalGame.maxPlayers = extendedData.maxPlayers ?? details?.maxPlayers ?? originalGame.maxPlayers;
             originalGame.minPlaytime = extendedData.minPlaytime ?? details?.minPlaytime ?? originalGame.minPlaytime;
@@ -326,8 +354,9 @@ async function fetchGameDetails(games: Game[], page: any): Promise<Game[]> {
 
         // Small delay to be nice to the server
         await new Promise(resolve => setTimeout(resolve, 300));
-      } catch (error: any) {
-        console.log(`    Failed to fetch ${game.name}: ${error.message || error}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.log(`    Failed to fetch ${game.name}: ${message}`);
       }
     }
   }
@@ -388,9 +417,25 @@ async function main() {
     console.log("Extracting game data...");
 
     // Extract game data from the table rows
-    const scrapedGames = await page.evaluate(() => {
+    const scrapedGames: ScrapedGameData[] = await page.evaluate(() => {
       const rows = document.querySelectorAll("table tbody tr");
-      const gameList: any[] = [];
+      const gameList: {
+        id: string;
+        name: string;
+        yearPublished: number | null;
+        image: string;
+        thumbnail: string;
+        galleryImages: string[];
+        rating: number | null;
+        description: string | null;
+        minAge: number | null;
+        communityAge: number | null;
+        bestPlayerCount: number[] | null;
+        categories: string[];
+        mechanics: string[];
+        usersRated: number | null;
+        isExpansion: boolean;
+      }[] = [];
 
       rows.forEach((row) => {
         const cells = row.querySelectorAll("td");
@@ -433,7 +478,7 @@ async function main() {
           description: null,
           minAge: null,
           communityAge: null,
-          bestPlayerCount: null,
+          bestPlayerCount: null as number[] | null,
           categories: [],
           mechanics: [],
           usersRated: null,
