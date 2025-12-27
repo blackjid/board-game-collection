@@ -780,6 +780,16 @@ export default function GamePickerPage() {
         </button>
       )}
 
+      {/* Exit button - always goes to home */}
+      <Link
+        href="/"
+        className="absolute top-4 right-4 z-50 bg-white/10 backdrop-blur-md w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all"
+        style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
+        title="Exit to collection"
+      >
+        <span className="w-5 h-5 text-stone-400 hover:text-white">{Icons.x}</span>
+      </Link>
+
       {/* Main content */}
       <div className="relative z-10 h-full">
         {/* ==================== WELCOME ==================== */}
