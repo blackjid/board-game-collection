@@ -1,0 +1,10 @@
+Read and follow all conventions, patterns, and guidelines defined in AGENTS.md for this project.
+
+When implementing new features or making changes:
+1. Follow the established code patterns and naming conventions
+2. Use the project's architecture (Server/Client component split, lib/ layer for business logic)
+3. Match the existing styling patterns (dark theme, Tailwind conventions)
+4. Write tests following the testing conventions
+5. Avoid the anti-patterns listed in the "Don't Do" section
+
+When receiving instructions that define new standards, design patterns, or architectural decisions, propose updates to AGENTS.md to document them for future sessions.
