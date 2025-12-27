@@ -1122,7 +1122,7 @@ export default function GamePickerPage() {
 
                   <div className="flex flex-wrap gap-2 justify-center mb-4">
                     {pickedGame.rating && (
-                      <span 
+                      <span
                         className="px-4 py-2 rounded-full flex items-center gap-2 font-bold"
                         style={{ backgroundColor: getRatingColor(pickedGame.rating) }}
                       >
