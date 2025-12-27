@@ -1,7 +1,11 @@
 # Stage 1: Dependencies
-FROM node:22-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:22-slim AS deps
 WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package.json package-lock.json ./
@@ -12,7 +16,7 @@ COPY prisma.config.ts ./
 RUN npm ci
 
 # Install Playwright browsers (chromium only for scraping)
-RUN npx playwright install chromium --with-deps || true
+RUN npx playwright install chromium --with-deps
 
 # Set DATA_PATH and DATABASE_URL for prisma generate (config needs it)
 ENV DATA_PATH="/data"
@@ -22,7 +26,7 @@ ENV DATABASE_URL="file:/data/games.db"
 RUN npx prisma generate
 
 # Stage 2: Builder
-FROM node:22-alpine AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -41,28 +45,37 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:22-alpine AS runner
+FROM node:22-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install Playwright dependencies for chromium
-RUN apk add --no-cache \
+# Install runtime dependencies including Chromium for Playwright
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
     chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont
+    fonts-liberation \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Tell Playwright to use system chromium
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 --gid nodejs nextjs
 
 # Copy public assets
 COPY --from=builder /app/public ./public
