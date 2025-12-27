@@ -556,6 +556,7 @@ export default function GamePickerPage() {
   const [maybePile, setMaybePile] = useState<GameData[]>([]);
   const [pickedGame, setPickedGame] = useState<GameData | null>(null);
   const [swipeGames, setSwipeGames] = useState<GameData[]>([]);
+  const [pickedViaLucky, setPickedViaLucky] = useState(false);
 
   const availableCategories = useMemo(() => {
     const catCount: Record<string, number> = {};
@@ -629,6 +630,7 @@ export default function GamePickerPage() {
       setCurrentIndex(0);
       setMaybePile([]);
       setPickedGame(null);
+      setPickedViaLucky(false);
       // Shuffle all filtered games
       setSwipeGames(shuffleArray(filteredGames));
     }
@@ -760,6 +762,13 @@ export default function GamePickerPage() {
       ) : (
         <button
           onClick={() => {
+            // If on picked state via "feeling lucky", go back to welcome
+            if (step === "picked" && pickedViaLucky) {
+              setPickedViaLucky(false);
+              goToStep("welcome");
+              return;
+            }
+            
             const stepOrder: Step[] = ["welcome", "players", "kids", "time", "mood", "expansions", "swipe", "picked"];
             const currentIdx = stepOrder.indexOf(step);
             if (currentIdx > 0) {
@@ -811,6 +820,7 @@ export default function GamePickerPage() {
                   // Pick a random game immediately!
                   const randomGame = games[Math.floor(Math.random() * games.length)];
                   setPickedGame(randomGame);
+                  setPickedViaLucky(true);
                   goToStep("picked");
                 }}
                 className="text-stone-500 hover:text-amber-400 transition-colors text-sm flex items-center gap-2 mx-auto"
