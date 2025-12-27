@@ -77,6 +77,23 @@ This will:
 | `DATA_PATH` | `/data` | Directory for the SQLite database |
 | `DATABASE_URL` | `file:/data/games.db` | SQLite database connection string |
 | `PORT` | `3000` | Port the server listens on |
+| `NEXT_PUBLIC_BASE_URL` | (auto-detected) | Base URL for share links and QR codes (e.g., `https://games.example.com`). Required for collaborative sessions when testing on other devices. |
+
+### Build-time Configuration (Docker)
+
+When building the Docker image, you can set the base URL:
+
+```bash
+docker build --build-arg NEXT_PUBLIC_BASE_URL=https://games.example.com -t my-bgg-app .
+```
+
+### Development with Custom Base URL
+
+For local network testing (e.g., testing on your phone):
+
+```bash
+NEXT_PUBLIC_BASE_URL=http://192.168.1.100:3000 npm run dev
+```
 
 ### Using a Custom Data Directory
 

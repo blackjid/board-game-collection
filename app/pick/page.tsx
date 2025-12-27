@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -158,6 +159,14 @@ const Icons = {
   check: (
     <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  userGroup: (
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   ),
 };
@@ -551,9 +560,14 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export default function GamePickerPage() {
+  const router = useRouter();
   const [games, setGames] = useState<GameData[]>([]);
   const [loading, setLoading] = useState(true);
   const [collectionName, setCollectionName] = useState("My");
+  const [isCollaborative, setIsCollaborative] = useState(false);
+  const [hostName, setHostName] = useState("");
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [creatingSession, setCreatingSession] = useState(false);
 
   const [step, setStep] = useState<WizardStep>("welcome");
   const [filters, setFilters] = useState<Filters>({
@@ -679,9 +693,47 @@ export default function GamePickerPage() {
     }));
   };
 
-  const setExpansions = (include: boolean) => {
+  const setExpansions = async (include: boolean) => {
+    const newFilters = { ...filters, includeExpansions: include };
     setFilters((f) => ({ ...f, includeExpansions: include }));
-    goToStep("swipe", { includeExpansions: include });
+
+    if (isCollaborative) {
+      // Create collaborative session
+      setCreatingSession(true);
+      try {
+        const filteredGameIds = filterGames(games, newFilters).map(g => g.id);
+
+        const response = await fetch("/api/pick/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            hostName,
+            filters: newFilters,
+            gameIds: filteredGameIds,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Store player info
+          sessionStorage.setItem(`player_${data.session.code}`, JSON.stringify({
+            playerId: data.playerId,
+            playerName: hostName,
+            isHost: true,
+          }));
+          // Navigate to session
+          router.push(`/pick/session/${data.session.code}`);
+        } else {
+          console.error("Failed to create session");
+          setCreatingSession(false);
+        }
+      } catch (error) {
+        console.error("Failed to create session:", error);
+        setCreatingSession(false);
+      }
+    } else {
+      goToStep("swipe", { includeExpansions: include });
+    }
   };
 
   const handleSwipeLeft = useCallback(() => {
@@ -720,12 +772,14 @@ export default function GamePickerPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [step, handleSwipeLeft, handleSwipeRight, handleSwipeUp]);
 
-  if (loading) {
+  if (loading || creatingSession) {
     return (
       <div className="h-screen w-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-          <p className="text-stone-400 text-lg">Loading your collection...</p>
+          <p className="text-stone-400 text-lg">
+            {creatingSession ? "Creating session..." : "Loading your collection..."}
+          </p>
         </div>
       </div>
     );
@@ -783,7 +837,7 @@ export default function GamePickerPage() {
               return;
             }
 
-            const stepOrder: Step[] = ["welcome", "players", "kids", "time", "mood", "expansions", "swipe", "picked"];
+            const stepOrder: WizardStep[] = ["welcome", "players", "kids", "time", "mood", "expansions", "swipe", "picked"];
             const currentIdx = stepOrder.indexOf(step);
             if (currentIdx > 0) {
               // Skip "kids" step if solo player
@@ -821,28 +875,98 @@ export default function GamePickerPage() {
             title="What should we play tonight?"
             subtitle={`Choose from ${games.length} games in ${collectionName} Collection`}
           >
-            <button
-              onClick={() => goToStep("players")}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black px-10 py-5 rounded-full text-xl font-black transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/30 flex items-center gap-3 mx-auto"
-            >
-              Let&apos;s Find Out <span className="text-amber-900 w-8 h-8">{Icons.dice}</span>
-            </button>
+            {/* Name input for collaborative mode */}
+            {showNameInput ? (
+              <div className="max-w-sm mx-auto mb-8">
+                <p className="text-stone-400 text-sm mb-3">Enter your name to start</p>
+                <input
+                  type="text"
+                  value={hostName}
+                  onChange={(e) => setHostName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full bg-stone-900 border border-stone-700 rounded-xl px-4 py-3 text-lg text-white text-center placeholder:text-stone-600 focus:outline-none focus:border-amber-500 transition-colors mb-4"
+                  maxLength={30}
+                  autoFocus
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowNameInput(false);
+                      setIsCollaborative(false);
+                    }}
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 py-3 rounded-full font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (hostName.trim()) {
+                        goToStep("players");
+                      }
+                    }}
+                    disabled={!hostName.trim()}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 disabled:from-stone-700 disabled:to-stone-700 text-white disabled:text-stone-500 py-3 rounded-full font-bold transition-all"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Solo mode button */}
+                <button
+                  onClick={() => {
+                    setIsCollaborative(false);
+                    goToStep("players");
+                  }}
+                  className="w-full max-w-xs bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black px-10 py-5 rounded-full text-xl font-black transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/30 flex items-center justify-center gap-3 mx-auto"
+                >
+                  Let&apos;s Find Out <span className="text-amber-900 w-8 h-8">{Icons.dice}</span>
+                </button>
 
-            <div className="mt-6">
-              <button
-                onClick={() => {
-                  // Pick a random game immediately!
-                  const randomGame = games[Math.floor(Math.random() * games.length)];
-                  setPickedGame(randomGame);
-                  setPickedViaLucky(true);
-                  goToStep("picked");
-                }}
-                className="text-stone-500 hover:text-amber-400 transition-colors text-sm flex items-center gap-2 mx-auto"
-              >
-                <span className="w-4 h-4">{Icons.dice}</span>
-                Feeling lucky? Pick random
-              </button>
-            </div>
+                {/* Collaborative mode button */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => {
+                      setIsCollaborative(true);
+                      setShowNameInput(true);
+                    }}
+                    className="w-full max-w-xs bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white px-10 py-5 rounded-full text-xl font-black transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 mx-auto"
+                  >
+                    Pick Together <span className="text-blue-200 w-8 h-8">{Icons.userGroup}</span>
+                  </button>
+                  <p className="text-stone-600 text-xs mt-2">
+                    Let everyone pick and find a game you all want to play
+                  </p>
+                </div>
+
+                {/* Lucky button */}
+                <div className="mt-6">
+                  <button
+                    onClick={() => {
+                      const randomGame = games[Math.floor(Math.random() * games.length)];
+                      setPickedGame(randomGame);
+                      setPickedViaLucky(true);
+                      goToStep("picked");
+                    }}
+                    className="text-stone-500 hover:text-amber-400 transition-colors text-sm flex items-center gap-2 mx-auto"
+                  >
+                    <span className="w-4 h-4">{Icons.dice}</span>
+                    Feeling lucky? Pick random
+                  </button>
+                </div>
+
+                {/* Join session link */}
+                <div className="mt-4">
+                  <Link
+                    href="/pick/join"
+                    className="text-stone-600 hover:text-blue-400 transition-colors text-sm"
+                  >
+                    Have a session code? Join here
+                  </Link>
+                </div>
+              </>
+            )}
           </WizardScreen>
         )}
 

@@ -14,5 +14,5 @@ echo "Running database migrations..."
 # Use --config to specify the JS config file
 node node_modules/prisma/build/index.js migrate deploy --config prisma.config.js
 
-echo "Starting Next.js server..."
-exec node server.js
+echo "Starting custom server with Socket.IO..."
+exec node dist/server.js

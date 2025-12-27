@@ -95,3 +95,54 @@ model ScrapeJob {
   @@index([status])
   @@index([gameId])
 }
+
+// Collaborative Pick Session Models
+model PickSession {
+  id            String   @id @default(cuid())
+  code          String   @unique  // 6-char shareable code
+  hostName      String
+  status        String   @default("active")  // active, completed, cancelled
+
+  // Stored filters so guests get same game set
+  filtersJson   String   // JSON: {players, kidsPlaying, time, categories, includeExpansions}
+  gameIdsJson   String   // JSON array of pre-filtered game IDs
+
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  players       PickSessionPlayer[]
+  votes         PickSessionVote[]
+
+  @@index([code])
+  @@index([status])
+}
+
+model PickSessionPlayer {
+  id          String   @id @default(cuid())
+  sessionId   String
+  name        String
+  isHost      Boolean  @default(false)
+  status      String   @default("picking")  // picking, done
+  progress    Int      @default(0)  // current card index
+  joinedAt    DateTime @default(now())
+
+  session     PickSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  votes       PickSessionVote[]
+
+  @@index([sessionId])
+}
+
+model PickSessionVote {
+  id          String   @id @default(cuid())
+  sessionId   String
+  playerId    String
+  gameId      String
+  decision    String   // "like", "skip", "pick"
+  createdAt   DateTime @default(now())
+
+  session     PickSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  player      PickSessionPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, playerId, gameId])
+  @@index([sessionId])
+}
