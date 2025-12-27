@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { GameData } from "@/lib/games";
 
@@ -57,11 +58,12 @@ export function GameListItem({ game }: GameListItemProps) {
       {/* Thumbnail */}
       <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-stone-800 relative">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={game.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
+            fill
+            sizes="80px"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-stone-800 to-stone-900">

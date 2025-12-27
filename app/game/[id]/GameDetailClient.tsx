@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { GameData } from "@/lib/games";
 
@@ -67,10 +68,12 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
         {/* Blurred background */}
         {displayImage && (
           <div className="absolute inset-0 overflow-hidden">
-            <img
+            <Image
               src={displayImage}
               alt=""
-              className="w-full h-full object-cover blur-3xl opacity-30 scale-110"
+              fill
+              sizes="100vw"
+              className="object-cover blur-3xl opacity-30 scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-stone-900/50 via-stone-900/80 to-stone-900" />
           </div>
@@ -96,10 +99,12 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               {/* Main Image */}
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-stone-800 aspect-square sm:aspect-[3/4]">
                 {displayImage ? (
-                  <img
+                  <Image
                     src={displayImage}
                     alt={game.name}
-                    className="w-full h-full object-contain"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    className="object-contain"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-8xl">
@@ -132,13 +137,13 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                     <button
                       key={i}
                       onClick={() => setSelectedImage(img)}
-                      className={`w-14 h-14 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`w-14 h-14 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all relative ${
                         (selectedImage || mainImage) === img
                           ? "border-amber-500 ring-2 ring-amber-500/30"
                           : "border-white/10 hover:border-white/30"
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <Image src={img} alt="" fill sizes="80px" className="object-cover" />
                     </button>
                   ))}
                 </div>
@@ -202,9 +207,9 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                       <button
                         key={i}
                         onClick={() => setSelectedImage(img)}
-                        className="aspect-square rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all"
+                        className="aspect-square rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all relative"
                       >
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <Image src={img} alt="" fill sizes="33vw" className="object-cover" />
                       </button>
                     ))}
                   </div>
@@ -253,10 +258,12 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                   rel="noopener noreferrer"
                   className="group flex items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-orange-500/50 transition-all"
                 >
-                  <img
+                  <Image
                     src="/powered-by-bgg.svg"
                     alt="Powered by BoardGameGeek"
-                    className="h-5 sm:h-6 opacity-80 group-hover:opacity-100 transition-opacity"
+                    width={120}
+                    height={24}
+                    className="h-5 sm:h-6 w-auto opacity-80 group-hover:opacity-100 transition-opacity"
                   />
                   <svg
                     className="w-3 sm:w-4 h-3 sm:h-4 text-stone-500 group-hover:text-amber-400 transition-colors"

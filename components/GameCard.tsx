@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { GameData } from "@/lib/games";
 
@@ -65,13 +66,14 @@ export function GameCard({ game }: GameCardProps) {
         {imageUrl ? (
           <>
             {/* Blurred background layer - scaled up to ensure full coverage */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+              <Image
                 src={imageUrl}
                 alt=""
                 aria-hidden="true"
-                className="min-w-[300%] min-h-[300%] object-cover blur-3xl saturate-150 opacity-80 scale-110"
-                loading="lazy"
+                fill
+                sizes="300px"
+                className="object-cover blur-3xl saturate-150 opacity-80 scale-[3]"
               />
             </div>
 
@@ -79,11 +81,12 @@ export function GameCard({ game }: GameCardProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
 
             {/* Main image - shown at natural aspect ratio, centered */}
-            <img
+            <Image
               src={imageUrl}
               alt={game.name}
-              className="absolute inset-0 w-full h-full object-contain z-10 drop-shadow-lg group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
+              fill
+              sizes="(max-width: 640px) 50vw, 16vw"
+              className="object-contain z-10 drop-shadow-lg group-hover:scale-105 transition-transform duration-300"
             />
           </>
         ) : (

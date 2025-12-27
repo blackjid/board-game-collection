@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GameCard } from "@/components/GameCard";
@@ -53,7 +54,6 @@ export function HomeClient({
   currentUser,
 }: HomeClientProps) {
   const router = useRouter();
-  const displayName = collectionName || (bggUsername ? `${bggUsername}'s Collection` : "Board Game Collection");
   const [columns, setColumns] = useState(6);
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -443,10 +443,12 @@ export function HomeClient({
             rel="noopener noreferrer"
             className="group px-4 py-2 rounded-lg hover:bg-stone-900/50 transition-all"
           >
-            <img
+            <Image
               src="/powered-by-bgg.svg"
               alt="Powered by BoardGameGeek"
-              className="h-10 opacity-80 group-hover:opacity-100 transition-opacity"
+              width={200}
+              height={40}
+              className="h-10 w-auto opacity-80 group-hover:opacity-100 transition-opacity"
             />
           </a>
           <div className="flex items-center gap-3 text-stone-600 text-xs">

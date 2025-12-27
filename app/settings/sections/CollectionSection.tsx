@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 
 interface SyncStatus {
   lastSync: {
@@ -154,7 +155,7 @@ function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
                           : "border-stone-700 hover:border-stone-500"
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <Image src={img} alt="" fill sizes="100px" className="object-cover" />
                       {selectedThumbnail === img && (
                         <div className="absolute inset-0 bg-amber-500/20 flex items-center justify-center">
                           <span className="bg-amber-500 text-black text-xs font-bold px-2 py-1 rounded">
@@ -185,7 +186,7 @@ function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
                           : "border-stone-700 hover:border-stone-500"
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <Image src={img} alt="" fill sizes="100px" className="object-cover" />
                       {componentImages.includes(img) && (
                         <div className="absolute top-1 right-1 bg-emerald-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                           {componentImages.indexOf(img) + 1}
@@ -733,12 +734,14 @@ export function CollectionSection() {
               className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:bg-stone-800/50 transition-colors"
             >
               <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-stone-800 flex-shrink-0">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-stone-800 flex-shrink-0 relative">
                   {(game.selectedThumbnail || game.thumbnail || game.image) ? (
-                    <img
+                    <Image
                       src={game.selectedThumbnail || game.thumbnail || game.image || ""}
                       alt=""
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="64px"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

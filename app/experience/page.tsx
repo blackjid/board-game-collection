@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 // ============================================================================
@@ -335,10 +336,12 @@ function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeC
       {/* Game Image */}
       <div className="h-3/5 relative bg-stone-800">
         {getPrimaryImage(game) ? (
-          <img
+          <Image
             src={getPrimaryImage(game)!}
             alt={game.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, 400px"
+            className="object-cover"
             draggable={false}
           />
         ) : (
@@ -606,7 +609,7 @@ export default function ExperiencePage() {
       setPickedGame(game);
       goToStep("picked");
     }
-  }, [filteredGames, currentIndex]);
+  }, [filteredGames, currentIndex, goToStep]);
 
   useEffect(() => {
     if (step !== "swipe") return;
@@ -658,9 +661,9 @@ export default function ExperiencePage() {
       <div className="absolute inset-0 opacity-10">
         <div className="grid grid-cols-6 md:grid-cols-8 gap-2 p-4">
           {games.slice(0, 24).map((game) => (
-            <div key={game.id} className="aspect-square rounded-lg overflow-hidden">
+            <div key={game.id} className="aspect-square rounded-lg overflow-hidden relative">
               {getPrimaryImage(game) && (
-                <img src={getPrimaryImage(game)!} alt="" className="w-full h-full object-cover" />
+                <Image src={getPrimaryImage(game)!} alt="" fill sizes="100px" className="object-cover" />
               )}
             </div>
           ))}
@@ -985,10 +988,12 @@ export default function ExperiencePage() {
               <div className="bg-gradient-to-b from-stone-800 to-stone-900 rounded-3xl overflow-hidden shadow-2xl mb-8">
                 <div className="aspect-[4/3] relative bg-stone-800">
                   {getPrimaryImage(pickedGame) ? (
-                    <img
+                    <Image
                       src={getPrimaryImage(pickedGame)!}
                       alt={pickedGame.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="(max-width: 640px) 100vw, 500px"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
