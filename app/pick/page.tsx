@@ -239,7 +239,152 @@ function filterGames(games: GameData[], filters: Filters): GameData[] {
 }
 
 // ============================================================================
-// SWIPE CARD COMPONENT
+// GAME CARD DISPLAY COMPONENT (shared between swipe and result)
+// ============================================================================
+
+interface GameCardDisplayProps {
+  game: GameData;
+  showDescription?: boolean;
+  swipeIndicators?: {
+    showLike: boolean;
+    showNope: boolean;
+    showPick: boolean;
+  };
+}
+
+function GameCardDisplay({ game, showDescription = false, swipeIndicators }: GameCardDisplayProps) {
+  return (
+    <div className="h-full flex flex-col bg-gradient-to-b from-stone-800 to-stone-900 rounded-2xl overflow-hidden">
+      {/* Game Image */}
+      <div className="aspect-[4/3] relative bg-stone-800 overflow-hidden">
+        {getPrimaryImage(game) ? (
+          <>
+            {/* Blurred background layer */}
+            <div className="absolute inset-0 overflow-hidden">
+              <Image
+                src={getPrimaryImage(game)!}
+                alt=""
+                aria-hidden="true"
+                fill
+                sizes="500px"
+                className="object-cover blur-3xl saturate-150 opacity-80 scale-[3]"
+                draggable={false}
+              />
+            </div>
+
+            {/* Subtle vignette overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
+
+            {/* Main image - shown at natural aspect ratio, never cropped */}
+            <Image
+              src={getPrimaryImage(game)!}
+              alt={game.name}
+              fill
+              sizes="(max-width: 640px) 100vw, 500px"
+              className="object-contain z-10 drop-shadow-lg"
+              draggable={false}
+            />
+          </>
+        ) : (
+          <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
+            <span className="w-8 h-8">{Icons.dice}</span>
+          </div>
+        )}
+
+        {/* Swipe indicators */}
+        {swipeIndicators?.showLike && (
+          <div className="absolute top-6 left-4 bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[-15deg] border-2 border-white z-20">
+            MAYBE
+          </div>
+        )}
+        {swipeIndicators?.showNope && (
+          <div className="absolute top-6 right-4 bg-red-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[15deg] border-2 border-white z-20">
+            NOPE
+          </div>
+        )}
+        {swipeIndicators?.showPick && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-black px-6 py-2 rounded-lg text-lg font-black border-2 border-white flex items-center gap-2 z-20">
+            THIS ONE! <span className="text-amber-900 w-5 h-5">{Icons.star}</span>
+          </div>
+        )}
+
+        {/* Expansion badge */}
+        {game.isExpansion && (
+          <div className="absolute top-3 left-3 bg-purple-600 text-white px-2 py-0.5 rounded-full text-xs font-bold z-20">
+            Expansion
+          </div>
+        )}
+      </div>
+
+      {/* Game Info */}
+      <div className="p-5 flex flex-col items-center text-center flex-1">
+        <div className="mb-3">
+          <h2 className="text-2xl font-black text-white mb-1">
+            {game.name}
+          </h2>
+          {game.yearPublished && (
+            <p className="text-stone-500 text-sm">
+              {game.yearPublished}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-auto">
+          {/* Stats badges */}
+          <div className="flex flex-wrap gap-2 justify-center mb-3">
+            {game.rating && (
+              <span
+                className="px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-sm"
+                style={{ backgroundColor: getRatingColor(game.rating) }}
+              >
+                <span className="w-4 h-4">{Icons.star}</span>
+                {game.rating.toFixed(1)}
+              </span>
+            )}
+            {game.minPlayers && game.maxPlayers && (
+              <span className="bg-white/10 px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5">
+                <span className="text-stone-400 w-4 h-4">{Icons.users}</span>
+                {game.minPlayers === game.maxPlayers ? game.minPlayers : `${game.minPlayers}-${game.maxPlayers}`}
+              </span>
+            )}
+            {(game.minPlaytime || game.maxPlaytime) && (
+              <span className="bg-white/10 px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5">
+                <span className="text-stone-400 w-4 h-4">{Icons.clock}</span>
+                {game.minPlaytime || game.maxPlaytime} min
+              </span>
+            )}
+            {game.minAge && (
+              <span className="bg-white/10 px-3 py-1.5 rounded-full text-sm">
+                {game.minAge}+
+              </span>
+            )}
+          </div>
+
+          {/* Categories */}
+          {game.categories.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {game.categories.slice(0, 3).map((cat, i) => (
+                <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded text-xs">
+                  {cat}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Description (optional) */}
+          {showDescription && game.description && (
+            <p className="text-stone-400 text-sm line-clamp-2 mt-3">
+              {game.description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SWIPE CARD COMPONENT (wraps GameCardDisplay with swipe logic)
 // ============================================================================
 
 interface SwipeCardProps {
@@ -314,7 +459,7 @@ function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeC
   return (
     <div
       ref={cardRef}
-      className={`absolute inset-0 bg-gradient-to-b from-stone-800 to-stone-900 rounded-2xl shadow-2xl overflow-hidden cursor-grab active:cursor-grabbing transition-transform ${isDragging ? "" : "duration-300"}`}
+      className={`absolute inset-0 shadow-2xl cursor-grab active:cursor-grabbing transition-transform ${isDragging ? "" : "duration-300"}`}
       style={{
         transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale})`,
         opacity,
@@ -328,119 +473,10 @@ function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeC
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Game Image */}
-      <div className="h-3/5 relative bg-stone-800 overflow-hidden">
-        {getPrimaryImage(game) ? (
-          <>
-            {/* Blurred background layer */}
-            <div className="absolute inset-0 overflow-hidden">
-              <Image
-                src={getPrimaryImage(game)!}
-                alt=""
-                aria-hidden="true"
-                fill
-                sizes="400px"
-                className="object-cover blur-3xl saturate-150 opacity-80 scale-[3]"
-                draggable={false}
-              />
-            </div>
-
-            {/* Subtle vignette overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
-
-            {/* Main image - shown at natural aspect ratio, never cropped */}
-            <Image
-              src={getPrimaryImage(game)!}
-              alt={game.name}
-              fill
-              sizes="(max-width: 640px) 100vw, 400px"
-              className="object-contain z-10 drop-shadow-lg"
-              draggable={false}
-            />
-          </>
-        ) : (
-          <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
-            <span className="w-8 h-8">{Icons.dice}</span>
-          </div>
-        )}
-
-        {/* Swipe indicators */}
-        {showLike && (
-          <div className="absolute top-6 left-4 bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[-15deg] border-2 border-white z-20">
-            MAYBE
-          </div>
-        )}
-        {showNope && (
-          <div className="absolute top-6 right-4 bg-red-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[15deg] border-2 border-white z-20">
-            NOPE
-          </div>
-        )}
-        {showPick && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-black px-6 py-2 rounded-lg text-lg font-black border-2 border-white flex items-center gap-2 z-20">
-            THIS ONE! <span className="text-amber-900 w-5 h-5">{Icons.star}</span>
-          </div>
-        )}
-
-        {/* Rating badge */}
-        {game.rating && (
-          <div
-            className="absolute top-3 right-3 px-2.5 py-1 rounded-full font-bold text-sm shadow-lg flex items-center gap-1 z-20"
-            style={{ backgroundColor: getRatingColor(game.rating) }}
-          >
-            <span className="w-3.5 h-3.5">{Icons.star}</span>
-            {game.rating.toFixed(1)}
-          </div>
-        )}
-
-        {/* Expansion badge */}
-        {game.isExpansion && (
-          <div className="absolute top-3 left-3 bg-purple-600 text-white px-2 py-0.5 rounded-full text-xs font-bold">
-            Expansion
-          </div>
-        )}
-      </div>
-
-      {/* Game Info */}
-      <div className="h-2/5 p-4 flex flex-col justify-between">
-        <div>
-          <h2 className="text-xl font-black text-white mb-1 line-clamp-2">
-            {game.name}
-          </h2>
-          {game.yearPublished && (
-            <p className="text-stone-500 text-sm mb-2">{game.yearPublished}</p>
-          )}
-        </div>
-
-        <div>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {game.minPlayers && game.maxPlayers && (
-              <span className="bg-white/10 px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
-                <span className="text-stone-400 w-3.5 h-3.5">{Icons.users}</span>
-                {game.minPlayers === game.maxPlayers ? game.minPlayers : `${game.minPlayers}-${game.maxPlayers}`}
-              </span>
-            )}
-            {(game.minPlaytime || game.maxPlaytime) && (
-              <span className="bg-white/10 px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
-                <span className="text-stone-400 w-3.5 h-3.5">{Icons.clock}</span>
-                {game.minPlaytime || game.maxPlaytime}m
-              </span>
-            )}
-            {game.minAge && (
-              <span className="bg-white/10 px-2.5 py-1 rounded-full text-xs">
-                {game.minAge}+
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-1">
-            {game.categories.slice(0, 2).map((cat, i) => (
-              <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded text-xs">
-                {cat}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+      <GameCardDisplay
+        game={game}
+        swipeIndicators={{ showLike, showNope, showPick }}
+      />
     </div>
   );
 }
@@ -1081,75 +1117,12 @@ export default function GamePickerPage() {
 
               <h1 className="text-2xl font-bold text-stone-400 mb-6">Tonight you&apos;re playing...</h1>
 
-              {/* Game card */}
-              <div className="bg-gradient-to-b from-stone-800 to-stone-900 rounded-3xl overflow-hidden shadow-2xl mb-8">
-                <div className="aspect-[4/3] relative bg-stone-800 overflow-hidden">
-                  {getPrimaryImage(pickedGame) ? (
-                    <>
-                      {/* Blurred background layer */}
-                      <div className="absolute inset-0 overflow-hidden">
-                        <Image
-                          src={getPrimaryImage(pickedGame)!}
-                          alt=""
-                          aria-hidden="true"
-                          fill
-                          sizes="500px"
-                          className="object-cover blur-3xl saturate-150 opacity-80 scale-[3]"
-                        />
-                      </div>
-
-                      {/* Subtle vignette overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
-
-                      {/* Main image - shown at natural aspect ratio, never cropped */}
-                      <Image
-                        src={getPrimaryImage(pickedGame)!}
-                        alt={pickedGame.name}
-                        fill
-                        sizes="(max-width: 640px) 100vw, 500px"
-                        className="object-contain z-10 drop-shadow-lg"
-                      />
-                    </>
-                  ) : (
-                    <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
-                      <span className="w-8 h-8">{Icons.dice}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-6">
-                  <h2 className="text-3xl font-black text-white mb-2">{pickedGame.name}</h2>
-                  <p className="text-stone-400 mb-4">{pickedGame.yearPublished}</p>
-
-                  <div className="flex flex-wrap gap-2 justify-center mb-4">
-                    {pickedGame.rating && (
-                      <span
-                        className="px-4 py-2 rounded-full flex items-center gap-2 font-bold"
-                        style={{ backgroundColor: getRatingColor(pickedGame.rating) }}
-                      >
-                        <span className="w-4 h-4">{Icons.star}</span>
-                        {pickedGame.rating.toFixed(1)}
-                      </span>
-                    )}
-                    {pickedGame.minPlayers && pickedGame.maxPlayers && (
-                      <span className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
-                        <span className="text-stone-400 w-5 h-5">{Icons.users}</span>
-                        {pickedGame.minPlayers}-{pickedGame.maxPlayers}
-                      </span>
-                    )}
-                    {(pickedGame.minPlaytime || pickedGame.maxPlaytime) && (
-                      <span className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
-                        <span className="text-stone-400 w-5 h-5">{Icons.clock}</span>
-                        {pickedGame.minPlaytime || pickedGame.maxPlaytime} min
-                      </span>
-                    )}
-                  </div>
-
-                  {pickedGame.description && (
-                    <p className="text-stone-400 text-sm line-clamp-3">
-                      {pickedGame.description}
-                    </p>
-                  )}
-                </div>
+              {/* Game card - using shared component */}
+              <div className="shadow-2xl rounded-2xl overflow-hidden mb-8">
+                <GameCardDisplay
+                  game={pickedGame}
+                  showDescription={true}
+                />
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
