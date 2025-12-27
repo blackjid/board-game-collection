@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin, hashPassword, getCurrentUser } from "@/lib/auth";
+import { requireAdmin, hashPassword } from "@/lib/auth";
 
 // PATCH - Update a user (admin only)
 export async function PATCH(

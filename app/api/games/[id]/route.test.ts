@@ -171,7 +171,6 @@ describe("Game [id] API Route", () => {
       });
 
       const response = await PATCH(request, createMockParams("123"));
-      const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(prisma.game.update).toHaveBeenCalledWith({
@@ -201,7 +200,7 @@ describe("Game [id] API Route", () => {
         body: JSON.stringify({ isActive: false }),
       });
 
-      const response = await PATCH(request, createMockParams("123"));
+      await PATCH(request, createMockParams("123"));
 
       expect(prisma.game.update).toHaveBeenCalledWith({
         where: { id: "123" },
@@ -231,7 +230,7 @@ describe("Game [id] API Route", () => {
         }),
       });
 
-      const response = await PATCH(request, createMockParams("123"));
+      await PATCH(request, createMockParams("123"));
 
       // Only isActive should be updated
       expect(prisma.game.update).toHaveBeenCalledWith({

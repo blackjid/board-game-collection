@@ -382,7 +382,7 @@ describe("Game Preferences API Route", () => {
         }),
       });
 
-      const response = await PATCH(request, createMockParams("123"));
+      await PATCH(request, createMockParams("123"));
 
       expect(prisma.game.update).toHaveBeenCalledWith({
         where: { id: "123" },

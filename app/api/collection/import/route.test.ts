@@ -229,7 +229,7 @@ describe("Collection Import API Route", () => {
       });
 
       const request = createRequest({});
-      const response = await POST(request);
+      await POST(request);
 
       expect(performSyncWithAutoScrape).toHaveBeenCalledWith(false);
     });

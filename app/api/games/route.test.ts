@@ -91,7 +91,7 @@ describe("Games API Route", () => {
       vi.mocked(prisma.game.findMany).mockResolvedValue([mockGames[0]]);
 
       const request = new NextRequest("http://localhost:3000/api/games?active=true");
-      const response = await GET(request);
+      await GET(request);
 
       expect(prisma.game.findMany).toHaveBeenCalledWith({
         where: { isActive: true },
@@ -103,7 +103,7 @@ describe("Games API Route", () => {
       vi.mocked(prisma.game.findMany).mockResolvedValue([mockGames[0]]);
 
       const request = new NextRequest("http://localhost:3000/api/games?scraped=true");
-      const response = await GET(request);
+      await GET(request);
 
       expect(prisma.game.findMany).toHaveBeenCalledWith({
         where: { lastScraped: { not: null } },
@@ -115,7 +115,7 @@ describe("Games API Route", () => {
       vi.mocked(prisma.game.findMany).mockResolvedValue([mockGames[0]]);
 
       const request = new NextRequest("http://localhost:3000/api/games?active=true&scraped=true");
-      const response = await GET(request);
+      await GET(request);
 
       expect(prisma.game.findMany).toHaveBeenCalledWith({
         where: { isActive: true, lastScraped: { not: null } },

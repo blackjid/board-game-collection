@@ -213,7 +213,7 @@ describe("User [id] API Route", () => {
         body: JSON.stringify({ password: "newpassword123" }),
       });
 
-      const response = await PATCH(request, createMockParams("user-2"));
+      await PATCH(request, createMockParams("user-2"));
 
       expect(hashPassword).toHaveBeenCalledWith("newpassword123");
       expect(prisma.user.update).toHaveBeenCalledWith(
