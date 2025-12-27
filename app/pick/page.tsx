@@ -489,11 +489,9 @@ interface WizardScreenProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
-  showSkip?: boolean;
-  onSkip?: () => void;
 }
 
-function WizardScreen({ children, title, subtitle, showSkip, onSkip }: WizardScreenProps) {
+function WizardScreen({ children, title, subtitle }: WizardScreenProps) {
   return (
     <div className="h-full flex flex-col items-center justify-center px-6 py-12 animate-fade-in">
       <div className="max-w-2xl w-full text-center">
@@ -507,15 +505,6 @@ function WizardScreen({ children, title, subtitle, showSkip, onSkip }: WizardScr
         <div className="mb-8">
           {children}
         </div>
-
-        {showSkip && onSkip && (
-          <button
-            onClick={onSkip}
-            className="px-6 py-3 text-stone-500 hover:text-stone-300 transition-colors text-sm"
-          >
-            Skip
-          </button>
-        )}
       </div>
     </div>
   );
@@ -825,12 +814,8 @@ export default function GamePickerPage() {
 
         {/* ==================== PLAYER COUNT ==================== */}
         {step === "players" && (
-          <WizardScreen
-            title="How many players?"
-            showSkip
-            onSkip={() => { setFilters(f => ({ ...f, players: null })); goToStep("kids"); }}
-          >
-            <div className="flex flex-wrap justify-center gap-3 max-w-lg mx-auto">
+          <WizardScreen title="How many players?">
+            <div className="flex flex-wrap justify-center gap-3 max-w-lg mx-auto mb-6">
               {PLAYER_OPTIONS.map((n) => (
                 <button
                   key={n}
@@ -843,6 +828,12 @@ export default function GamePickerPage() {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => { setFilters(f => ({ ...f, players: null })); goToStep("kids"); }}
+              className="bg-white/10 hover:bg-white/20 border border-white/20 px-8 py-3 rounded-full text-lg font-medium transition-all"
+            >
+              Any number
+            </button>
           </WizardScreen>
         )}
 
@@ -851,10 +842,8 @@ export default function GamePickerPage() {
           <WizardScreen
             title="Any kids playing?"
             subtitle="We'll find age-appropriate games"
-            showSkip
-            onSkip={() => { setKids(null); }}
           >
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <button
                 onClick={() => setKids(true)}
                 className="bg-white/10 hover:bg-emerald-500/20 border-2 border-transparent hover:border-emerald-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
@@ -872,17 +861,19 @@ export default function GamePickerPage() {
                 <span className="text-stone-400 text-sm block">Adults only</span>
               </button>
             </div>
+            <button
+              onClick={() => { setKids(null); }}
+              className="bg-white/10 hover:bg-white/20 border border-white/20 px-8 py-3 rounded-full text-lg font-medium transition-all"
+            >
+              Any age
+            </button>
           </WizardScreen>
         )}
 
         {/* ==================== TIME AVAILABLE ==================== */}
         {step === "time" && (
-          <WizardScreen
-            title="How much time do you have?"
-            showSkip
-            onSkip={() => { setTime(null); }}
-          >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+          <WizardScreen title="How much time do you have?">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto mb-6">
               {(Object.entries(TIME_RANGES) as [keyof typeof TIME_RANGES, typeof TIME_RANGES.quick][]).map(([key, value]) => (
                 <button
                   key={key}
@@ -895,6 +886,12 @@ export default function GamePickerPage() {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => { setTime(null); }}
+              className="bg-white/10 hover:bg-white/20 border border-white/20 px-8 py-3 rounded-full text-lg font-medium transition-all"
+            >
+              Any duration
+            </button>
           </WizardScreen>
         )}
 
