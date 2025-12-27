@@ -96,7 +96,8 @@ describe("GameCard", () => {
 
     const images = screen.getAllByRole("img");
     const mainImage = images.find(img => img.getAttribute("alt") === "Wingspan");
-    expect(mainImage).toHaveAttribute("src", "https://example.com/wingspan.jpg");
+    // Next.js Image transforms URLs, so check that src contains the encoded URL
+    expect(mainImage?.getAttribute("src")).toContain(encodeURIComponent("https://example.com/wingspan.jpg"));
   });
 
   it("should prefer selectedThumbnail over image", () => {
@@ -108,7 +109,8 @@ describe("GameCard", () => {
 
     const images = screen.getAllByRole("img");
     const mainImage = images.find(img => img.getAttribute("alt") === "Wingspan");
-    expect(mainImage).toHaveAttribute("src", "https://example.com/selected.jpg");
+    // Next.js Image transforms URLs, so check that src contains the encoded URL
+    expect(mainImage?.getAttribute("src")).toContain(encodeURIComponent("https://example.com/selected.jpg"));
   });
 
   it("should render fallback when no image", () => {
@@ -150,7 +152,7 @@ describe("GameCard rating colors", () => {
     id: "1",
     name: "Test",
     yearPublished: 2020,
-    image: "test.jpg",
+    image: "https://example.com/test.jpg",
     thumbnail: null,
     selectedThumbnail: null,
     description: null,

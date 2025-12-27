@@ -115,7 +115,8 @@ describe("GameListItem", () => {
     render(<GameListItem game={mockGame} />);
 
     const image = screen.getByRole("img");
-    expect(image).toHaveAttribute("src", "https://example.com/wingspan.jpg");
+    // Next.js Image transforms URLs, so check that src contains the encoded URL
+    expect(image.getAttribute("src")).toContain(encodeURIComponent("https://example.com/wingspan.jpg"));
   });
 
   it("should prefer selectedThumbnail over image", () => {
@@ -126,7 +127,8 @@ describe("GameListItem", () => {
     render(<GameListItem game={gameWithSelected} />);
 
     const image = screen.getByRole("img");
-    expect(image).toHaveAttribute("src", "https://example.com/selected.jpg");
+    // Next.js Image transforms URLs, so check that src contains the encoded URL
+    expect(image.getAttribute("src")).toContain(encodeURIComponent("https://example.com/selected.jpg"));
   });
 
   it("should render expansion badge when isExpansion is true", () => {

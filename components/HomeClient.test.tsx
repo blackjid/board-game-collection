@@ -35,7 +35,7 @@ describe("HomeClient", () => {
     id: "1",
     name: "Test Game",
     yearPublished: 2020,
-    image: "test.jpg",
+    image: "https://example.com/test.jpg",
     thumbnail: null,
     selectedThumbnail: null,
     description: "A test game",

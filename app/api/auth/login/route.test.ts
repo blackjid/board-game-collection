@@ -19,10 +19,16 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/auth", () => ({
   verifyPassword: vi.fn(),
   createSession: vi.fn(),
-  setSessionCookie: vi.fn(),
+  SESSION_COOKIE_OPTIONS: {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 30 * 24 * 60 * 60,
+  },
 }));
 
-import { verifyPassword, createSession, setSessionCookie } from "@/lib/auth";
+import { verifyPassword, createSession } from "@/lib/auth";
 
 describe("Login API Route", () => {
   beforeEach(() => {
@@ -115,7 +121,6 @@ describe("Login API Route", () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
       vi.mocked(verifyPassword).mockResolvedValue(true);
       vi.mocked(createSession).mockResolvedValue("session-id-123");
-      vi.mocked(setSessionCookie).mockResolvedValue(undefined);
 
       const request = new NextRequest("http://localhost:3000/api/auth/login", {
         method: "POST",
@@ -133,7 +138,8 @@ describe("Login API Route", () => {
         role: "admin",
       });
       expect(createSession).toHaveBeenCalledWith("user-1");
-      expect(setSessionCookie).toHaveBeenCalledWith("session-id-123");
+      // Verify session cookie was set
+      expect(response.cookies.get("session_id")?.value).toBe("session-id-123");
     });
 
     it("should normalize email to lowercase", async () => {
@@ -150,7 +156,6 @@ describe("Login API Route", () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
       vi.mocked(verifyPassword).mockResolvedValue(true);
       vi.mocked(createSession).mockResolvedValue("session-id-123");
-      vi.mocked(setSessionCookie).mockResolvedValue(undefined);
 
       const request = new NextRequest("http://localhost:3000/api/auth/login", {
         method: "POST",
