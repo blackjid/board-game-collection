@@ -974,7 +974,7 @@ export default function GamePickerPage() {
 
         {/* ==================== SWIPE CARDS ==================== */}
         {step === "swipe" && (
-          <div className="h-full flex flex-col">
+          <div className="h-full flex flex-col pt-14 sm:pt-0">
             {/* Header with filter pills */}
             <div className="p-4 flex flex-wrap gap-2 items-center justify-center">
               <span className="text-stone-500 text-sm">
@@ -1071,9 +1071,9 @@ export default function GamePickerPage() {
 
             {/* Action buttons with maybe pile indicator */}
             {currentIndex < swipeGames.length && (
-              <div className="p-6">
+              <div className="px-4 py-3 sm:p-6">
                 {/* Maybe pile indicator - clickable when has games */}
-                <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="flex items-center justify-center gap-2 mb-2 sm:mb-4">
                   {maybePile.length > 0 ? (
                     <button
                       onClick={() => {
@@ -1081,13 +1081,13 @@ export default function GamePickerPage() {
                         setPickedGame(random);
                         goToStep("picked");
                       }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-full transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105"
+                      className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105"
                     >
-                      <span className="w-4 h-4">{Icons.heart}</span>
-                      <span className="text-sm font-medium">
+                      <span className="w-3.5 h-3.5 sm:w-4 sm:h-4">{Icons.heart}</span>
+                      <span className="text-xs sm:text-sm font-medium">
                         {maybePile.length} in maybe pile
                       </span>
-                      <div className="flex -space-x-2 ml-1">
+                      <div className="flex -space-x-2 ml-1 hidden sm:flex">
                         {maybePile.slice(-3).map((game, i) => (
                           <div
                             key={game.id}
@@ -1108,35 +1108,35 @@ export default function GamePickerPage() {
                           </div>
                         ))}
                       </div>
-                      <span className="text-emerald-300 text-xs ml-1">→ Pick one!</span>
+                      <span className="text-emerald-300 text-xs ml-1">→ Pick!</span>
                     </button>
                   ) : (
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-stone-800/50 text-stone-500">
-                      <span className="w-4 h-4">{Icons.heart}</span>
-                      <span className="text-sm font-medium">Maybe pile empty</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-stone-800/50 text-stone-500">
+                      <span className="w-3.5 h-3.5 sm:w-4 sm:h-4">{Icons.heart}</span>
+                      <span className="text-xs sm:text-sm font-medium">Maybe pile empty</span>
                     </div>
                   )}
                 </div>
 
                 {/* Buttons */}
-                <div className="flex items-center justify-center gap-6">
+                <div className="flex items-center justify-center gap-4 sm:gap-6">
                   <button
                     onClick={handleSwipeLeft}
-                    className="w-16 h-16 bg-red-500/20 hover:bg-red-500/40 rounded-full flex items-center justify-center text-red-400 transition-all hover:scale-110"
+                    className="w-12 h-12 sm:w-16 sm:h-16 bg-red-500/20 hover:bg-red-500/40 rounded-full flex items-center justify-center text-red-400 transition-all hover:scale-110"
                   >
-                    <span className="w-8 h-8">{Icons.x}</span>
+                    <span className="w-6 h-6 sm:w-8 sm:h-8">{Icons.x}</span>
                   </button>
                   <button
                     onClick={handleSwipeUp}
-                    className="w-20 h-20 bg-amber-500 hover:bg-amber-400 rounded-full flex items-center justify-center text-amber-900 transition-all hover:scale-110 shadow-lg shadow-amber-500/30"
+                    className="w-14 h-14 sm:w-20 sm:h-20 bg-amber-500 hover:bg-amber-400 rounded-full flex items-center justify-center text-amber-900 transition-all hover:scale-110 shadow-lg shadow-amber-500/30"
                   >
-                    <span className="w-8 h-8">{Icons.star}</span>
+                    <span className="w-6 h-6 sm:w-8 sm:h-8">{Icons.star}</span>
                   </button>
                   <button
                     onClick={handleSwipeRight}
-                    className="w-16 h-16 bg-emerald-500/20 hover:bg-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400 transition-all hover:scale-110"
+                    className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/20 hover:bg-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400 transition-all hover:scale-110"
                   >
-                    <span className="w-7 h-7">{Icons.heart}</span>
+                    <span className="w-5 h-5 sm:w-7 sm:h-7">{Icons.heart}</span>
                   </button>
                 </div>
               </div>
@@ -1166,23 +1166,24 @@ export default function GamePickerPage() {
 
         {/* ==================== PICKED GAME ==================== */}
         {step === "picked" && pickedGame && (
-          <div className="h-full flex items-center justify-center p-6">
-            <div className="max-w-md w-full text-center animate-scale-in">
-              <span className="text-amber-400 flex justify-center mb-4 w-16 h-16 mx-auto">{Icons.sparkles}</span>
-
-              <h1 className="text-2xl font-bold text-stone-400 mb-6">Tonight you&apos;re playing...</h1>
+          <div className="h-full flex flex-col pt-16 pb-4 px-4 sm:justify-center sm:pt-6 sm:px-6" data-allow-scroll>
+            <div className="max-w-md w-full mx-auto text-center animate-scale-in flex-1 flex flex-col justify-center overflow-auto">
+              <div className="flex-shrink-0">
+                <span className="text-amber-400 flex justify-center mb-2 sm:mb-4 w-10 h-10 sm:w-16 sm:h-16 mx-auto">{Icons.sparkles}</span>
+                <h1 className="text-lg sm:text-2xl font-bold text-stone-400 mb-3 sm:mb-6">Tonight you&apos;re playing...</h1>
+              </div>
 
               {/* Game card - using shared component */}
-              <div className="shadow-2xl rounded-2xl overflow-hidden mb-8">
+              <div className="shadow-2xl rounded-2xl overflow-hidden mb-4 sm:mb-8 flex-shrink min-h-0">
                 <GameCardDisplay
                   game={pickedGame}
-                  showDescription={true}
+                  showDescription={false}
                 />
               </div>
 
               <button
                 onClick={() => goToStep("welcome")}
-                className="bg-amber-500 hover:bg-amber-400 text-black px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center gap-2 justify-center mx-auto"
+                className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all flex items-center gap-2 justify-center mx-auto flex-shrink-0"
               >
                 Play This! <span className="text-amber-700 w-5 h-5">{Icons.play}</span>
               </button>
