@@ -13,26 +13,18 @@ A static Next.js site that displays your BoardGameGeek collection in a beautiful
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Install Playwright browsers (first time only):
+
    ```bash
    npx playwright install chromium
    ```
 
 ## Usage
-
-### Fetch Collection
-
-Fetch your game collection from BoardGameGeek:
-
-```bash
-npm run fetch
-```
-
-This scrapes your BGG collection page and fetches game images, saving the data to `data/games.json`.
 
 ### Development
 
@@ -54,12 +46,61 @@ npm run build
 
 The static site will be in the `out/` directory.
 
-### Refresh Collection
+## Running with Docker
 
-Fetch latest data and rebuild:
+### Pull the Image
 
 ```bash
-npm run refresh
+docker pull ghcr.io/blackjid/board-game-collection:latest
+```
+
+### Run the Container
+
+```bash
+docker run -d \
+  --name board-game-geek \
+  -p 3000:3000 \
+  -v bgg-data:/data \
+  ghcr.io/blackjid/board-game-collection:latest
+```
+
+This will:
+
+- Start the app on port 3000
+- Persist the SQLite database in a Docker volume called `bgg-data`
+- Automatically run database migrations on startup
+
+### Environment Variables
+
+| Variable | Default | Description |
+| -------- | ------- | ----------- |
+| `DATA_PATH` | `/data` | Directory for the SQLite database |
+| `DATABASE_URL` | `file:/data/games.db` | SQLite database connection string |
+| `PORT` | `3000` | Port the server listens on |
+
+### Using a Custom Data Directory
+
+Mount a host directory instead of a Docker volume:
+
+```bash
+docker run -d \
+  --name board-game-geek \
+  -p 3000:3000 \
+  -v /path/to/your/data:/data \
+  ghcr.io/blackjid/board-game-collection:latest
+```
+
+### View Logs
+
+```bash
+docker logs -f board-game-geek
+```
+
+### Stop and Remove
+
+```bash
+docker stop board-game-geek
+docker rm board-game-geek
 ```
 
 ## Printing
@@ -70,25 +111,23 @@ npm run refresh
 
 ## Configuration
 
-To use a different BGG username, edit `scripts/fetch-collection.ts`:
-
-```typescript
-const BGG_USERNAME = "your_username";
-```
+The BGG username is configured via the Settings page in the app. Navigate to `/settings` to set your BoardGameGeek username and other options.
 
 ## Project Structure
 
-```
+```text
 ├── app/
 │   ├── page.tsx          # Main collection grid page
 │   ├── layout.tsx         # Root layout with metadata
 │   └── globals.css        # Styles including print CSS
 ├── components/
 │   └── GameCard.tsx       # Individual game card component
-├── data/
-│   └── games.json         # Cached collection data
-├── scripts/
-│   └── fetch-collection.ts # BGG scraping script
+├── lib/
+│   ├── games.ts          # Game data access layer
+│   ├── sync.ts           # BGG collection sync logic
+│   └── prisma.ts         # Database client
+├── prisma/
+│   └── schema.prisma     # Database schema
 └── types/
     └── game.ts            # TypeScript interfaces
 ```
@@ -97,5 +136,6 @@ const BGG_USERNAME = "your_username";
 
 - [Next.js 16](https://nextjs.org/) - React framework
 - [Tailwind CSS v4](https://tailwindcss.com/) - Styling
+- [Prisma](https://www.prisma.io/) - Database ORM (SQLite)
 - [Playwright](https://playwright.dev/) - Browser automation
 - [TypeScript](https://www.typescriptlang.org/) - Type safety

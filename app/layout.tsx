@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Board Game Collection - jidonoso",
+  title: "Board Game Collection",
   description: "A printable collection of board games from BoardGameGeek",
 };
 

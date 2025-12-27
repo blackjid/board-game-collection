@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import prisma from "@/lib/prisma";
 
-const DEFAULT_BGG_USERNAME = "jidonoso";
+const DEFAULT_BGG_USERNAME = "";
 
 // ============================================================================
 // Types

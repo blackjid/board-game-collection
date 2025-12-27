@@ -41,7 +41,7 @@ describe("lib/sync", () => {
       vi.mocked(prisma.settings.findUnique).mockResolvedValue(null);
 
       const username = await getBggUsername();
-      expect(username).toBe("jidonoso"); // Default username
+      expect(username).toBe(""); // Default username (empty)
     });
 
     it("should return default username when bggUsername is null", async () => {
@@ -56,7 +56,7 @@ describe("lib/sync", () => {
       });
 
       const username = await getBggUsername();
-      expect(username).toBe("jidonoso");
+      expect(username).toBe("");
     });
   });
 

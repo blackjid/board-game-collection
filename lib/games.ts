@@ -94,7 +94,7 @@ export interface CollectionSettings {
   bggUsername: string | null;
 }
 
-const DEFAULT_BGG_USERNAME = "jidonoso";
+const DEFAULT_BGG_USERNAME = "";
 
 export async function getCollectionSettings(): Promise<CollectionSettings> {
   const settings = await prisma.settings.findUnique({

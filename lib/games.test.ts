@@ -321,7 +321,7 @@ describe("lib/games", () => {
       const result = await getCollectionSettings();
 
       expect(result.collectionName).toBeNull();
-      expect(result.bggUsername).toBe("jidonoso");
+      expect(result.bggUsername).toBe("");
     });
 
     it("should return null collectionName when not set", async () => {
