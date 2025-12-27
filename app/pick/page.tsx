@@ -329,16 +329,35 @@ function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeC
       onTouchEnd={handleTouchEnd}
     >
       {/* Game Image */}
-      <div className="h-3/5 relative bg-stone-800">
+      <div className="h-3/5 relative bg-stone-800 overflow-hidden">
         {getPrimaryImage(game) ? (
-          <Image
-            src={getPrimaryImage(game)!}
-            alt={game.name}
-            fill
-            sizes="(max-width: 640px) 100vw, 400px"
-            className="object-cover"
-            draggable={false}
-          />
+          <>
+            {/* Blurred background layer */}
+            <div className="absolute inset-0 overflow-hidden">
+              <Image
+                src={getPrimaryImage(game)!}
+                alt=""
+                aria-hidden="true"
+                fill
+                sizes="400px"
+                className="object-cover blur-3xl saturate-150 opacity-80 scale-[3]"
+                draggable={false}
+              />
+            </div>
+
+            {/* Subtle vignette overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
+
+            {/* Main image - shown at natural aspect ratio, never cropped */}
+            <Image
+              src={getPrimaryImage(game)!}
+              alt={game.name}
+              fill
+              sizes="(max-width: 640px) 100vw, 400px"
+              className="object-contain z-10 drop-shadow-lg"
+              draggable={false}
+            />
+          </>
         ) : (
           <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
             <span className="w-8 h-8">{Icons.dice}</span>
@@ -347,17 +366,17 @@ function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeC
 
         {/* Swipe indicators */}
         {showLike && (
-          <div className="absolute top-6 left-4 bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[-15deg] border-2 border-white">
+          <div className="absolute top-6 left-4 bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[-15deg] border-2 border-white z-20">
             MAYBE
           </div>
         )}
         {showNope && (
-          <div className="absolute top-6 right-4 bg-red-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[15deg] border-2 border-white">
+          <div className="absolute top-6 right-4 bg-red-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[15deg] border-2 border-white z-20">
             NOPE
           </div>
         )}
         {showPick && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-black px-6 py-2 rounded-lg text-lg font-black border-2 border-white flex items-center gap-2">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-black px-6 py-2 rounded-lg text-lg font-black border-2 border-white flex items-center gap-2 z-20">
             THIS ONE! <span className="text-amber-900 w-5 h-5">{Icons.star}</span>
           </div>
         )}
@@ -365,7 +384,7 @@ function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeC
         {/* Rating badge */}
         {game.rating && (
           <div
-            className="absolute top-3 right-3 px-2.5 py-1 rounded-full font-bold text-sm shadow-lg flex items-center gap-1"
+            className="absolute top-3 right-3 px-2.5 py-1 rounded-full font-bold text-sm shadow-lg flex items-center gap-1 z-20"
             style={{ backgroundColor: getRatingColor(game.rating) }}
           >
             <span className="w-3.5 h-3.5">{Icons.star}</span>
@@ -1064,15 +1083,33 @@ export default function GamePickerPage() {
 
               {/* Game card */}
               <div className="bg-gradient-to-b from-stone-800 to-stone-900 rounded-3xl overflow-hidden shadow-2xl mb-8">
-                <div className="aspect-[4/3] relative bg-stone-800">
+                <div className="aspect-[4/3] relative bg-stone-800 overflow-hidden">
                   {getPrimaryImage(pickedGame) ? (
-                    <Image
-                      src={getPrimaryImage(pickedGame)!}
-                      alt={pickedGame.name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 500px"
-                      className="object-cover"
-                    />
+                    <>
+                      {/* Blurred background layer */}
+                      <div className="absolute inset-0 overflow-hidden">
+                        <Image
+                          src={getPrimaryImage(pickedGame)!}
+                          alt=""
+                          aria-hidden="true"
+                          fill
+                          sizes="500px"
+                          className="object-cover blur-3xl saturate-150 opacity-80 scale-[3]"
+                        />
+                      </div>
+
+                      {/* Subtle vignette overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
+
+                      {/* Main image - shown at natural aspect ratio, never cropped */}
+                      <Image
+                        src={getPrimaryImage(pickedGame)!}
+                        alt={pickedGame.name}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 500px"
+                        className="object-contain z-10 drop-shadow-lg"
+                      />
+                    </>
                   ) : (
                     <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
                       <span className="w-8 h-8">{Icons.dice}</span>
@@ -1080,7 +1117,7 @@ export default function GamePickerPage() {
                   )}
                   {pickedGame.rating && (
                     <div
-                      className="absolute top-4 right-4 px-4 py-2 rounded-full font-black text-xl flex items-center gap-1"
+                      className="absolute top-4 right-4 px-4 py-2 rounded-full font-black text-xl flex items-center gap-1 z-20"
                       style={{ backgroundColor: getRatingColor(pickedGame.rating) }}
                     >
                       <span className="w-5 h-5">{Icons.star}</span>
