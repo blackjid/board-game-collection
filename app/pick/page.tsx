@@ -291,20 +291,29 @@ function GameCardDisplay({ game, showDescription = false, swipeIndicators }: Gam
           </div>
         )}
 
-        {/* Swipe indicators */}
+        {/* Swipe indicators - subtle overlays */}
         {swipeIndicators?.showLike && (
-          <div className="absolute top-6 left-4 bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[-15deg] border-2 border-white z-20">
-            MAYBE
+          <div className="absolute inset-0 bg-emerald-500/20 z-20 flex items-center justify-center pointer-events-none">
+            <div className="bg-emerald-500/90 backdrop-blur-sm text-white px-6 py-3 rounded-2xl flex items-center gap-3">
+              <span className="w-8 h-8">{Icons.heart}</span>
+              <span className="text-2xl font-bold">Maybe</span>
+            </div>
           </div>
         )}
         {swipeIndicators?.showNope && (
-          <div className="absolute top-6 right-4 bg-red-500 text-white px-4 py-1.5 rounded-lg text-lg font-black rotate-[15deg] border-2 border-white z-20">
-            NOPE
+          <div className="absolute inset-0 bg-red-500/20 z-20 flex items-center justify-center pointer-events-none">
+            <div className="bg-red-500/90 backdrop-blur-sm text-white px-6 py-3 rounded-2xl flex items-center gap-3">
+              <span className="w-8 h-8">{Icons.x}</span>
+              <span className="text-2xl font-bold">Nope</span>
+            </div>
           </div>
         )}
         {swipeIndicators?.showPick && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-black px-6 py-2 rounded-lg text-lg font-black border-2 border-white flex items-center gap-2 z-20">
-            THIS ONE! <span className="text-amber-900 w-5 h-5">{Icons.star}</span>
+          <div className="absolute inset-0 bg-amber-500/30 z-20 flex items-center justify-center pointer-events-none">
+            <div className="bg-amber-500 text-black px-8 py-4 rounded-2xl flex items-center gap-3 shadow-xl">
+              <span className="w-8 h-8">{Icons.star}</span>
+              <span className="text-2xl font-black">This one!</span>
+            </div>
           </div>
         )}
 
