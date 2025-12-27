@@ -80,7 +80,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
         )}
 
         {/* Navigation */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-stone-400 hover:text-white transition-colors group text-sm sm:text-base"
@@ -89,6 +89,24 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
             <span className="hidden sm:inline">Back to Collection</span>
             <span className="sm:hidden">Back</span>
           </Link>
+
+          {/* Let's Play Button */}
+          <button
+            onClick={() => {
+              alert(`Tonight you're playing ${game.name}! 🎲`);
+            }}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-full font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-105"
+          >
+            Let&apos;s Play!
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+              <circle cx="16" cy="8" r="1.5" fill="currentColor" />
+              <circle cx="8" cy="16" r="1.5" fill="currentColor" />
+              <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+            </svg>
+          </button>
         </div>
 
         {/* Main Content */}

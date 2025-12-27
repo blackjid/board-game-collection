@@ -335,7 +335,7 @@ function GameCardDisplay({ game, showDescription = false, swipeIndicators }: Gam
             {game.rating && (
               <span
                 className="px-3 py-1 rounded-full flex items-center gap-1.5 font-black text-base shadow-md"
-                style={{ 
+                style={{
                   backgroundColor: getRatingColor(game.rating),
                   boxShadow: `0 2px 12px ${getRatingColor(game.rating)}50`
                 }}
@@ -1187,7 +1187,7 @@ export default function GamePickerPage() {
                 onClick={() => goToStep("welcome")}
                 className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all flex items-center gap-2 justify-center mx-auto flex-shrink-0"
               >
-                Play This! <span className="text-amber-700 w-5 h-5">{Icons.play}</span>
+                Let&apos;s Play! <span className="w-5 h-5">{Icons.dice}</span>
               </button>
             </div>
           </div>
