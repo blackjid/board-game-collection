@@ -486,8 +486,6 @@ function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeC
 // ============================================================================
 
 interface WizardScreenProps {
-  onNext: () => void;
-  onBack?: () => void;
   children: React.ReactNode;
   title: string;
   subtitle?: string;
@@ -495,7 +493,7 @@ interface WizardScreenProps {
   onSkip?: () => void;
 }
 
-function WizardScreen({ onBack, children, title, subtitle, showSkip, onSkip }: WizardScreenProps) {
+function WizardScreen({ children, title, subtitle, showSkip, onSkip }: WizardScreenProps) {
   return (
     <div className="h-full flex flex-col items-center justify-center px-6 py-12 animate-fade-in">
       <div className="max-w-2xl w-full text-center">
@@ -510,24 +508,14 @@ function WizardScreen({ onBack, children, title, subtitle, showSkip, onSkip }: W
           {children}
         </div>
 
-        <div className="flex items-center justify-center gap-4">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="px-6 py-3 text-stone-400 hover:text-white transition-colors flex items-center gap-2"
-            >
-              <span className="w-4 h-4">{Icons.arrowLeft}</span> Back
-            </button>
-          )}
-          {showSkip && onSkip && (
-            <button
-              onClick={onSkip}
-              className="px-6 py-3 text-stone-500 hover:text-stone-300 transition-colors text-sm"
-            >
-              Skip
-            </button>
-          )}
-        </div>
+        {showSkip && onSkip && (
+          <button
+            onClick={onSkip}
+            className="px-6 py-3 text-stone-500 hover:text-stone-300 transition-colors text-sm"
+          >
+            Skip
+          </button>
+        )}
       </div>
     </div>
   );
@@ -734,20 +722,41 @@ export default function GamePickerPage() {
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-black" />
 
-      {/* Back button */}
-      <Link
-        href="/"
-        className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
-      >
-        <span className="w-4 h-4">{Icons.arrowLeft}</span> Back
-      </Link>
+      {/* Back button - context aware */}
+      {step === "welcome" ? (
+        <Link
+          href="/"
+          className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
+        >
+          <span className="w-4 h-4">{Icons.arrowLeft}</span> Back
+        </Link>
+      ) : (
+        <button
+          onClick={() => {
+            const stepOrder: Step[] = ["welcome", "players", "kids", "time", "mood", "expansions", "swipe", "picked"];
+            const currentIdx = stepOrder.indexOf(step);
+            if (currentIdx > 0) {
+              // Skip "kids" step if solo player
+              if (stepOrder[currentIdx - 1] === "kids" && filters.players === 1) {
+                goToStep("players");
+              } else {
+                goToStep(stepOrder[currentIdx - 1]);
+              }
+            } else {
+              goToStep("welcome");
+            }
+          }}
+          className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
+        >
+          <span className="w-4 h-4">{Icons.arrowLeft}</span> Back
+        </button>
+      )}
 
       {/* Main content */}
       <div className="relative z-10 h-full">
         {/* ==================== WELCOME ==================== */}
         {step === "welcome" && (
           <WizardScreen
-            onNext={() => goToStep("players")}
             title="What should we play tonight?"
             subtitle={`Choose from ${games.length} games in ${collectionName} Collection`}
           >
@@ -778,8 +787,6 @@ export default function GamePickerPage() {
         {/* ==================== PLAYER COUNT ==================== */}
         {step === "players" && (
           <WizardScreen
-            onNext={() => goToStep("kids")}
-            onBack={() => goToStep("welcome")}
             title="How many players?"
             showSkip
             onSkip={() => { setFilters(f => ({ ...f, players: null })); goToStep("kids"); }}
@@ -803,8 +810,6 @@ export default function GamePickerPage() {
         {/* ==================== KIDS PLAYING ==================== */}
         {step === "kids" && (
           <WizardScreen
-            onNext={() => goToStep("time")}
-            onBack={() => goToStep("players")}
             title="Any kids playing?"
             subtitle="We'll find age-appropriate games"
             showSkip
@@ -834,8 +839,6 @@ export default function GamePickerPage() {
         {/* ==================== TIME AVAILABLE ==================== */}
         {step === "time" && (
           <WizardScreen
-            onNext={() => goToStep("mood")}
-            onBack={() => filters.players === 1 ? goToStep("players") : goToStep("kids")}
             title="How much time do you have?"
             showSkip
             onSkip={() => { setTime(null); }}
@@ -859,8 +862,6 @@ export default function GamePickerPage() {
         {/* ==================== MOOD / CATEGORY ==================== */}
         {step === "mood" && (
           <WizardScreen
-            onNext={() => goToStep("expansions")}
-            onBack={() => goToStep("time")}
             title="What are you in the mood for?"
             subtitle="Select one or more categories"
           >
@@ -892,8 +893,6 @@ export default function GamePickerPage() {
         {/* ==================== EXPANSIONS ==================== */}
         {step === "expansions" && (
           <WizardScreen
-            onNext={() => goToStep("swipe")}
-            onBack={() => goToStep("mood")}
             title="Include expansions?"
           >
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
