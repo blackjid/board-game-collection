@@ -191,4 +191,3 @@ describe("GameCard rating colors", () => {
     expect(style).toContain("rgb(");
   });
 });
-
