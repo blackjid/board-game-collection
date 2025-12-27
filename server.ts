@@ -1,4 +1,4 @@
-import { createServer } from "http";
+import { createServer, Server as HttpServer } from "http";
 import { parse } from "url";
 import next from "next";
 import { Server } from "socket.io";
@@ -14,6 +14,9 @@ const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);
 
+// Graceful shutdown configuration
+const SHUTDOWN_TIMEOUT_MS = 15000; // 15 seconds max wait before forced exit
+
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
@@ -21,13 +24,83 @@ const handle = app.getRequestHandler();
 // This is synced with the database but kept in memory for fast WebSocket broadcasts
 const sessionPlayers: Map<string, Map<string, PlayerInfo>> = new Map();
 
+// Server references for graceful shutdown
+let httpServer: HttpServer;
+let io: Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
+let isShuttingDown = false;
+
+// Graceful shutdown handler
+async function gracefulShutdown(signal: string): Promise<void> {
+  // Prevent multiple shutdown attempts
+  if (isShuttingDown) {
+    console.log("Shutdown already in progress...");
+    return;
+  }
+  isShuttingDown = true;
+
+  console.log(`\n[${new Date().toISOString()}] ${signal} received. Starting graceful shutdown...`);
+
+  // Set a hard timeout to force exit if graceful shutdown takes too long
+  const forceExitTimeout = setTimeout(() => {
+    console.error(`[${new Date().toISOString()}] Shutdown timeout (${SHUTDOWN_TIMEOUT_MS}ms) exceeded, forcing exit`);
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+
+  // Prevent the timeout from keeping the process alive if we exit gracefully
+  forceExitTimeout.unref();
+
+  try {
+    // 1. Close Socket.IO server (disconnects all clients gracefully)
+    if (io) {
+      console.log("Closing Socket.IO server...");
+      await io.close();
+      console.log("Socket.IO server closed");
+    }
+
+    // 2. Close HTTP server (stops accepting new connections, waits for existing to finish)
+    if (httpServer) {
+      console.log("Closing HTTP server...");
+      await new Promise<void>((resolve, reject) => {
+        httpServer.close((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+      console.log("HTTP server closed");
+    }
+
+    // 3. Close Next.js app
+    console.log("Closing Next.js app...");
+    await app.close();
+    console.log("Next.js app closed");
+
+    // 4. Clear in-memory state
+    sessionPlayers.clear();
+
+    clearTimeout(forceExitTimeout);
+    console.log(`[${new Date().toISOString()}] Graceful shutdown complete`);
+    process.exit(0);
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] Error during graceful shutdown:`, error);
+    clearTimeout(forceExitTimeout);
+    process.exit(1);
+  }
+}
+
+// Register signal handlers
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
 app.prepare().then(() => {
-  const httpServer = createServer((req, res) => {
+  httpServer = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
     handle(req, res, parsedUrl);
   });
 
-  const io = new Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>(httpServer, {
+  io = new Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>(httpServer, {
     path: "/api/socketio",
     addTrailingSlash: false,
     cors: {
