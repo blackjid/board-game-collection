@@ -1115,21 +1115,21 @@ export default function GamePickerPage() {
                       <span className="w-8 h-8">{Icons.dice}</span>
                     </div>
                   )}
-                  {pickedGame.rating && (
-                    <div
-                      className="absolute top-4 right-4 px-4 py-2 rounded-full font-black text-xl flex items-center gap-1 z-20"
-                      style={{ backgroundColor: getRatingColor(pickedGame.rating) }}
-                    >
-                      <span className="w-5 h-5">{Icons.star}</span>
-                      {pickedGame.rating.toFixed(1)}
-                    </div>
-                  )}
                 </div>
                 <div className="p-6">
                   <h2 className="text-3xl font-black text-white mb-2">{pickedGame.name}</h2>
                   <p className="text-stone-400 mb-4">{pickedGame.yearPublished}</p>
 
                   <div className="flex flex-wrap gap-2 justify-center mb-4">
+                    {pickedGame.rating && (
+                      <span 
+                        className="px-4 py-2 rounded-full flex items-center gap-2 font-bold"
+                        style={{ backgroundColor: getRatingColor(pickedGame.rating) }}
+                      >
+                        <span className="w-4 h-4">{Icons.star}</span>
+                        {pickedGame.rating.toFixed(1)}
+                      </span>
+                    )}
                     {pickedGame.minPlayers && pickedGame.maxPlayers && (
                       <span className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
                         <span className="text-stone-400 w-5 h-5">{Icons.users}</span>
