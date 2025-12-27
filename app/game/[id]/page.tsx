@@ -1,16 +1,8 @@
 import Link from "next/link";
-import { getGameById, getActiveGames } from "@/lib/games";
+import { getGameById } from "@/lib/games";
 import { GameDetailClient } from "./GameDetailClient";
 
 export const dynamic = "force-dynamic";
-
-// Generate static params for all active games
-export async function generateStaticParams() {
-  const games = await getActiveGames();
-  return games.map((game) => ({
-    id: game.id,
-  }));
-}
 
 interface PageProps {
   params: Promise<{ id: string }>;

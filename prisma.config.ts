@@ -3,12 +3,20 @@
 import path from "node:path";
 import { defineConfig } from "prisma/config";
 
+// Get database URL from environment variable or fallback to local dev.db
+const getDatabaseUrl = () => {
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
+  }
+  return `file:${path.join(__dirname, "prisma", "dev.db")}`;
+};
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: `file:${path.join(__dirname, "prisma", "dev.db")}`,
+    url: getDatabaseUrl(),
   },
 });

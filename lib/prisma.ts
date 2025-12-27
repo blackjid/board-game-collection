@@ -2,9 +2,17 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import path from "path";
 
-// Create libSQL adapter for local SQLite file
+// Get database URL from environment variable or fallback to local dev.db
+const getDatabaseUrl = () => {
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
+  }
+  return `file:${path.join(process.cwd(), "prisma", "dev.db")}`;
+};
+
+// Create libSQL adapter
 const adapter = new PrismaLibSql({
-  url: `file:${path.join(process.cwd(), "prisma", "dev.db")}`,
+  url: getDatabaseUrl(),
 });
 
 const globalForPrisma = globalThis as unknown as {
