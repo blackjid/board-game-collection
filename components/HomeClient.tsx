@@ -158,16 +158,16 @@ export function HomeClient({
                 </button>
               )}
 
-              {/* Experience Button */}
+              {/* Pick a Game Button */}
             <Link
-              href="/experience"
+              href="/pick"
                 className="px-3 sm:px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-                <span className="hidden sm:inline">Experience</span>
+                <span className="hidden sm:inline">Pick a Game</span>
               </Link>
 
               {/* User Menu or Login */}

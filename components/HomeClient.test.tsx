@@ -130,13 +130,13 @@ describe("HomeClient", () => {
       expect(screen.getByText("Login")).toBeInTheDocument();
     });
 
-    it("should render Experience link", () => {
+    it("should render Pick a Game link", () => {
       render(<HomeClient {...defaultProps} />);
 
-      const experienceLinks = screen.getAllByRole("link").filter(
-        link => link.getAttribute("href") === "/experience"
+      const pickLinks = screen.getAllByRole("link").filter(
+        link => link.getAttribute("href") === "/pick"
       );
-      expect(experienceLinks.length).toBeGreaterThan(0);
+      expect(pickLinks.length).toBeGreaterThan(0);
     });
   });
 

@@ -43,7 +43,7 @@ type WizardStep = "welcome" | "players" | "kids" | "time" | "mood" | "expansions
 
 const Icons = {
   dice: (
-    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <circle cx="8" cy="8" r="1.5" fill="currentColor" />
       <circle cx="16" cy="8" r="1.5" fill="currentColor" />
@@ -53,7 +53,7 @@ const Icons = {
     </svg>
   ),
   users: (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -61,57 +61,52 @@ const Icons = {
     </svg>
   ),
   clock: (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
     </svg>
   ),
   star: (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
     </svg>
   ),
   x: (
-    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   heart: (
-    <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="currentColor">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   ),
   sparkles: (
-    <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
-      <path d="M12 8l1.5 3 3.5.5-2.5 2.5.5 3.5-3-1.5-3 1.5.5-3.5-2.5-2.5 3.5-.5L12 8z" fill="currentColor" />
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
     </svg>
   ),
   arrowLeft: (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <line x1="19" y1="12" x2="5" y2="12" />
       <polyline points="12 19 5 12 12 5" />
     </svg>
   ),
-  gamepad: (
-    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="6" width="20" height="12" rx="2" />
-      <line x1="6" y1="12" x2="10" y2="12" />
-      <line x1="8" y1="10" x2="8" y2="14" />
-      <circle cx="16" cy="10" r="1" fill="currentColor" />
-      <circle cx="18" cy="12" r="1" fill="currentColor" />
+  play: (
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z" />
     </svg>
   ),
   package: (
-    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
       <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
       <line x1="12" y1="22.08" x2="12" y2="12" />
     </svg>
   ),
   child: (
-    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="12" cy="6" r="3" />
       <path d="M12 9v3" />
       <path d="M9 21v-6a3 3 0 0 1 6 0v6" />
@@ -119,7 +114,7 @@ const Icons = {
     </svg>
   ),
   adults: (
-    <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="8" cy="5" r="2.5" />
       <circle cx="16" cy="5" r="2.5" />
       <path d="M4 21v-5a4 4 0 0 1 8 0v5" />
@@ -127,31 +122,31 @@ const Icons = {
     </svg>
   ),
   lightning: (
-    <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none" />
     </svg>
   ),
   clockMedium: (
-    <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 15 15" />
     </svg>
   ),
   clockLong: (
-    <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 8 16" />
     </svg>
   ),
   castle: (
-    <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M3 21h18" />
       <path d="M5 21V7l3-3 3 3 2-2 2 2 3-3 3 3v14" />
       <path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" />
     </svg>
   ),
   shrug: (
-    <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="12" cy="8" r="5" />
       <path d="M12 13v8" />
       <path d="M5 17l7-4 7 4" />
@@ -161,7 +156,7 @@ const Icons = {
     </svg>
   ),
   check: (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
       <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
@@ -346,7 +341,7 @@ function SwipeCard({ game, onSwipeLeft, onSwipeRight, onSwipeUp, isTop }: SwipeC
           />
         ) : (
           <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
-            {Icons.dice}
+            <span className="w-8 h-8">{Icons.dice}</span>
           </div>
         )}
 
@@ -466,7 +461,7 @@ function WizardScreen({ onBack, children, title, subtitle, showSkip, onSkip }: W
               onClick={onBack}
               className="px-6 py-3 text-stone-400 hover:text-white transition-colors flex items-center gap-2"
             >
-              {Icons.arrowLeft} Back
+              <span className="w-4 h-4">{Icons.arrowLeft}</span> Back
             </button>
           )}
           {showSkip && onSkip && (
@@ -490,10 +485,10 @@ function WizardScreen({ onBack, children, title, subtitle, showSkip, onSkip }: W
 
 function TimeIcon({ time }: { time: "quick" | "medium" | "long" | "epic" }) {
   switch (time) {
-    case "quick": return <span className="text-amber-400">{Icons.lightning}</span>;
-    case "medium": return <span className="text-amber-400">{Icons.clockMedium}</span>;
-    case "long": return <span className="text-amber-400">{Icons.clockLong}</span>;
-    case "epic": return <span className="text-amber-400">{Icons.castle}</span>;
+    case "quick": return <span className="text-amber-400 w-10 h-10">{Icons.lightning}</span>;
+    case "medium": return <span className="text-amber-400 w-10 h-10">{Icons.clockMedium}</span>;
+    case "long": return <span className="text-amber-400 w-10 h-10">{Icons.clockLong}</span>;
+    case "epic": return <span className="text-amber-400 w-10 h-10">{Icons.castle}</span>;
   }
 }
 
@@ -501,7 +496,17 @@ function TimeIcon({ time }: { time: "quick" | "medium" | "long" | "epic" }) {
 // MAIN COMPONENT
 // ============================================================================
 
-export default function ExperiencePage() {
+// Fisher-Yates shuffle
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+export default function GamePickerPage() {
   const [games, setGames] = useState<GameData[]>([]);
   const [loading, setLoading] = useState(true);
   const [collectionName, setCollectionName] = useState("My");
@@ -518,6 +523,7 @@ export default function ExperiencePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [maybePile, setMaybePile] = useState<GameData[]>([]);
   const [pickedGame, setPickedGame] = useState<GameData | null>(null);
+  const [swipeGames, setSwipeGames] = useState<GameData[]>([]);
 
   const availableCategories = useMemo(() => {
     const catCount: Record<string, number> = {};
@@ -537,7 +543,7 @@ export default function ExperiencePage() {
   }, [games, filters]);
 
   useEffect(() => {
-    fetch("/api/experience")
+    fetch("/api/pick")
       .then((res) => res.json())
       .then((data) => {
         setGames(data.games || []);
@@ -554,9 +560,11 @@ export default function ExperiencePage() {
       setCurrentIndex(0);
       setMaybePile([]);
       setPickedGame(null);
+      // Shuffle all filtered games
+      setSwipeGames(shuffleArray(filteredGames));
     }
     setStep(newStep);
-  }, []);
+  }, [filteredGames]);
 
   const setPlayers = (n: number | null) => {
     setFilters((f) => ({ ...f, players: n }));
@@ -596,20 +604,20 @@ export default function ExperiencePage() {
   }, []);
 
   const handleSwipeRight = useCallback(() => {
-    const game = filteredGames[currentIndex];
+    const game = swipeGames[currentIndex];
     if (game) {
       setMaybePile((pile) => [...pile, game]);
     }
     setCurrentIndex((i) => i + 1);
-  }, [filteredGames, currentIndex]);
+  }, [swipeGames, currentIndex]);
 
   const handleSwipeUp = useCallback(() => {
-    const game = filteredGames[currentIndex];
+    const game = swipeGames[currentIndex];
     if (game) {
       setPickedGame(game);
       goToStep("picked");
     }
-  }, [filteredGames, currentIndex, goToStep]);
+  }, [swipeGames, currentIndex, goToStep]);
 
   useEffect(() => {
     if (step !== "swipe") return;
@@ -676,7 +684,7 @@ export default function ExperiencePage() {
         href="/"
         className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
       >
-        {Icons.arrowLeft} Back
+        <span className="w-4 h-4">{Icons.arrowLeft}</span> Back
       </Link>
 
       {/* Main content */}
@@ -692,15 +700,21 @@ export default function ExperiencePage() {
               onClick={() => goToStep("players")}
               className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black px-10 py-5 rounded-full text-xl font-black transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/30 flex items-center gap-3 mx-auto"
             >
-              Let&apos;s Find Out <span className="text-amber-900">{Icons.dice}</span>
+              Let&apos;s Find Out <span className="text-amber-900 w-8 h-8">{Icons.dice}</span>
             </button>
 
             <div className="mt-6">
               <button
-                onClick={() => goToStep("swipe")}
-                className="text-stone-500 hover:text-amber-400 transition-colors text-sm"
+                onClick={() => {
+                  // Pick a random game immediately!
+                  const randomGame = games[Math.floor(Math.random() * games.length)];
+                  setPickedGame(randomGame);
+                  goToStep("picked");
+                }}
+                className="text-stone-500 hover:text-amber-400 transition-colors text-sm flex items-center gap-2 mx-auto"
               >
-                Feeling lucky? Skip filters
+                <span className="w-4 h-4">{Icons.dice}</span>
+                Feeling lucky? Pick random
               </button>
             </div>
           </WizardScreen>
@@ -746,7 +760,7 @@ export default function ExperiencePage() {
                 onClick={() => setKids(true)}
                 className="bg-white/10 hover:bg-emerald-500/20 border-2 border-transparent hover:border-emerald-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
               >
-                <span className="text-emerald-400 flex justify-center mb-2">{Icons.child}</span>
+                <span className="text-emerald-400 flex justify-center mb-2 w-12 h-12 mx-auto">{Icons.child}</span>
                 <span className="text-xl font-bold block">Yes</span>
                 <span className="text-stone-400 text-sm block">Age 10 and under</span>
               </button>
@@ -754,7 +768,7 @@ export default function ExperiencePage() {
                 onClick={() => setKids(false)}
                 className="bg-white/10 hover:bg-amber-500/20 border-2 border-transparent hover:border-amber-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
               >
-                <span className="text-amber-400 flex justify-center mb-2">{Icons.adults}</span>
+                <span className="text-amber-400 flex justify-center mb-2 w-12 h-12 mx-auto">{Icons.adults}</span>
                 <span className="text-xl font-bold block">No</span>
                 <span className="text-stone-400 text-sm block">Adults only</span>
               </button>
@@ -806,7 +820,7 @@ export default function ExperiencePage() {
                       : "bg-white/10 hover:bg-white/20 text-white"
                   }`}
                 >
-                  {filters.categories.includes(cat) && Icons.check}
+                  {filters.categories.includes(cat) && <span className="w-5 h-5">{Icons.check}</span>}
                   {cat}
                 </button>
               ))}
@@ -832,7 +846,7 @@ export default function ExperiencePage() {
                 onClick={() => setExpansions(true)}
                 className="bg-white/10 hover:bg-purple-500/20 border-2 border-transparent hover:border-purple-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
               >
-                <span className="text-purple-400 flex justify-center mb-2">{Icons.package}</span>
+                <span className="text-purple-400 flex justify-center mb-2 w-12 h-12 mx-auto">{Icons.package}</span>
                 <span className="text-xl font-bold block">Yes</span>
                 <span className="text-stone-400 text-sm block">Show everything</span>
               </button>
@@ -840,7 +854,7 @@ export default function ExperiencePage() {
                 onClick={() => setExpansions(false)}
                 className="bg-white/10 hover:bg-amber-500/20 border-2 border-transparent hover:border-amber-500 rounded-2xl px-12 py-8 transition-all hover:scale-105"
               >
-                <span className="text-amber-400 flex justify-center mb-2">{Icons.gamepad}</span>
+                <span className="text-amber-400 flex justify-center mb-2 w-12 h-12 mx-auto">{Icons.play}</span>
                 <span className="text-xl font-bold block">No</span>
                 <span className="text-stone-400 text-sm block">Base games only</span>
               </button>
@@ -854,7 +868,7 @@ export default function ExperiencePage() {
             {/* Header with filter pills */}
             <div className="p-4 flex flex-wrap gap-2 items-center justify-center">
               <span className="text-stone-500 text-sm">
-                {filteredGames.length} matches
+                {swipeGames.length} matches
               </span>
               {filters.players && (
                 <span className="bg-white/10 px-3 py-1 rounded-full text-xs flex items-center gap-1">
@@ -882,10 +896,10 @@ export default function ExperiencePage() {
             {/* Card stack - centered with max dimensions */}
             <div className="flex-1 flex items-center justify-center p-4">
               <div className="relative w-full max-w-sm h-full max-h-[32rem]">
-              {filteredGames.length === 0 ? (
+              {swipeGames.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center px-6">
-                    <span className="text-stone-600 flex justify-center mb-4">{Icons.shrug}</span>
+                    <span className="text-stone-600 flex justify-center mb-4 w-16 h-16 mx-auto">{Icons.shrug}</span>
                     <h2 className="text-2xl font-bold mb-2">No matches found</h2>
                     <p className="text-stone-400 mb-6">Try different filters</p>
                     <button
@@ -896,10 +910,10 @@ export default function ExperiencePage() {
                     </button>
                   </div>
                 </div>
-              ) : currentIndex >= filteredGames.length ? (
+              ) : currentIndex >= swipeGames.length ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center px-6">
-                    <span className="text-amber-400 flex justify-center mb-4">{Icons.sparkles}</span>
+                    <span className="text-amber-400 flex justify-center mb-4 w-16 h-16 mx-auto">{Icons.sparkles}</span>
                     <h2 className="text-2xl font-bold mb-2">You&apos;ve seen them all!</h2>
                     {maybePile.length > 0 ? (
                       <>
@@ -914,7 +928,7 @@ export default function ExperiencePage() {
                           }}
                           className="bg-amber-500 text-black px-6 py-3 rounded-full font-bold flex items-center gap-2 mx-auto"
                         >
-                          <span className="text-amber-900">{Icons.dice}</span>
+                          <span className="text-amber-900 w-6 h-6">{Icons.dice}</span>
                           Pick from Maybe Pile
                         </button>
                       </>
@@ -930,7 +944,7 @@ export default function ExperiencePage() {
                 </div>
               ) : (
                 <>
-                  {filteredGames.slice(currentIndex, currentIndex + 2).map((game, i) => (
+                  {swipeGames.slice(currentIndex, currentIndex + 2).map((game, i) => (
                     <SwipeCard
                       key={game.id}
                       game={game}
@@ -945,31 +959,95 @@ export default function ExperiencePage() {
               </div>
             </div>
 
-            {/* Action buttons */}
-            {currentIndex < filteredGames.length && (
-              <div className="p-6 flex items-center justify-center gap-6">
-                <button
-                  onClick={handleSwipeLeft}
-                  className="w-16 h-16 bg-red-500/20 hover:bg-red-500/40 rounded-full flex items-center justify-center text-red-400 transition-all hover:scale-110"
-                >
-                  {Icons.x}
-                </button>
-                <button
-                  onClick={handleSwipeUp}
-                  className="w-20 h-20 bg-amber-500 hover:bg-amber-400 rounded-full flex items-center justify-center text-amber-900 transition-all hover:scale-110 shadow-lg shadow-amber-500/30"
-                >
-                  {Icons.star}
-                </button>
-                <button
-                  onClick={handleSwipeRight}
-                  className="w-16 h-16 bg-emerald-500/20 hover:bg-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400 transition-all hover:scale-110"
-                >
-                  {Icons.heart}
-                </button>
+            {/* Action buttons with maybe pile indicator */}
+            {currentIndex < swipeGames.length && (
+              <div className="p-6">
+                {/* Maybe pile indicator - clickable when has games */}
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  {maybePile.length > 0 ? (
+                    <button
+                      onClick={() => {
+                        const random = maybePile[Math.floor(Math.random() * maybePile.length)];
+                        setPickedGame(random);
+                        goToStep("picked");
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-full transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105"
+                    >
+                      <span className="w-4 h-4">{Icons.heart}</span>
+                      <span className="text-sm font-medium">
+                        {maybePile.length} in maybe pile
+                      </span>
+                      <div className="flex -space-x-2 ml-1">
+                        {maybePile.slice(-3).map((game, i) => (
+                          <div
+                            key={game.id}
+                            className="w-6 h-6 rounded-full bg-stone-700 border-2 border-stone-900 overflow-hidden"
+                            style={{ zIndex: i }}
+                          >
+                            {getPrimaryImage(game) ? (
+                              <Image
+                                src={getPrimaryImage(game)!}
+                                alt=""
+                                width={24}
+                                height={24}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-emerald-500/30" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-emerald-300 text-xs ml-1">→ Pick one!</span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-stone-800/50 text-stone-500">
+                      <span className="w-4 h-4">{Icons.heart}</span>
+                      <span className="text-sm font-medium">Maybe pile empty</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Buttons */}
+                <div className="flex items-center justify-center gap-6">
+                  <button
+                    onClick={handleSwipeLeft}
+                    className="w-16 h-16 bg-red-500/20 hover:bg-red-500/40 rounded-full flex items-center justify-center text-red-400 transition-all hover:scale-110"
+                  >
+                    <span className="w-8 h-8">{Icons.x}</span>
+                  </button>
+                  <button
+                    onClick={handleSwipeUp}
+                    className="w-20 h-20 bg-amber-500 hover:bg-amber-400 rounded-full flex items-center justify-center text-amber-900 transition-all hover:scale-110 shadow-lg shadow-amber-500/30"
+                  >
+                    <span className="w-8 h-8">{Icons.star}</span>
+                  </button>
+                  <button
+                    onClick={handleSwipeRight}
+                    className="w-16 h-16 bg-emerald-500/20 hover:bg-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400 transition-all hover:scale-110"
+                  >
+                    <span className="w-7 h-7">{Icons.heart}</span>
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Keyboard hint */}
+            {/* Progress bar */}
+            {currentIndex < swipeGames.length && (
+              <div className="px-6 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-1.5 bg-stone-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-300"
+                      style={{ width: `${((currentIndex + 1) / swipeGames.length) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-stone-500 text-xs whitespace-nowrap">
+                    {currentIndex + 1} / {swipeGames.length}
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="pb-4 text-center text-stone-600 text-xs hidden sm:block">
               Use arrow keys: Left = Skip, Up = Pick, Right = Maybe
             </div>
@@ -980,7 +1058,7 @@ export default function ExperiencePage() {
         {step === "picked" && pickedGame && (
           <div className="h-full flex items-center justify-center p-6">
             <div className="max-w-md w-full text-center animate-scale-in">
-              <span className="text-amber-400 flex justify-center mb-4">{Icons.sparkles}</span>
+              <span className="text-amber-400 flex justify-center mb-4 w-16 h-16 mx-auto">{Icons.sparkles}</span>
 
               <h1 className="text-2xl font-bold text-stone-400 mb-6">Tonight you&apos;re playing...</h1>
 
@@ -997,7 +1075,7 @@ export default function ExperiencePage() {
                     />
                   ) : (
                     <div className="w-full h-full bg-stone-700 flex items-center justify-center text-stone-500">
-                      {Icons.dice}
+                      <span className="w-8 h-8">{Icons.dice}</span>
                     </div>
                   )}
                   {pickedGame.rating && (
@@ -1017,13 +1095,13 @@ export default function ExperiencePage() {
                   <div className="flex flex-wrap gap-2 justify-center mb-4">
                     {pickedGame.minPlayers && pickedGame.maxPlayers && (
                       <span className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
-                        <span className="text-stone-400">{Icons.users}</span>
+                        <span className="text-stone-400 w-5 h-5">{Icons.users}</span>
                         {pickedGame.minPlayers}-{pickedGame.maxPlayers}
                       </span>
                     )}
                     {(pickedGame.minPlaytime || pickedGame.maxPlaytime) && (
                       <span className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
-                        <span className="text-stone-400">{Icons.clock}</span>
+                        <span className="text-stone-400 w-5 h-5">{Icons.clock}</span>
                         {pickedGame.minPlaytime || pickedGame.maxPlaytime} min
                       </span>
                     )}
@@ -1042,13 +1120,13 @@ export default function ExperiencePage() {
                   onClick={() => goToStep("swipe")}
                   className="px-6 py-3 text-stone-400 hover:text-white transition-colors flex items-center gap-2 justify-center"
                 >
-                  {Icons.arrowLeft} Go Back
+                  <span className="w-4 h-4">{Icons.arrowLeft}</span> Go Back
                 </button>
                 <button
                   onClick={() => goToStep("welcome")}
                   className="bg-amber-500 hover:bg-amber-400 text-black px-8 py-3 rounded-full font-bold transition-all flex items-center gap-2 justify-center"
                 >
-                  Play This! <span className="text-amber-700">{Icons.gamepad}</span>
+                  Play This! <span className="text-amber-700 w-5 h-5">{Icons.play}</span>
                 </button>
               </div>
             </div>
