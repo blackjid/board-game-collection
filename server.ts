@@ -50,15 +50,9 @@ async function gracefulShutdown(signal: string): Promise<void> {
   forceExitTimeout.unref();
 
   try {
-    // 1. Close Socket.IO server (disconnects all clients gracefully)
-    if (io) {
-      console.log("Closing Socket.IO server...");
-      await io.close();
-      console.log("Socket.IO server closed");
-    }
-
-    // 2. Close HTTP server (stops accepting new connections, waits for existing to finish)
-    if (httpServer) {
+    // 1. Close HTTP server first (stops accepting new connections)
+    // Must close before Socket.IO since io.close() also tries to close the HTTP server
+    if (httpServer?.listening) {
       console.log("Closing HTTP server...");
       await new Promise<void>((resolve, reject) => {
         httpServer.close((err) => {
@@ -70,6 +64,14 @@ async function gracefulShutdown(signal: string): Promise<void> {
         });
       });
       console.log("HTTP server closed");
+    }
+
+    // 2. Close Socket.IO server (disconnects all clients gracefully)
+    if (io) {
+      console.log("Closing Socket.IO server...");
+      // Socket.IO may try to close HTTP server again, but it handles the already-closed case
+      await io.close();
+      console.log("Socket.IO server closed");
     }
 
     // 3. Close Next.js app
