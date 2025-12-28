@@ -118,18 +118,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Create non-root user for security
-RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 --gid nodejs nextjs
+# Use existing node user (uid 1000) from base image - no need to create new user
 
 # Copy public assets
 COPY --from=builder /app/public ./public
 
 # Copy Next.js build output (not standalone - we use custom server)
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=node:node /app/.next ./.next
 
 # Copy compiled custom server
-COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=node:node /app/dist ./dist
 
 # Copy Prisma schema and migrations
 COPY --from=builder /app/prisma ./prisma
@@ -151,9 +149,9 @@ COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
 # Create data directory for SQLite database
-RUN mkdir -p /data && chown -R nextjs:nodejs /data
+RUN mkdir -p /data && chown -R node:node /data
 
-USER nextjs
+USER node
 
 EXPOSE 3000
 
