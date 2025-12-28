@@ -29,20 +29,32 @@ let httpServer: HttpServer;
 let io: Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
 let isShuttingDown = false;
 
+// Synchronous log function that flushes immediately (important for container environments)
+// In non-TTY environments (like Docker/Kubernetes), stdout can be buffered
+function logSync(message: string, isError = false): void {
+  const timestamp = new Date().toISOString();
+  const line = `[${timestamp}] ${message}\n`;
+  if (isError) {
+    process.stderr.write(line);
+  } else {
+    process.stdout.write(line);
+  }
+}
+
 // Graceful shutdown handler
 async function gracefulShutdown(signal: string): Promise<void> {
   // Prevent multiple shutdown attempts
   if (isShuttingDown) {
-    console.log("Shutdown already in progress...");
+    logSync("Shutdown already in progress...");
     return;
   }
   isShuttingDown = true;
 
-  console.log(`\n[${new Date().toISOString()}] ${signal} received. Starting graceful shutdown...`);
+  logSync(`${signal} received. Starting graceful shutdown...`);
 
   // Set a hard timeout to force exit if graceful shutdown takes too long
   const forceExitTimeout = setTimeout(() => {
-    console.error(`[${new Date().toISOString()}] Shutdown timeout (${SHUTDOWN_TIMEOUT_MS}ms) exceeded, forcing exit`);
+    logSync(`Shutdown timeout (${SHUTDOWN_TIMEOUT_MS}ms) exceeded, forcing exit`, true);
     process.exit(1);
   }, SHUTDOWN_TIMEOUT_MS);
 
@@ -53,7 +65,7 @@ async function gracefulShutdown(signal: string): Promise<void> {
     // 1. Close HTTP server first (stops accepting new connections)
     // Must close before Socket.IO since io.close() also tries to close the HTTP server
     if (httpServer?.listening) {
-      console.log("Closing HTTP server...");
+      logSync("Closing HTTP server...");
       await new Promise<void>((resolve, reject) => {
         httpServer.close((err) => {
           if (err) {
@@ -63,30 +75,30 @@ async function gracefulShutdown(signal: string): Promise<void> {
           }
         });
       });
-      console.log("HTTP server closed");
+      logSync("HTTP server closed");
     }
 
     // 2. Close Socket.IO server (disconnects all clients gracefully)
     if (io) {
-      console.log("Closing Socket.IO server...");
+      logSync("Closing Socket.IO server...");
       // Socket.IO may try to close HTTP server again, but it handles the already-closed case
       await io.close();
-      console.log("Socket.IO server closed");
+      logSync("Socket.IO server closed");
     }
 
     // 3. Close Next.js app
-    console.log("Closing Next.js app...");
+    logSync("Closing Next.js app...");
     await app.close();
-    console.log("Next.js app closed");
+    logSync("Next.js app closed");
 
     // 4. Clear in-memory state
     sessionPlayers.clear();
 
     clearTimeout(forceExitTimeout);
-    console.log(`[${new Date().toISOString()}] Graceful shutdown complete`);
+    logSync("Graceful shutdown complete");
     process.exit(0);
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error during graceful shutdown:`, error);
+    logSync(`Error during graceful shutdown: ${error}`, true);
     clearTimeout(forceExitTimeout);
     process.exit(1);
   }
