@@ -45,6 +45,16 @@ ENV DATABASE_URL="file:/data/games.db"
 ARG NEXT_PUBLIC_BASE_URL=""
 ENV NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
 
+# Build-time ARG for app version (git tag or "latest" for CI builds)
+# Pass with: docker build --build-arg APP_VERSION=v1.0.0
+ARG APP_VERSION="dev"
+ENV NEXT_PUBLIC_APP_VERSION=${APP_VERSION}
+
+# Build-time ARG for commit SHA
+# Pass with: docker build --build-arg APP_COMMIT_SHA=abc1234...
+ARG APP_COMMIT_SHA=""
+ENV NEXT_PUBLIC_APP_COMMIT_SHA=${APP_COMMIT_SHA}
+
 # Build Next.js application
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build

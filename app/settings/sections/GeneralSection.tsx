@@ -46,6 +46,13 @@ export function GeneralSection() {
     }
   };
 
+  // Get version and commit SHA from environment variables (baked in at build time)
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
+  const commitSha = process.env.NEXT_PUBLIC_APP_COMMIT_SHA || "";
+
+  // Format commit SHA: truncate to 7 characters if present
+  const formattedCommitSha = commitSha.length >= 7 ? commitSha.substring(0, 7) : commitSha;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -88,6 +95,18 @@ export function GeneralSection() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Version info */}
+      <div className="border-t border-stone-800 pt-4 flex flex-wrap gap-x-4 gap-y-1">
+        <p className="text-stone-500 text-xs">
+          Version: <span className="font-mono text-stone-400">{appVersion}</span>
+        </p>
+        {formattedCommitSha && (
+          <p className="text-stone-500 text-xs">
+            Commit: <span className="font-mono text-stone-400">{formattedCommitSha}</span>
+          </p>
+        )}
       </div>
     </div>
   );
