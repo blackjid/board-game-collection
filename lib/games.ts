@@ -58,7 +58,7 @@ function transformGame(game: Awaited<ReturnType<typeof prisma.game.findFirst>>):
 export async function getActiveGames(): Promise<GameData[]> {
   const games = await prisma.game.findMany({
     where: {
-      isActive: true,
+      isVisible: true,
       lastScraped: { not: null },
     },
     orderBy: { name: "asc" },
@@ -78,7 +78,7 @@ export async function getGameById(id: string): Promise<GameData | null> {
 export async function getGameCount(): Promise<{ total: number; active: number }> {
   const [total, active] = await Promise.all([
     prisma.game.count(),
-    prisma.game.count({ where: { isActive: true, lastScraped: { not: null } } }),
+    prisma.game.count({ where: { isVisible: true, lastScraped: { not: null } } }),
   ]);
 
   return { total, active };

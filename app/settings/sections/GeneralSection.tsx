@@ -2,6 +2,18 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
 interface Settings {
   collectionName: string | null;
 }
@@ -56,7 +68,7 @@ export function GeneralSection() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-stone-500">Loading settings...</div>
+        <div className="text-muted-foreground">Loading settings...</div>
       </div>
     );
   }
@@ -64,47 +76,52 @@ export function GeneralSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-white">General Settings</h2>
-        <p className="text-stone-400 text-sm mt-1">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground">General Settings</h2>
+        <p className="text-muted-foreground text-sm mt-1">
           Configure your collection display settings
         </p>
       </div>
 
-      <div className="bg-stone-900 rounded-xl p-4 sm:p-6">
-        <div className="max-w-xl">
-          <label className="block text-sm font-medium text-stone-300 mb-2">
-            Collection Name
-          </label>
-          <p className="text-stone-500 text-xs mb-3">
+      <Card>
+        <CardHeader>
+          <CardTitle>Collection Name</CardTitle>
+          <CardDescription>
             Override the default collection name displayed on the site. Leave empty to use the default (your BGG username).
-          </p>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={collectionNameInput}
-              onChange={(e) => setCollectionNameInput(e.target.value)}
-              placeholder="My Board Game Collection"
-              className="flex-1 px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
-            />
-            <button
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-3 max-w-xl">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="collection-name" className="sr-only">
+                Collection Name
+              </Label>
+              <Input
+                id="collection-name"
+                type="text"
+                value={collectionNameInput}
+                onChange={(e) => setCollectionNameInput(e.target.value)}
+                placeholder="My Board Game Collection"
+              />
+            </div>
+            <Button
               onClick={saveSettings}
               disabled={saving || collectionNameInput === (settings.collectionName || "")}
-              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save"}
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Version info */}
-      <div className="border-t border-stone-800 pt-4 flex flex-wrap gap-x-4 gap-y-1">
-        <p className="text-stone-500 text-xs">
-          Version: <span className="font-mono text-stone-400">{appVersion}</span>
+      <Separator />
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        <p className="text-muted-foreground text-xs">
+          Version: <span className="font-mono text-foreground/70">{appVersion}</span>
         </p>
         {formattedCommitSha && (
-          <p className="text-stone-500 text-xs">
-            Commit: <span className="font-mono text-stone-400">{formattedCommitSha}</span>
+          <p className="text-muted-foreground text-xs">
+            Commit: <span className="font-mono text-foreground/70">{formattedCommitSha}</span>
           </p>
         )}
       </div>

@@ -44,11 +44,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Game not found" }, { status: 404 });
   }
 
-  // Only allow updating isActive via this route
+  // Only allow updating isVisible via this route
   const updateData: Record<string, unknown> = {};
 
   if (typeof body.isActive === "boolean") {
-    updateData.isActive = body.isActive;
+    updateData.isVisible = body.isActive;
   }
 
   const updatedGame = await prisma.game.update({

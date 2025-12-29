@@ -45,7 +45,7 @@ describe("lib/games", () => {
     categories: '["Card Game", "Animals"]',
     mechanics: '["Hand Management", "Engine Building"]',
     isExpansion: false,
-    isActive: true,
+    isVisible: true,
     lastScraped: new Date(),
     availableImages: '["img1.jpg", "img2.jpg"]',
     componentImages: '["comp1.jpg"]',
@@ -65,7 +65,7 @@ describe("lib/games", () => {
 
       expect(prisma.game.findMany).toHaveBeenCalledWith({
         where: {
-          isActive: true,
+          isVisible: true,
           lastScraped: { not: null },
         },
         orderBy: { name: "asc" },

@@ -15,7 +15,7 @@ export async function POST() {
   }
 
   const activeGames = await prisma.game.findMany({
-    where: { isActive: true },
+    where: { isVisible: true },
     select: { id: true, name: true },
   });
 

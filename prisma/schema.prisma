@@ -15,7 +15,7 @@ model Game {
   yearPublished   Int?
 
   // Import status
-  isActive        Boolean  @default(false)
+  isVisible       Boolean  @default(false)
   lastScraped     DateTime?
 
   // Scraped data (populated after scraping)

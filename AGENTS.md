@@ -34,6 +34,7 @@ When proposing AGENTS.md updates, add to the relevant section or create a new se
 | Language | TypeScript (strict mode) |
 | Database | SQLite via Prisma ORM (libSQL adapter in production) |
 | Styling | Tailwind CSS v4 |
+| UI Components | shadcn/ui (New York style) |
 | Testing | Vitest + Testing Library |
 | Real-time | Socket.IO |
 | Auth | Cookie-based sessions (bcrypt) |
@@ -243,7 +244,7 @@ function transformGame(game: PrismaGame): GameData {
 // Export data access functions
 export async function getActiveGames(): Promise<GameData[]> {
   const games = await prisma.game.findMany({
-    where: { isActive: true },
+    where: { isVisible: true },
     orderBy: { name: "asc" },
   });
   return games.map(transformGame);
@@ -402,6 +403,211 @@ const createMockGame = (overrides = {}): GameData => ({
 ### Global Mocks (vitest.setup.ts)
 
 Prisma and Next.js navigation are mocked globally. Don't re-mock unless you need different behavior.
+
+---
+
+## shadcn/ui Component Library
+
+This project uses [shadcn/ui](https://ui.shadcn.com/) for UI components. Components are installed in `components/ui/` and can be customized.
+
+### Configuration
+
+The project is configured with:
+- **Style**: New York (cleaner, more modern)
+- **Base Color**: Stone (matches dark theme)
+- **CSS Variables**: Enabled for theming
+- **Icon Library**: Lucide React
+
+Configuration file: `components.json`
+
+### Adding New Components
+
+```bash
+# Add a single component
+npx shadcn@latest add button
+
+# Add multiple components
+npx shadcn@latest add dialog dropdown-menu tabs
+```
+
+### Available Components
+
+Currently installed components in `components/ui/`:
+- `button.tsx` - Buttons with variants (default, destructive, outline, secondary, ghost, link)
+- `input.tsx` - Text inputs
+- `label.tsx` - Form labels
+- `card.tsx` - Card containers (Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter)
+- `dialog.tsx` - Modal dialogs
+- `select.tsx` - Dropdown selects
+- `switch.tsx` - Toggle switches
+- `badge.tsx` - Status badges
+- `checkbox.tsx` - Checkboxes
+- `separator.tsx` - Visual separators
+- `avatar.tsx` - User avatars
+- `dropdown-menu.tsx` - Dropdown menus
+- `context-menu.tsx` - Right-click context menus
+- `command.tsx` - Command palette / combobox
+- `popover.tsx` - Popovers
+- `scroll-area.tsx` - Scrollable areas
+- `tabs.tsx` - Tab navigation
+- `multi-select.tsx` - Custom multi-select component (uses Command + Popover)
+
+### Custom Components
+
+#### MultiSelect
+
+A multi-select dropdown built on Command + Popover:
+
+```tsx
+import { MultiSelect } from "@/components/ui/multi-select";
+
+const options = [
+  { value: "option1", label: "Option 1" },
+  { value: "option2", label: "Option 2" },
+];
+
+<MultiSelect
+  options={options}
+  selected={selectedValues}
+  onChange={setSelectedValues}
+  placeholder="Select items..."
+/>
+```
+
+#### useRowSelection Hook
+
+For bulk selection in tables/lists:
+
+```tsx
+import { useRowSelection } from "@/components/ui/multi-select";
+
+const {
+  selectedIds,
+  selectedItems,
+  selectedCount,
+  toggleItem,
+  toggleAll,
+  clearSelection,
+  isSelected,
+  allSelected,
+  someSelected,
+} = useRowSelection({
+  items: games,
+  getItemId: (game) => game.id,
+});
+```
+
+#### Context Menu for List Actions
+
+For lists with row-level actions, use both ContextMenu (right-click) and DropdownMenu (kebab button) to provide the same actions through multiple interaction patterns:
+
+```tsx
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+
+// Create a reusable actions component for both menus
+const ItemActions = ({ asContext = false }: { asContext?: boolean }) => {
+  const MenuItem = asContext ? ContextMenuItem : DropdownMenuItem;
+  return (
+    <>
+      <MenuItem onClick={() => handleEdit(item)}>Edit</MenuItem>
+      <MenuItem onClick={() => handleDelete(item)}>Delete</MenuItem>
+    </>
+  );
+};
+
+// Wrap each list item
+<ContextMenu>
+  <ContextMenuTrigger asChild>
+    <div className="flex items-center ...">
+      {/* Item content */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <MoreVertical className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <ItemActions />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  </ContextMenuTrigger>
+  <ContextMenuContent>
+    <ItemActions asContext />
+  </ContextMenuContent>
+</ContextMenu>
+```
+
+### Usage Patterns
+
+**Use shadcn/ui components instead of custom elements:**
+
+```tsx
+// Good - use shadcn Button
+import { Button } from "@/components/ui/button";
+<Button variant="destructive" size="sm">Delete</Button>
+
+// Bad - custom button styles
+<button className="px-4 py-2 bg-red-600 ...">Delete</button>
+```
+
+**Use semantic variants:**
+
+```tsx
+// Primary action
+<Button>Save Changes</Button>
+
+// Secondary action
+<Button variant="secondary">Cancel</Button>
+
+// Destructive action
+<Button variant="destructive">Delete</Button>
+
+// Ghost/subtle action
+<Button variant="ghost">Edit</Button>
+```
+
+**Use the cn() utility for conditional classes:**
+
+```tsx
+import { cn } from "@/lib/utils";
+
+<div className={cn(
+  "base-classes",
+  isActive && "active-classes",
+  isDisabled && "disabled-classes"
+)} />
+```
+
+### Theming
+
+CSS variables are defined in `app/globals.css`. The project uses a dark theme by default with stone colors and amber accents:
+
+```css
+:root {
+  --background: #0c0a09;        /* Stone-950 */
+  --foreground: #fafaf9;        /* Stone-50 */
+  --card: #1c1917;              /* Stone-900 */
+  --primary: #d97706;           /* Amber-600 */
+  --destructive: #dc2626;       /* Red-600 */
+  --muted: #292524;             /* Stone-800 */
+  /* ... more variables */
+}
+```
+
+Use semantic color classes from shadcn instead of raw Tailwind colors:
+
+```tsx
+// Good - semantic colors
+<div className="bg-card text-card-foreground" />
+<span className="text-muted-foreground" />
+<Button className="bg-primary" />
+
+// Also acceptable - raw Tailwind for custom needs
+<div className="bg-stone-900 text-stone-400" />
+```
 
 ---
 
@@ -672,3 +878,11 @@ node dist/server.js
 2. Mock Prisma/Next.js (already global in vitest.setup.ts)
 3. Use `vi.mocked()` for type-safe mock returns
 4. Follow describe/it structure with section comments
+
+### Adding shadcn/ui Components
+
+1. Run `npx shadcn@latest add [component-name]`
+2. Component is added to `components/ui/[component].tsx`
+3. Import and use: `import { Button } from "@/components/ui/button"`
+4. Customize styling via className or by editing the component file
+5. Use `cn()` utility from `@/lib/utils` for conditional classes

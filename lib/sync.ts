@@ -247,7 +247,7 @@ export async function performSyncWithAutoScrape(
     // First, mark new games as active
     await prisma.game.updateMany({
       where: { id: { in: result.newGameIds } },
-      data: { isActive: true },
+      data: { isVisible: true },
     });
 
     // Get game names for the queue

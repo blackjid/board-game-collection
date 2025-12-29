@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const where: Record<string, unknown> = {};
 
   if (activeOnly) {
-    where.isActive = true;
+    where.isVisible = true;
   }
 
   if (scrapedOnly) {
@@ -21,9 +21,10 @@ export async function GET(request: NextRequest) {
     orderBy: { name: "asc" },
   });
 
-  // Parse JSON fields for response
+  // Parse JSON fields for response and map isVisible to isActive for frontend
   const parsedGames = games.map((game) => ({
     ...game,
+    isActive: game.isVisible, // Map database field to frontend field name
     categories: game.categories ? JSON.parse(game.categories) : [],
     mechanics: game.mechanics ? JSON.parse(game.mechanics) : [],
     availableImages: game.availableImages ? JSON.parse(game.availableImages) : [],

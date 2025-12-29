@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     const games = await prisma.game.findMany({
       where: {
         id: { in: gameIds },
-        isActive: true,
+        isVisible: true,
       },
     });
 

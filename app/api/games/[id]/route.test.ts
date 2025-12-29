@@ -175,7 +175,7 @@ describe("Game [id] API Route", () => {
       expect(response.status).toBe(200);
       expect(prisma.game.update).toHaveBeenCalledWith({
         where: { id: "123" },
-        data: { isActive: true },
+        data: { isVisible: true },
       });
     });
 
@@ -204,7 +204,7 @@ describe("Game [id] API Route", () => {
 
       expect(prisma.game.update).toHaveBeenCalledWith({
         where: { id: "123" },
-        data: { isActive: false },
+        data: { isVisible: false },
       });
     });
 
@@ -235,7 +235,7 @@ describe("Game [id] API Route", () => {
       // Only isActive should be updated
       expect(prisma.game.update).toHaveBeenCalledWith({
         where: { id: "123" },
-        data: { isActive: true },
+        data: { isVisible: true },
       });
     });
   });

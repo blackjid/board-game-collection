@@ -125,7 +125,7 @@ export async function GET() {
   // Fetch all active, scraped games
   const rawGames = await prisma.game.findMany({
     where: {
-      isActive: true,
+      isVisible: true,
       lastScraped: { not: null },
     },
     orderBy: { rating: "desc" },

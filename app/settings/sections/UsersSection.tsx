@@ -1,7 +1,45 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Trash2, Edit, UserPlus, ChevronDown } from "lucide-react";
+
 import { useSettings } from "../layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useRowSelection } from "@/components/ui/multi-select";
+import { cn } from "@/lib/utils";
 
 interface User {
   id: string;
@@ -25,6 +63,22 @@ export function UsersSection() {
   });
   const [savingUser, setSavingUser] = useState(false);
   const [userError, setUserError] = useState("");
+
+  // Row selection for bulk actions
+  const selectableUsers = users.filter((u) => u.id !== currentUser?.id);
+  const {
+    selectedCount,
+    toggleItem,
+    toggleAll,
+    clearSelection,
+    isSelected,
+    allSelected,
+    someSelected,
+    selectedItems,
+  } = useRowSelection({
+    items: selectableUsers,
+    getItemId: (user) => user.id,
+  });
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -125,10 +179,37 @@ export function UsersSection() {
     }
   };
 
+  // Bulk actions
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedCount} user(s)?`)) return;
+
+    await Promise.all(
+      selectedItems.map((user) =>
+        fetch(`/api/auth/users/${user.id}`, { method: "DELETE" })
+      )
+    );
+    clearSelection();
+    await fetchUsers();
+  };
+
+  const handleBulkRoleChange = async (role: string) => {
+    await Promise.all(
+      selectedItems.map((user) =>
+        fetch(`/api/auth/users/${user.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role }),
+        })
+      )
+    );
+    clearSelection();
+    await fetchUsers();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-stone-500">Loading users...</div>
+        <div className="text-muted-foreground">Loading users...</div>
       </div>
     );
   }
@@ -137,171 +218,241 @@ export function UsersSection() {
     <div className="space-y-6 pb-20 lg:pb-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white">Users</h2>
-          <p className="text-stone-400 text-sm mt-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">Users</h2>
+          <p className="text-muted-foreground text-sm mt-1">
             Manage who can access the settings
           </p>
         </div>
-        <button
-          onClick={() => handleOpenUserModal()}
-          className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors text-sm"
-        >
+        <Button onClick={() => handleOpenUserModal()}>
+          <UserPlus className="size-4" />
           Add User
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-stone-900 rounded-xl overflow-hidden">
-        <div className="divide-y divide-stone-800">
-          {users.map((user) => (
-            <div key={user.id} className="p-4 sm:p-5 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-full bg-stone-700 flex items-center justify-center text-white font-bold flex-shrink-0">
-                  {(user.name || user.email).charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-white truncate text-sm sm:text-base">
-                      {user.name || user.email}
-                    </span>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded ${
-                        user.role === "admin"
-                          ? "bg-amber-500/20 text-amber-300"
-                          : "bg-stone-700 text-stone-400"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                  </div>
-                  <div className="text-xs text-stone-400 mt-0.5 truncate">
-                    {user.email}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  onClick={() => handleOpenUserModal(user)}
-                  className="px-3 py-1.5 text-sm text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors"
-                >
-                  Edit
-                </button>
-                {currentUser?.id !== user.id && (
-                  <button
-                    onClick={() => handleDeleteUser(user.id)}
-                    className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+      <Card>
+        {/* Bulk Actions Bar */}
+        {selectedCount > 0 && (
+          <div className="px-6 py-3 bg-primary/10 border-b border-border flex items-center justify-between gap-3">
+            <span className="text-sm text-foreground">
+              {selectedCount} user{selectedCount !== 1 ? "s" : ""} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    Actions
+                    <ChevronDown className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleBulkRoleChange("admin")}>
+                    Set as Admin
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleBulkRoleChange("user")}>
+                    Set as User
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={handleBulkDelete}
                   >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-          {users.length === 0 && (
-            <div className="p-8 text-center text-stone-500 text-sm">
-              No users found.
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* User Modal */}
-      {showUserModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-stone-900 rounded-2xl max-w-md w-full overflow-hidden">
-            <div className="p-6 border-b border-stone-700">
-              <h2 className="text-xl font-bold text-white">
-                {editingUser ? "Edit User" : "Create User"}
-              </h2>
-              <p className="text-stone-400 text-sm mt-1">
-                {editingUser ? "Update user information" : "Add a new user to the system"}
-              </p>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {!editingUser && (
-                <div>
-                  <label className="block text-sm font-medium text-stone-300 mb-1.5">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={userFormData.email}
-                    onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="user@example.com"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-stone-300 mb-1.5">
-                  Name (optional)
-                </label>
-                <input
-                  type="text"
-                  value={userFormData.name}
-                  onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-300 mb-1.5">
-                  {editingUser ? "New Password (leave blank to keep current)" : "Password"}
-                </label>
-                <input
-                  type="password"
-                  value={userFormData.password}
-                  onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-300 mb-1.5">
-                  Role
-                </label>
-                <select
-                  value={userFormData.role}
-                  onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
-                  disabled={editingUser?.id === currentUser?.id}
-                  className="w-full px-4 py-2.5 bg-stone-800 border border-stone-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-                {editingUser?.id === currentUser?.id && (
-                  <p className="text-xs text-stone-500 mt-1">You cannot change your own role</p>
-                )}
-              </div>
-
-              {userError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                  {userError}
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-stone-700 flex justify-end gap-3">
-              <button
-                onClick={() => setShowUserModal(false)}
-                className="px-4 py-2 text-stone-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveUser}
-                disabled={savingUser}
-                className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-              >
-                {savingUser ? "Saving..." : editingUser ? "Update" : "Create"}
-              </button>
+                    <Trash2 className="size-4" />
+                    Delete Selected
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button variant="ghost" size="sm" onClick={clearSelection}>
+                Clear
+              </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        <CardContent className="p-0">
+          {/* Select All Header - Only show if there are selectable users */}
+          {selectableUsers.length > 0 && (
+            <div className="px-4 py-2 border-b border-border flex items-center gap-3">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={toggleAll}
+                aria-label="Select all"
+                {...(someSelected ? { "data-state": "indeterminate" } : {})}
+              />
+              <span className="text-xs text-muted-foreground">
+                {allSelected ? "Deselect all" : "Select all (except yourself)"}
+              </span>
+            </div>
+          )}
+
+          <div className="divide-y divide-border">
+            {users.map((user) => {
+              const isCurrentUser = currentUser?.id === user.id;
+              return (
+                <div
+                  key={user.id}
+                  className={cn(
+                    "p-4 sm:p-5 flex items-center gap-3",
+                    !isCurrentUser && isSelected(user.id) && "bg-primary/5"
+                  )}
+                >
+                  {/* Checkbox - only for non-current users */}
+                  {!isCurrentUser ? (
+                    <Checkbox
+                      checked={isSelected(user.id)}
+                      onCheckedChange={() => toggleItem(user.id)}
+                      aria-label={`Select ${user.name || user.email}`}
+                    />
+                  ) : (
+                    <div className="size-4" /> // Spacer for alignment
+                  )}
+
+                  <Avatar className="size-10 bg-secondary">
+                    <AvatarFallback className="bg-secondary text-secondary-foreground font-bold">
+                      {(user.name || user.email).charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-foreground truncate text-sm sm:text-base">
+                        {user.name || user.email}
+                      </span>
+                      <Badge
+                        variant={user.role === "admin" ? "default" : "secondary"}
+                        className="text-xs"
+                      >
+                        {user.role}
+                      </Badge>
+                      {isCurrentUser && (
+                        <Badge variant="outline" className="text-xs">
+                          You
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {user.email}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenUserModal(user)}
+                    >
+                      <Edit className="size-4" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </Button>
+                    {!isCurrentUser && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="size-4" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {users.length === 0 && (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                No users found.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* User Modal */}
+      <Dialog open={showUserModal} onOpenChange={setShowUserModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingUser ? "Edit User" : "Create User"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingUser ? "Update user information" : "Add a new user to the system"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {!editingUser && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={userFormData.email}
+                  onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
+                  placeholder="user@example.com"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="name">Name (optional)</Label>
+              <Input
+                id="name"
+                type="text"
+                value={userFormData.name}
+                onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                {editingUser ? "New Password (leave blank to keep current)" : "Password"}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={userFormData.password}
+                onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                value={userFormData.role}
+                onValueChange={(value) => setUserFormData({ ...userFormData, role: value })}
+                disabled={editingUser?.id === currentUser?.id}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              {editingUser?.id === currentUser?.id && (
+                <p className="text-xs text-muted-foreground">You cannot change your own role</p>
+              )}
+            </div>
+
+            {userError && (
+              <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
+                {userError}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowUserModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveUser} disabled={savingUser}>
+              {savingUser ? "Saving..." : editingUser ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

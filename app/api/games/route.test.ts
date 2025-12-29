@@ -40,7 +40,7 @@ describe("Games API Route", () => {
         categories: '["Card Game", "Animals"]',
         mechanics: '["Hand Management", "Engine Building"]',
         isExpansion: false,
-        isActive: true,
+        isVisible: true,
         lastScraped: new Date(),
         availableImages: '["img1.jpg", "img2.jpg"]',
         componentImages: "[]",
@@ -64,7 +64,7 @@ describe("Games API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: false,
+        isVisible: false,
         lastScraped: null,
         availableImages: null,
         componentImages: null,
@@ -94,7 +94,7 @@ describe("Games API Route", () => {
       await GET(request);
 
       expect(prisma.game.findMany).toHaveBeenCalledWith({
-        where: { isActive: true },
+        where: { isVisible: true },
         orderBy: { name: "asc" },
       });
     });
@@ -118,7 +118,7 @@ describe("Games API Route", () => {
       await GET(request);
 
       expect(prisma.game.findMany).toHaveBeenCalledWith({
-        where: { isActive: true, lastScraped: { not: null } },
+        where: { isVisible: true, lastScraped: { not: null } },
         orderBy: { name: "asc" },
       });
     });

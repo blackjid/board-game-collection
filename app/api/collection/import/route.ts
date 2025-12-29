@@ -46,10 +46,10 @@ export async function GET() {
   });
 
   const totalGames = await prisma.game.count();
-  const activeGames = await prisma.game.count({ where: { isActive: true } });
+  const activeGames = await prisma.game.count({ where: { isVisible: true } });
   const scrapedGames = await prisma.game.count({ where: { lastScraped: { not: null } } });
   const unscrapedActiveGames = await prisma.game.count({
-    where: { isActive: true, lastScraped: null },
+    where: { isVisible: true, lastScraped: null },
   });
 
   const bggUsername = await getBggUsername();
