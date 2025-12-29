@@ -31,7 +31,7 @@ export function AboutSection() {
         </p>
       </div>
 
-      <Card>
+      <Card className="gap-0">
         <CardHeader className="border-b border-border">
           <div className="flex items-center gap-2">
             <Info className="size-4 text-muted-foreground" />

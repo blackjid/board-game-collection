@@ -505,12 +505,12 @@ export function CollectionSection() {
       </div>
 
       {/* Collection Source & Sync */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <Card className="gap-0">
+        <CardHeader className="border-b border-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <CardTitle>BGG Source</CardTitle>
-              <CardDescription>Connect your BoardGameGeek collection</CardDescription>
+              <CardTitle className="text-lg">BoardGameGeek</CardTitle>
+              <CardDescription>Import and sync your collection</CardDescription>
             </div>
             <Button
               onClick={handleSyncClick}
@@ -530,17 +530,17 @@ export function CollectionSection() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="pt-6 space-y-6">
           {/* Username input */}
           <div className="flex flex-col sm:flex-row gap-3 max-w-md">
             <div className="flex-1 space-y-2">
-              <Label htmlFor="bgg-username">BGG Username</Label>
+              <Label htmlFor="bgg-username">Username</Label>
               <Input
                 id="bgg-username"
                 type="text"
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
-                placeholder="BGG username"
+                placeholder="Your BGG username"
               />
             </div>
             <Button

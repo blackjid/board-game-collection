@@ -78,7 +78,7 @@ export function GeneralSection() {
       </div>
 
       {/* Collection Name Card */}
-      <Card>
+      <Card className="gap-0">
         <CardHeader className="border-b border-border">
           <CardTitle className="text-lg">Collection Name</CardTitle>
           <CardDescription>
