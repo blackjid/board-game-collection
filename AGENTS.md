@@ -449,6 +449,8 @@ Currently installed components in `components/ui/`:
 - `command.tsx` - Command palette / combobox
 - `popover.tsx` - Popovers
 - `scroll-area.tsx` - Scrollable areas
+- `sheet.tsx` - Slide-out panels/drawers (mobile navigation)
+- `breadcrumb.tsx` - Breadcrumb navigation
 - `tabs.tsx` - Tab navigation
 - `multi-select.tsx` - Custom multi-select component (uses Command + Popover)
 

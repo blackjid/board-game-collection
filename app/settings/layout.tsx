@@ -3,11 +3,26 @@
 import { useState, useEffect, useCallback, createContext, useContext, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { Settings, Package, Users, Menu, X, LogOut, ArrowLeft } from "lucide-react";
+import { Settings, Package, Users, LogOut, ArrowLeft, PanelLeft, Home, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 
 interface CurrentUser {
@@ -39,32 +54,19 @@ const SECTIONS = [
 
 export type SectionId = (typeof SECTIONS)[number]["id"];
 
-// Navigation component that uses useSearchParams
-function SettingsNavigation({
+// Navigation items component
+function NavItems({
+  currentSection,
+  onNavigate,
   currentUser,
-  mobileMenuOpen,
-  setMobileMenuOpen,
   onLogout,
 }: {
+  currentSection: SectionId;
+  onNavigate: (sectionId: string) => void;
   currentUser: CurrentUser | null;
-  mobileMenuOpen: boolean;
-  setMobileMenuOpen: (open: boolean) => void;
   onLogout: () => void;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const currentSection = (searchParams.get("section") as SectionId) || "general";
-
-  const navigateToSection = (sectionId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("section", sectionId);
-    router.push(`${pathname}?${params.toString()}`);
-    setMobileMenuOpen(false);
-  };
-
-  const NavItems = () => (
+  return (
     <>
       <nav className="flex-1 p-4 space-y-1">
         {SECTIONS.map((section) => (
@@ -75,7 +77,7 @@ function SettingsNavigation({
               "w-full justify-start gap-3",
               currentSection === section.id && "bg-primary text-primary-foreground"
             )}
-            onClick={() => navigateToSection(section.id)}
+            onClick={() => onNavigate(section.id)}
           >
             <section.Icon className="size-5" />
             <span className="font-medium">{section.label}</span>
@@ -110,32 +112,128 @@ function SettingsNavigation({
       )}
     </>
   );
+}
+
+// Navigation component that uses useSearchParams
+function SettingsNavigation({
+  currentUser,
+  sheetOpen,
+  setSheetOpen,
+  onLogout,
+}: {
+  currentUser: CurrentUser | null;
+  sheetOpen: boolean;
+  setSheetOpen: (open: boolean) => void;
+  onLogout: () => void;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const currentSection = (searchParams.get("section") as SectionId) || "general";
+
+  const navigateToSection = (sectionId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("section", sectionId);
+    router.push(`${pathname}?${params.toString()}`);
+    setSheetOpen(false);
+  };
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-64 flex-col fixed left-0 top-16 bottom-0 bg-card border-r border-border">
-        <NavItems />
-      </aside>
-
-      {/* Mobile Sidebar Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/60 z-30"
-          onClick={() => setMobileMenuOpen(false)}
+        <NavItems
+          currentSection={currentSection}
+          onNavigate={navigateToSection}
+          currentUser={currentUser}
+          onLogout={onLogout}
         />
-      )}
-
-      {/* Mobile Sidebar (Drawer) */}
-      <aside
-        className={cn(
-          "lg:hidden fixed left-0 top-16 bottom-0 w-72 bg-card border-r border-border z-40 transform transition-transform duration-300 flex flex-col",
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NavItems />
       </aside>
+
+      {/* Mobile Sheet */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="left" className="w-72 p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b border-border">
+            <SheetTitle className="flex items-center gap-2">
+              <Settings className="size-5" />
+              Settings
+            </SheetTitle>
+          </SheetHeader>
+          <NavItems
+            currentSection={currentSection}
+            onNavigate={navigateToSection}
+            currentUser={currentUser}
+            onLogout={onLogout}
+          />
+        </SheetContent>
+      </Sheet>
     </>
+  );
+}
+
+// Header with breadcrumbs component
+function SettingsHeader({
+  onOpenSheet,
+}: {
+  onOpenSheet: () => void;
+}) {
+  const searchParams = useSearchParams();
+  const currentSection = (searchParams.get("section") as SectionId) || "general";
+  const sectionLabel = SECTIONS.find(s => s.id === currentSection)?.label || "General";
+
+  return (
+    <header className="bg-card border-b border-border sticky top-0 z-40 h-14 sm:h-16">
+      <div className="h-full px-4 flex items-center gap-3">
+        {/* Mobile: Menu trigger */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden size-9"
+          onClick={onOpenSheet}
+        >
+          <PanelLeft className="size-5" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
+
+        {/* Desktop: Back button */}
+        <Button variant="ghost" size="sm" asChild className="hidden lg:flex gap-2">
+          <Link href="/">
+            <ArrowLeft className="size-4" />
+            Back
+          </Link>
+        </Button>
+
+        <Separator orientation="vertical" className="h-6 hidden lg:block" />
+
+        {/* Breadcrumb navigation */}
+        <Breadcrumb className="flex-1">
+          <BreadcrumbList>
+            <BreadcrumbItem className="hidden sm:block">
+              <BreadcrumbLink asChild>
+                <Link href="/" className="flex items-center gap-1.5">
+                  <Home className="size-3.5" />
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator className="hidden sm:block">
+              <ChevronRight className="size-3.5" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/settings" className="font-medium">Settings</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator>
+              <ChevronRight className="size-3.5" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbPage className="font-medium text-foreground">{sectionLabel}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+    </header>
   );
 }
 
@@ -146,7 +244,7 @@ export default function SettingsLayout({
 }) {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -203,48 +301,22 @@ export default function SettingsLayout({
   return (
     <SettingsContext.Provider value={{ currentUser, refreshData: fetchCurrentUser }}>
       <div className="min-h-screen bg-background text-foreground">
-        {/* Header */}
-        <header className="bg-card border-b border-border sticky top-0 z-40 h-16">
-          <div className="h-full px-4 sm:px-6 flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/" className="gap-2">
-                  <ArrowLeft className="size-4" />
-                  <span className="hidden sm:inline">Back</span>
-                </Link>
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <h1 className="text-xl sm:text-2xl font-bold">Settings</h1>
-            </div>
-
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? (
-                <X className="size-6" />
-              ) : (
-                <Menu className="size-6" />
-              )}
-            </Button>
-          </div>
-        </header>
+        <Suspense fallback={null}>
+          <SettingsHeader onOpenSheet={() => setSheetOpen(true)} />
+        </Suspense>
 
         <div className="flex">
           <Suspense fallback={null}>
             <SettingsNavigation
               currentUser={currentUser}
-              mobileMenuOpen={mobileMenuOpen}
-              setMobileMenuOpen={setMobileMenuOpen}
+              sheetOpen={sheetOpen}
+              setSheetOpen={setSheetOpen}
               onLogout={handleLogout}
             />
           </Suspense>
 
           {/* Main Content */}
-          <main className="flex-1 lg:ml-64 min-h-[calc(100vh-4rem)] w-full overflow-x-hidden">
+          <main className="flex-1 lg:ml-64 min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] w-full overflow-x-hidden">
             {children}
           </main>
         </div>
