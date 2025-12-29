@@ -762,7 +762,7 @@ export function CollectionSection() {
       )}
 
       {/* Games List */}
-      <Card>
+      <Card className="gap-0">
         <CardHeader className="border-b border-border">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -799,54 +799,52 @@ export function CollectionSection() {
           </div>
         </CardHeader>
 
-        {/* Bulk Actions Bar */}
-        {selectedCount > 0 && (
-          <div className="px-6 py-3 bg-primary/10 border-b border-border flex items-center justify-between gap-3">
-            <span className="text-sm text-foreground">
-              {selectedCount} game{selectedCount !== 1 ? "s" : ""} selected
-            </span>
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Actions
-                    <ChevronDown className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleBulkActivate}>
-                    <Eye className="size-4" />
-                    Show Selected
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleBulkDeactivate}>
-                    <EyeOff className="size-4" />
-                    Hide Selected
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleBulkScrape}>
-                    <RefreshCw className="size-4" />
-                    Scrape Selected
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button variant="ghost" size="sm" onClick={clearSelection}>
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
-
         <CardContent className="p-0">
-          {/* Select All Header */}
-          <div className="p-3 sm:p-4 border-b border-border flex items-center gap-3 sm:gap-4 bg-muted/30">
+          {/* Select All Header with Bulk Actions */}
+          <div className={cn(
+            "px-3 sm:px-4 h-12 border-b border-border flex items-center gap-3 sm:gap-4",
+            selectedCount > 0 ? "bg-primary/10" : "bg-muted/30"
+          )}>
             <Checkbox
               checked={allSelected}
               onCheckedChange={toggleAll}
               aria-label="Select all"
               {...(someSelected ? { "data-state": "indeterminate" } : {})}
             />
-            <span className="text-xs text-muted-foreground">
-              {allSelected ? "Deselect all" : "Select all"}
+            <span className="text-xs text-muted-foreground flex-1">
+              {selectedCount > 0
+                ? `${selectedCount} game${selectedCount !== 1 ? "s" : ""} selected`
+                : allSelected ? "Deselect all" : "Select all"}
             </span>
+            {selectedCount > 0 && (
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Actions
+                      <ChevronDown className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleBulkActivate}>
+                      <Eye className="size-4" />
+                      Show Selected
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleBulkDeactivate}>
+                      <EyeOff className="size-4" />
+                      Hide Selected
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleBulkScrape}>
+                      <RefreshCw className="size-4" />
+                      Scrape Selected
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="ghost" size="sm" onClick={clearSelection}>
+                  Clear
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="divide-y divide-border">

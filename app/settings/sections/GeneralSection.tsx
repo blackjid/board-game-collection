@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 interface Settings {
   collectionName: string | null;
@@ -58,12 +58,7 @@ export function GeneralSection() {
     }
   };
 
-  // Get version and commit SHA from environment variables (baked in at build time)
-  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
-  const commitSha = process.env.NEXT_PUBLIC_APP_COMMIT_SHA || "";
-
-  // Format commit SHA: truncate to 7 characters if present
-  const formattedCommitSha = commitSha.length >= 7 ? commitSha.substring(0, 7) : commitSha;
+  const hasChanges = collectionNameInput !== (settings.collectionName || "");
 
   if (loading) {
     return (
@@ -74,22 +69,23 @@ export function GeneralSection() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 lg:pb-0">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground">General Settings</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground">General</h2>
         <p className="text-muted-foreground text-sm mt-1">
           Configure your collection display settings
         </p>
       </div>
 
+      {/* Collection Name Card */}
       <Card>
-        <CardHeader>
-          <CardTitle>Collection Name</CardTitle>
+        <CardHeader className="border-b border-border">
+          <CardTitle className="text-lg">Collection Name</CardTitle>
           <CardDescription>
             Override the default collection name displayed on the site. Leave empty to use the default (your BGG username).
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-3 max-w-xl">
             <div className="flex-1 space-y-2">
               <Label htmlFor="collection-name" className="sr-only">
@@ -105,26 +101,19 @@ export function GeneralSection() {
             </div>
             <Button
               onClick={saveSettings}
-              disabled={saving || collectionNameInput === (settings.collectionName || "")}
+              disabled={saving || !hasChanges}
             >
+              <Save className="size-4" />
               {saving ? "Saving..." : "Save"}
             </Button>
           </div>
+          {settings.collectionName && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Currently using: <span className="text-foreground">{settings.collectionName}</span>
+            </p>
+          )}
         </CardContent>
       </Card>
-
-      {/* Version info */}
-      <Separator />
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        <p className="text-muted-foreground text-xs">
-          Version: <span className="font-mono text-foreground/70">{appVersion}</span>
-        </p>
-        {formattedCommitSha && (
-          <p className="text-muted-foreground text-xs">
-            Commit: <span className="font-mono text-foreground/70">{formattedCommitSha}</span>
-          </p>
-        )}
-      </div>
     </div>
   );
 }

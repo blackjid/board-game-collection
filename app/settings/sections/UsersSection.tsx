@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Trash2, Edit, UserPlus, ChevronDown } from "lucide-react";
+import { Trash2, Edit, UserPlus, ChevronDown, MoreVertical, Shield, User } from "lucide-react";
 
 import { useSettings } from "../layout";
 import { Button } from "@/components/ui/button";
@@ -37,11 +37,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu";
 import { useRowSelection } from "@/components/ui/multi-select";
 import { cn } from "@/lib/utils";
 
-interface User {
+interface UserData {
   id: string;
   email: string;
   name: string | null;
@@ -51,10 +59,10 @@ interface User {
 
 export function UsersSection() {
   const { currentUser } = useSettings();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUserModal, setShowUserModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [userFormData, setUserFormData] = useState({
     email: "",
     password: "",
@@ -98,7 +106,7 @@ export function UsersSection() {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleOpenUserModal = (user?: User) => {
+  const handleOpenUserModal = (user?: UserData) => {
     if (user) {
       setEditingUser(user);
       setUserFormData({
@@ -179,6 +187,15 @@ export function UsersSection() {
     }
   };
 
+  const handleSetRole = async (userId: string, role: string) => {
+    await fetch(`/api/auth/users/${userId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    await fetchUsers();
+  };
+
   // Bulk actions
   const handleBulkDelete = async () => {
     if (!confirm(`Are you sure you want to delete ${selectedCount} user(s)?`)) return;
@@ -229,132 +246,192 @@ export function UsersSection() {
         </Button>
       </div>
 
-      <Card>
-        {/* Bulk Actions Bar */}
-        {selectedCount > 0 && (
-          <div className="px-6 py-3 bg-primary/10 border-b border-border flex items-center justify-between gap-3">
-            <span className="text-sm text-foreground">
-              {selectedCount} user{selectedCount !== 1 ? "s" : ""} selected
-            </span>
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Actions
-                    <ChevronDown className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleBulkRoleChange("admin")}>
-                    Set as Admin
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleBulkRoleChange("user")}>
-                    Set as User
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    variant="destructive"
-                    onClick={handleBulkDelete}
-                  >
-                    <Trash2 className="size-4" />
-                    Delete Selected
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button variant="ghost" size="sm" onClick={clearSelection}>
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
+      <Card className="gap-0">
+        <CardHeader className="border-b border-border">
+          <CardTitle className="text-lg">{users.length} Users</CardTitle>
+        </CardHeader>
 
         <CardContent className="p-0">
-          {/* Select All Header - Only show if there are selectable users */}
+          {/* Select All Header with Bulk Actions */}
           {selectableUsers.length > 0 && (
-            <div className="px-4 py-2 border-b border-border flex items-center gap-3">
+            <div className={cn(
+              "px-3 sm:px-4 h-12 border-b border-border flex items-center gap-3 sm:gap-4",
+              selectedCount > 0 ? "bg-primary/10" : "bg-muted/30"
+            )}>
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={toggleAll}
                 aria-label="Select all"
                 {...(someSelected ? { "data-state": "indeterminate" } : {})}
               />
-              <span className="text-xs text-muted-foreground">
-                {allSelected ? "Deselect all" : "Select all (except yourself)"}
+              <span className="text-xs text-muted-foreground flex-1">
+                {selectedCount > 0
+                  ? `${selectedCount} user${selectedCount !== 1 ? "s" : ""} selected`
+                  : allSelected ? "Deselect all" : "Select all (except yourself)"}
               </span>
+              {selectedCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        Actions
+                        <ChevronDown className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleBulkRoleChange("admin")}>
+                        <Shield className="size-4" />
+                        Make Admin
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBulkRoleChange("user")}>
+                        <User className="size-4" />
+                        Make User
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={handleBulkDelete}
+                      >
+                        <Trash2 className="size-4" />
+                        Delete Selected
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button variant="ghost" size="sm" onClick={clearSelection}>
+                    Clear
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
           <div className="divide-y divide-border">
             {users.map((user) => {
               const isCurrentUser = currentUser?.id === user.id;
+
+              // Actions component for both context menu and dropdown
+              const UserActions = ({ asContext = false }: { asContext?: boolean }) => {
+                const MenuItem = asContext ? ContextMenuItem : DropdownMenuItem;
+                const MenuSeparator = asContext ? ContextMenuSeparator : DropdownMenuSeparator;
+
+                return (
+                  <>
+                    <MenuItem onClick={() => handleOpenUserModal(user)}>
+                      <Edit className="size-4" />
+                      Edit
+                    </MenuItem>
+                    {!isCurrentUser && (
+                      <>
+                        <MenuSeparator />
+                        <MenuItem onClick={() => handleSetRole(user.id, user.role === "admin" ? "user" : "admin")}>
+                          {user.role === "admin" ? (
+                            <>
+                              <User className="size-4" />
+                              Make User
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="size-4" />
+                              Make Admin
+                            </>
+                          )}
+                        </MenuItem>
+                        <MenuSeparator />
+                        <MenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <Trash2 className="size-4" />
+                          Delete
+                        </MenuItem>
+                      </>
+                    )}
+                  </>
+                );
+              };
+
               return (
-                <div
-                  key={user.id}
-                  className={cn(
-                    "p-4 sm:p-5 flex items-center gap-3",
-                    !isCurrentUser && isSelected(user.id) && "bg-primary/5"
-                  )}
-                >
-                  {/* Checkbox - only for non-current users */}
-                  {!isCurrentUser ? (
-                    <Checkbox
-                      checked={isSelected(user.id)}
-                      onCheckedChange={() => toggleItem(user.id)}
-                      aria-label={`Select ${user.name || user.email}`}
-                    />
-                  ) : (
-                    <div className="size-4" /> // Spacer for alignment
-                  )}
+                <ContextMenu key={user.id}>
+                  <ContextMenuTrigger asChild>
+                    <div
+                      className={cn(
+                        "p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/50 transition-colors cursor-default",
+                        !isCurrentUser && isSelected(user.id) && "bg-primary/5"
+                      )}
+                    >
+                      {/* Checkbox - only for non-current users */}
+                      {!isCurrentUser ? (
+                        <Checkbox
+                          checked={isSelected(user.id)}
+                          onCheckedChange={() => toggleItem(user.id)}
+                          aria-label={`Select ${user.name || user.email}`}
+                        />
+                      ) : (
+                        <div className="size-4" />
+                      )}
 
-                  <Avatar className="size-10 bg-secondary">
-                    <AvatarFallback className="bg-secondary text-secondary-foreground font-bold">
-                      {(user.name || user.email).charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                      <Avatar className="size-10 bg-secondary flex-shrink-0">
+                        <AvatarFallback className="bg-secondary text-secondary-foreground font-bold">
+                          {(user.name || user.email).charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-foreground truncate text-sm sm:text-base">
-                        {user.name || user.email}
-                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-foreground truncate text-sm sm:text-base">
+                            {user.name || user.email}
+                          </span>
+                          {isCurrentUser && (
+                            <Badge variant="outline" className="text-xs">
+                              You
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground mt-0.5">
+                          <span className="truncate">{user.email}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="hidden sm:inline capitalize">{user.role}</span>
+                        </div>
+                      </div>
+
+                      {/* Role Badge */}
                       <Badge
                         variant={user.role === "admin" ? "default" : "secondary"}
-                        className="text-xs"
+                        className={cn(
+                          "text-xs hidden sm:flex",
+                          user.role === "admin" && "bg-primary/20 text-primary hover:bg-primary/30"
+                        )}
                       >
-                        {user.role}
+                        {user.role === "admin" ? "Admin" : "User"}
                       </Badge>
-                      {isCurrentUser && (
-                        <Badge variant="outline" className="text-xs">
-                          You
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {user.email}
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleOpenUserModal(user)}
-                    >
-                      <Edit className="size-4" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </Button>
-                    {!isCurrentUser && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="size-4" />
-                        <span className="hidden sm:inline">Delete</span>
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                      {/* Status dot for mobile */}
+                      <div
+                        className={cn(
+                          "size-2 rounded-full sm:hidden flex-shrink-0",
+                          user.role === "admin" ? "bg-primary" : "bg-muted-foreground"
+                        )}
+                        title={user.role}
+                      />
+
+                      {/* Actions Menu */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                            <MoreVertical className="size-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <UserActions />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <UserActions asContext />
+                  </ContextMenuContent>
+                </ContextMenu>
               );
             })}
             {users.length === 0 && (

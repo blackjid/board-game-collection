@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, createContext, useContext, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { Settings, Package, Users, LogOut, ArrowLeft, PanelLeft, Home, ChevronRight } from "lucide-react";
+import { Settings, Package, Users, LogOut, ArrowLeft, PanelLeft, Home, ChevronRight, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -50,6 +50,7 @@ const SECTIONS = [
   { id: "general", label: "General", Icon: Settings },
   { id: "collection", label: "Collection", Icon: Package },
   { id: "users", label: "Users", Icon: Users },
+  { id: "about", label: "About", Icon: Info },
 ] as const;
 
 export type SectionId = (typeof SECTIONS)[number]["id"];

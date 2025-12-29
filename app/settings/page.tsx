@@ -5,12 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { GeneralSection } from "./sections/GeneralSection";
 import { CollectionSection } from "./sections/CollectionSection";
 import { UsersSection } from "./sections/UsersSection";
+import { AboutSection } from "./sections/AboutSection";
 import type { SectionId } from "./layout";
 
 const SECTION_COMPONENTS: Record<SectionId, React.ComponentType> = {
   general: GeneralSection,
   collection: CollectionSection,
   users: UsersSection,
+  about: AboutSection,
 };
 
 function SettingsContent() {
