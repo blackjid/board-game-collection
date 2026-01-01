@@ -17,6 +17,7 @@ model Game {
   // Import status
   isVisible       Boolean  @default(false)
   lastScraped     DateTime?
+  source          String   @default("bgg_collection") // "bgg_collection" | "manual"
 
   // Scraped data (populated after scraping)
   image           String?
@@ -41,6 +42,9 @@ model Game {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // Collections this game belongs to
+  collections     CollectionGame[]
 }
 
 model SyncLog {
@@ -153,4 +157,31 @@ model PickSessionVote {
 
   @@unique([sessionId, playerId, gameId])
   @@index([sessionId])
+}
+
+// Custom Collections - curated subsets of games
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  games       CollectionGame[]
+
+  @@index([name])
+}
+
+model CollectionGame {
+  id           String   @id @default(cuid())
+  collectionId String
+  gameId       String
+  addedAt      DateTime @default(now())
+
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  game         Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, gameId])
+  @@index([collectionId])
+  @@index([gameId])
 }

@@ -168,6 +168,7 @@ export async function syncCollection(): Promise<SyncResult> {
             name: game.name,
             yearPublished: game.yearPublished,
             isExpansion: game.isExpansion,
+            source: "bgg_collection",
           },
         });
         created++;
