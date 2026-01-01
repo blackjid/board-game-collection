@@ -744,13 +744,35 @@ export default function GamePickerPage() {
     setCurrentIndex((i) => i + 1);
   }, [swipeGames, currentIndex]);
 
+  // Persist a solo session to the database (fire-and-forget)
+  const persistSoloSession = useCallback(async (winnerGame: GameData, sessionFilters: Filters, allGameIds: string[]) => {
+    try {
+      await fetch("/api/pick/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hostName: "Solo Player",
+          type: "solo",
+          filters: sessionFilters,
+          gameIds: allGameIds,
+          winnerGameId: winnerGame.id,
+        }),
+      });
+    } catch (error) {
+      // Silent failure - don't disrupt the user experience
+      console.error("Failed to persist solo session:", error);
+    }
+  }, []);
+
   const handleSwipeUp = useCallback(() => {
     const game = swipeGames[currentIndex];
     if (game) {
       setPickedGame(game);
       goToStep("picked");
+      // Persist the solo session in the background
+      persistSoloSession(game, filters, swipeGames.map(g => g.id));
     }
-  }, [swipeGames, currentIndex, goToStep]);
+  }, [swipeGames, currentIndex, goToStep, persistSoloSession, filters]);
 
   useEffect(() => {
     if (step !== "swipe") return;
@@ -944,6 +966,8 @@ export default function GamePickerPage() {
                       setPickedGame(randomGame);
                       setPickedViaLucky(true);
                       goToStep("picked");
+                      // Persist the lucky pick session
+                      persistSoloSession(randomGame, filters, games.map(g => g.id));
                     }}
                     className="text-stone-500 hover:text-amber-400 transition-colors text-sm flex items-center gap-2 mx-auto"
                   >
@@ -1169,6 +1193,8 @@ export default function GamePickerPage() {
                             const random = maybePile[Math.floor(Math.random() * maybePile.length)];
                             setPickedGame(random);
                             goToStep("picked");
+                            // Persist from maybe pile pick
+                            persistSoloSession(random, filters, swipeGames.map(g => g.id));
                           }}
                           className="bg-amber-500 text-black px-6 py-3 rounded-full font-bold flex items-center gap-2 mx-auto"
                         >
@@ -1214,6 +1240,8 @@ export default function GamePickerPage() {
                         const random = maybePile[Math.floor(Math.random() * maybePile.length)];
                         setPickedGame(random);
                         goToStep("picked");
+                        // Persist from maybe pile pick
+                        persistSoloSession(random, filters, swipeGames.map(g => g.id));
                       }}
                       className="flex items-center justify-center gap-2 px-4 py-2 rounded-full transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:scale-105 border border-emerald-500/30"
                     >

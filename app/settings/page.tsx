@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { GeneralSection } from "./sections/GeneralSection";
 import { CollectionSection } from "./sections/CollectionSection";
+import { SessionsSection } from "./sections/SessionsSection";
 import { UsersSection } from "./sections/UsersSection";
 import { AboutSection } from "./sections/AboutSection";
 import type { SectionId } from "./layout";
@@ -11,6 +12,7 @@ import type { SectionId } from "./layout";
 const SECTION_COMPONENTS: Record<SectionId, React.ComponentType> = {
   general: GeneralSection,
   collection: CollectionSection,
+  sessions: SessionsSection,
   users: UsersSection,
   about: AboutSection,
 };

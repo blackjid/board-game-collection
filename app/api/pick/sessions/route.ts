@@ -26,6 +26,7 @@ async function getUniqueSessionCode(): Promise<string> {
 
 interface CreateSessionBody {
   hostName: string;
+  type?: "solo" | "collaborative";  // Defaults to "collaborative"
   filters: {
     players: number | null;
     kidsPlaying: boolean | null;
@@ -34,16 +35,18 @@ interface CreateSessionBody {
     includeExpansions: boolean;
   };
   gameIds: string[];
+  // For solo sessions that are already complete
+  winnerGameId?: string;
 }
 
 /**
  * POST /api/pick/sessions
- * Create a new collaborative pick session
+ * Create a new pick session (solo or collaborative)
  */
 export async function POST(request: NextRequest) {
   try {
     const body: CreateSessionBody = await request.json();
-    const { hostName, filters, gameIds } = body;
+    const { hostName, type = "collaborative", filters, gameIds, winnerGameId } = body;
 
     if (!hostName || !gameIds || gameIds.length === 0) {
       return NextResponse.json(
@@ -54,25 +57,31 @@ export async function POST(request: NextRequest) {
 
     const code = await getUniqueSessionCode();
 
+    // For solo sessions with a winner already selected, mark as completed
+    const isSoloComplete = type === "solo" && winnerGameId;
+
     // Create the session
     const session = await prisma.pickSession.create({
       data: {
         code,
+        type,
         hostName,
-        status: "active",
+        status: isSoloComplete ? "completed" : "active",
         filtersJson: JSON.stringify(filters),
         gameIdsJson: JSON.stringify(gameIds),
+        winnerGameId: winnerGameId || null,
+        completedAt: isSoloComplete ? new Date() : null,
       },
     });
 
-    // Create the host as the first player
+    // Create the host/player as the first player
     const hostPlayer = await prisma.pickSessionPlayer.create({
       data: {
         sessionId: session.id,
         name: hostName,
         isHost: true,
-        status: "picking",
-        progress: 0,
+        status: isSoloComplete ? "done" : "picking",
+        progress: isSoloComplete ? gameIds.length : 0,
       },
     });
 
@@ -80,8 +89,10 @@ export async function POST(request: NextRequest) {
       session: {
         id: session.id,
         code: session.code,
+        type: session.type,
         hostName: session.hostName,
         status: session.status,
+        winnerGameId: session.winnerGameId,
       },
       playerId: hostPlayer.id,
       totalGames: gameIds.length,

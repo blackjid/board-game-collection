@@ -5,6 +5,9 @@ interface Params {
   params: Promise<{ code: string }>;
 }
 
+/**
+ * Full game result with vote data AND game metadata (for API response)
+ */
 interface GameResult {
   id: string;
   name: string;
@@ -19,8 +22,51 @@ interface GameResult {
 }
 
 /**
+ * Vote data only (persisted in finalResultsJson - no game metadata)
+ */
+interface GameVoteResult {
+  id: string;
+  likes: number;
+  picks: number;
+  skips: number;
+  likedBy: string[];
+  pickedBy: string[];
+  isUnanimous: boolean;
+}
+
+interface PersistedResults {
+  unanimousMatches: GameVoteResult[];
+  rankedResults: GameVoteResult[];
+}
+
+/**
+ * Hydrate vote results with fresh game metadata from the database.
+ */
+function hydrateResults(
+  voteResults: GameVoteResult[],
+  gameMap: Map<string, { name: string; image: string | null; rating: number | null }>
+): GameResult[] {
+  return voteResults.map((vote) => {
+    const game = gameMap.get(vote.id);
+    return {
+      ...vote,
+      name: game?.name || "Unknown Game",
+      image: game?.image || null,
+      rating: game?.rating || null,
+    };
+  });
+}
+
+/**
  * GET /api/pick/sessions/[code]/results
  * Get aggregated results for the session
+ *
+ * For completed sessions, returns the persisted final results to ensure
+ * all clients see the same winner (random tie-breaking happens once when
+ * the session ends, not on each results request).
+ *
+ * Vote order is persisted; game metadata (name/image/rating) is fetched
+ * fresh from the Game table to avoid stale data.
  */
 export async function GET(request: NextRequest, { params }: Params) {
   try {
@@ -41,15 +87,64 @@ export async function GET(request: NextRequest, { params }: Params) {
       );
     }
 
-    // Get all games in the session
     const gameIds: string[] = JSON.parse(session.gameIdsJson);
+    const totalPlayers = session.players.length;
+
+    // If session is completed and has persisted results, hydrate with game data
+    // This ensures all clients see the same winner order while using fresh game metadata
+    if (session.status === "completed" && session.finalResultsJson) {
+      const persistedResults: PersistedResults = JSON.parse(session.finalResultsJson);
+
+      // Fetch fresh game metadata
+      const allResultIds = [
+        ...persistedResults.unanimousMatches.map((r) => r.id),
+        ...persistedResults.rankedResults.map((r) => r.id),
+      ];
+      const games = await prisma.game.findMany({
+        where: { id: { in: allResultIds } },
+        select: { id: true, name: true, selectedThumbnail: true, image: true, thumbnail: true, rating: true },
+      });
+      const gameMap = new Map(
+        games.map((g) => [g.id, {
+          name: g.name,
+          image: g.selectedThumbnail || g.image || g.thumbnail,
+          rating: g.rating,
+        }])
+      );
+
+      // Hydrate vote results with game metadata
+      const unanimousMatches = hydrateResults(persistedResults.unanimousMatches, gameMap);
+      const rankedResults = hydrateResults(persistedResults.rankedResults, gameMap);
+
+      return NextResponse.json({
+        session: {
+          code: session.code,
+          hostName: session.hostName,
+          status: session.status,
+          totalGames: gameIds.length,
+          totalPlayers,
+        },
+        players: session.players.map((p) => ({
+          id: p.id,
+          name: p.name,
+          isHost: p.isHost,
+          status: p.status,
+        })),
+        unanimousMatches,
+        rankedResults,
+        hasUnanimousMatch: unanimousMatches.length > 0,
+      });
+    }
+
+    // For active sessions or sessions without persisted results (legacy),
+    // compute results on the fly (but note: this can cause inconsistency
+    // if called multiple times due to random shuffle for ties)
     const games = await prisma.game.findMany({
       where: { id: { in: gameIds } },
     });
 
     const gameMap = new Map(games.map((g) => [g.id, g]));
     const playerMap = new Map(session.players.map((p) => [p.id, p.name]));
-    const totalPlayers = session.players.length;
 
     // Aggregate votes by game
     const gameVotes: Map<string, { likes: string[]; picks: string[]; skips: string[] }> = new Map();

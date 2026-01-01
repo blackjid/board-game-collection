@@ -96,16 +96,21 @@ model ScrapeJob {
   @@index([gameId])
 }
 
-// Collaborative Pick Session Models
+// Pick Session Models - stores both solo and collaborative sessions
 model PickSession {
   id            String   @id @default(cuid())
-  code          String   @unique  // 6-char shareable code
-  hostName      String
+  code          String   @unique  // 6-char shareable code (generated for all sessions)
+  type          String   @default("collaborative")  // "solo" | "collaborative"
+  hostName      String   // For collab: host name, for solo: player name
   status        String   @default("active")  // active, completed, cancelled
 
-  // Stored filters so guests get same game set
+  // Stored filters so guests get same game set (and for session history)
   filtersJson   String   // JSON: {players, kidsPlaying, time, categories, includeExpansions}
   gameIdsJson   String   // JSON array of pre-filtered game IDs
+
+  // Final results
+  finalResultsJson String?  // JSON: vote results in final order (for collaborative)
+  winnerGameId     String?  // The final picked game (quick access, avoids parsing JSON)
 
   createdAt     DateTime @default(now())
   completedAt   DateTime?
@@ -115,6 +120,9 @@ model PickSession {
 
   @@index([code])
   @@index([status])
+  @@index([type])
+  @@index([createdAt])  // For browsing session history
+  @@index([winnerGameId])
 }
 
 model PickSessionPlayer {
