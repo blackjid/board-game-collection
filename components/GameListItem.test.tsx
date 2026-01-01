@@ -53,7 +53,8 @@ describe("GameListItem", () => {
   it("should render player count range", () => {
     render(<GameListItem game={mockGame} />);
 
-    expect(screen.getByText("👥 1-5P")).toBeInTheDocument();
+    // Now uses Lucide Users icon instead of emoji
+    expect(screen.getByText("1-5P")).toBeInTheDocument();
   });
 
   it("should render single player count when min equals max", () => {
@@ -64,13 +65,15 @@ describe("GameListItem", () => {
     };
     render(<GameListItem game={soloGame} />);
 
-    expect(screen.getByText("👥 2P")).toBeInTheDocument();
+    // Now uses Lucide Users icon instead of emoji
+    expect(screen.getByText("2P")).toBeInTheDocument();
   });
 
   it("should render playtime range", () => {
     render(<GameListItem game={mockGame} />);
 
-    expect(screen.getByText("⏱ 40-70m")).toBeInTheDocument();
+    // Now uses Lucide Clock icon instead of emoji
+    expect(screen.getByText("40-70m")).toBeInTheDocument();
   });
 
   it("should render single playtime when min equals max", () => {
@@ -81,7 +84,8 @@ describe("GameListItem", () => {
     };
     render(<GameListItem game={fixedTimeGame} />);
 
-    expect(screen.getByText("⏱ 60m")).toBeInTheDocument();
+    // Now uses Lucide Clock icon instead of emoji
+    expect(screen.getByText("60m")).toBeInTheDocument();
   });
 
   it("should render rating with star", () => {
@@ -147,7 +151,7 @@ describe("GameListItem", () => {
     expect(screen.queryByText("EXP")).not.toBeInTheDocument();
   });
 
-  it("should render fallback emoji when no image", () => {
+  it("should render fallback icon when no image", () => {
     const gameWithoutImage: GameData = {
       ...mockGame,
       image: null,
@@ -156,7 +160,9 @@ describe("GameListItem", () => {
     };
     render(<GameListItem game={gameWithoutImage} />);
 
-    expect(screen.getByText("🎲")).toBeInTheDocument();
+    // Now uses Lucide Dice6 icon instead of emoji - check for SVG
+    const thumbnail = document.querySelector('.lucide-dice-6');
+    expect(thumbnail).toBeInTheDocument();
   });
 
   it("should not render description when null", () => {

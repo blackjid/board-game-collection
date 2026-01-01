@@ -4,6 +4,32 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  RefreshCw,
+  Play,
+  User,
+  Search,
+  X,
+  LayoutGrid,
+  List,
+  Settings as SettingsIcon,
+  LogIn,
+  Printer,
+  ExternalLink
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
 import { GameCard } from "@/components/GameCard";
 import { GameListItem } from "@/components/GameListItem";
 import { UserMenu } from "@/components/UserMenu";
@@ -109,81 +135,68 @@ export function HomeClient({
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 print:bg-white">
+    <div className="min-h-screen bg-background print:bg-white">
       {/* Header */}
-      <header className="bg-gradient-to-b from-stone-900 to-stone-900/95 border-b border-stone-800/80 print:hidden sticky top-0 z-30 backdrop-blur-sm">
+      <header className="bg-gradient-to-b from-card to-card/95 border-b border-border print:hidden sticky top-0 z-30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           {/* Main header row */}
           <div className="flex items-center justify-between gap-4">
             {/* Left: Title and meta */}
             <div className="flex-1 min-w-0">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">
-                <span className="text-white">{collectionName || (bggUsername ? `${bggUsername}'s` : "Board Game")}</span>
-                <span className="text-amber-500/80 font-light ml-2 italic">Collection</span>
-            </h1>
+                <span className="text-foreground">{collectionName || (bggUsername ? `${bggUsername}'s` : "Board Game")}</span>
+                <span className="text-primary/80 font-light ml-2 italic">Collection</span>
+              </h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-stone-400 text-sm">
+                <span className="text-muted-foreground text-sm">
                   {totalGames} game{totalGames !== 1 ? "s" : ""}
                 </span>
                 {lastSyncedAt && isAdmin && (
                   <>
-                    <span className="text-stone-600">•</span>
-                    <span className="text-stone-500 text-sm">
+                    <span className="text-muted-foreground/50">•</span>
+                    <span className="text-muted-foreground text-sm">
                       Synced {formatRelativeTime(lastSyncedAt)}
                     </span>
                   </>
                 )}
               </div>
-          </div>
+            </div>
 
             {/* Right: Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Quick Sync - Admin only */}
               {isAdmin && (
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleQuickSync}
                   disabled={syncing}
-                  className="p-2 sm:px-3 sm:py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-sm font-medium transition-all border border-stone-700 disabled:opacity-50 flex items-center gap-2"
+                  className="gap-2"
                   title="Sync collection"
                 >
-                  <svg
-                    className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
+                  <RefreshCw className={cn("size-4", syncing && "animate-spin")} />
                   <span className="hidden sm:inline">{syncing ? "Syncing..." : "Sync"}</span>
-                </button>
+                </Button>
               )}
 
               {/* Pick a Game Button */}
-            <Link
-              href="/pick"
-                className="px-3 sm:px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-                <span className="hidden sm:inline">Pick a Game</span>
-              </Link>
+              <Button asChild className="gap-2 shadow-lg shadow-primary/20">
+                <Link href="/pick">
+                  <Play className="size-4" />
+                  <span className="hidden sm:inline">Pick a Game</span>
+                </Link>
+              </Button>
 
               {/* User Menu or Login */}
               {currentUser ? (
                 <UserMenu user={currentUser} />
               ) : (
-                <Link
-                  href="/login"
-                  className="p-2 sm:px-3 sm:py-2 text-stone-400 hover:text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 hover:bg-stone-800"
-                  title="Admin login"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span className="hidden sm:inline">Login</span>
-            </Link>
+                <Button variant="ghost" size="sm" asChild className="gap-2" title="Admin login">
+                  <Link href="/login">
+                    <User className="size-4" />
+                    <span className="hidden sm:inline">Login</span>
+                  </Link>
+                </Button>
               )}
             </div>
           </div>
@@ -192,25 +205,24 @@ export function HomeClient({
           {games.length > 0 && (
             <div className="mt-4 sm:mt-3">
               <div className="relative max-w-md">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
                   type="text"
                   placeholder="Search games..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 bg-stone-800/60 border border-stone-700/50 rounded-xl text-sm text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 focus:bg-stone-800 transition-all"
+                  className="pl-10 pr-10"
                 />
                 {searchQuery && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white transition-colors"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 size-7"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                    <X className="size-4" />
+                    <span className="sr-only">Clear search</span>
+                  </Button>
                 )}
               </div>
             </div>
@@ -228,61 +240,52 @@ export function HomeClient({
 
       {/* View Controls Bar - Compact strip */}
       {games.length > 0 && (
-        <div className="bg-stone-900/30 border-b border-stone-800/50 py-2.5 px-4 sm:px-6 print:hidden">
+        <div className="bg-muted/30 border-b border-border py-2.5 px-4 sm:px-6 print:hidden">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             {/* Left: View toggle and sort */}
             <div className="flex items-center gap-3 sm:gap-4">
-            {/* View Toggle */}
-              <div className="flex items-center gap-0.5 bg-stone-800/80 rounded-lg p-0.5">
-              <button
-                onClick={() => setViewMode("grid")}
-                  className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-amber-600 text-white"
-                    : "text-stone-400 hover:text-white"
-                }`}
-                title="Grid view"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                  className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded transition-colors ${
-                  viewMode === "list"
-                    ? "bg-amber-600 text-white"
-                    : "text-stone-400 hover:text-white"
-                }`}
-                title="List view"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
+              {/* View Toggle */}
+              <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="icon-sm"
+                  onClick={() => setViewMode("grid")}
+                  title="Grid view"
+                >
+                  <LayoutGrid className="size-4" />
+                  <span className="sr-only">Grid view</span>
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="icon-sm"
+                  onClick={() => setViewMode("list")}
+                  title="List view"
+                >
+                  <List className="size-4" />
+                  <span className="sr-only">List view</span>
+                </Button>
+              </div>
 
               {/* Sort Dropdown */}
               <div className="flex items-center gap-1.5">
-                <span className="text-stone-500 text-xs hidden sm:inline">Sort:</span>
-                <select
-                  id="sort-by"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="bg-stone-800/60 border border-stone-700/50 rounded-md px-2 py-1 text-sm text-stone-300 focus:outline-none focus:ring-1 focus:ring-amber-500/50 cursor-pointer hover:bg-stone-800 transition-colors appearance-none pr-6"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2378716c'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 4px center', backgroundSize: '16px' }}
-                >
-                  <option value="name" className="bg-stone-900">Name</option>
-                  <option value="year" className="bg-stone-900">Year</option>
-                  <option value="rating" className="bg-stone-900">Rating</option>
-                </select>
+                <span className="text-muted-foreground text-xs hidden sm:inline">Sort:</span>
+                <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                  <SelectTrigger size="sm" className="w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="year">Year</SelectItem>
+                    <SelectItem value="rating">Rating</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             {/* Right: Size slider (grid only) */}
             {viewMode === "grid" && (
               <div className="flex items-center gap-2">
-                <span className="text-stone-500 text-xs hidden sm:inline">Size:</span>
+                <span className="text-muted-foreground text-xs hidden sm:inline">Size:</span>
                 <input
                   id="card-size"
                   type="range"
@@ -290,9 +293,9 @@ export function HomeClient({
                   max="10"
                   value={columns}
                   onChange={(e) => setColumns(Number(e.target.value))}
-                  className="w-20 sm:w-24 accent-amber-500"
+                  className="w-20 sm:w-24 accent-primary"
                 />
-                <span className="text-stone-500 text-xs w-6 text-right">{columns}</span>
+                <span className="text-muted-foreground text-xs w-6 text-right">{columns}</span>
               </div>
             )}
           </div>
@@ -306,95 +309,93 @@ export function HomeClient({
           <div className="text-center py-16 sm:py-24">
             <div className="relative inline-block mb-6">
               <div className="text-7xl sm:text-8xl animate-bounce">🎲</div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 rounded-full animate-ping opacity-75" />
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full animate-ping opacity-75" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
               Welcome to Your Collection!
             </h2>
-            <p className="text-stone-400 mb-8 max-w-md mx-auto">
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
               Get started by setting up your BoardGameGeek collection. It only takes a minute!
             </p>
 
             {/* Onboarding Steps */}
             <div className="max-w-sm mx-auto mb-8">
               <div className="space-y-4 text-left">
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-stone-900/50 border border-stone-800">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    currentUser ? "bg-emerald-500 text-white" : "bg-stone-800 text-stone-400"
-                  }`}>
-                    {currentUser ? "✓" : "1"}
-                  </div>
-                  <div className="flex-1">
-                    <p className={`font-medium ${currentUser ? "text-emerald-400" : "text-white"}`}>
-                      Login as admin
-                    </p>
-                    <p className="text-stone-500 text-sm">Access the settings panel</p>
-                  </div>
-                </div>
+                <Card className={cn("py-0", currentUser && "border-emerald-500/50")}>
+                  <CardContent className="flex items-center gap-4 py-4">
+                    <div className={cn(
+                      "size-8 rounded-full flex items-center justify-center text-sm font-bold",
+                      currentUser ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
+                    )}>
+                      {currentUser ? "✓" : "1"}
+                    </div>
+                    <div className="flex-1">
+                      <p className={cn("font-medium", currentUser ? "text-emerald-400" : "text-foreground")}>
+                        Login as admin
+                      </p>
+                      <p className="text-muted-foreground text-sm">Access the settings panel</p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-stone-900/50 border border-stone-800">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    bggUsername ? "bg-emerald-500 text-white" : "bg-stone-800 text-stone-400"
-                  }`}>
-                    {bggUsername ? "✓" : "2"}
-                  </div>
-                  <div className="flex-1">
-                    <p className={`font-medium ${bggUsername ? "text-emerald-400" : "text-white"}`}>
-                      Set your BGG username
-                    </p>
-                    <p className="text-stone-500 text-sm">Connect to BoardGameGeek</p>
-                  </div>
-                </div>
+                <Card className={cn("py-0", bggUsername && "border-emerald-500/50")}>
+                  <CardContent className="flex items-center gap-4 py-4">
+                    <div className={cn(
+                      "size-8 rounded-full flex items-center justify-center text-sm font-bold",
+                      bggUsername ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
+                    )}>
+                      {bggUsername ? "✓" : "2"}
+                    </div>
+                    <div className="flex-1">
+                      <p className={cn("font-medium", bggUsername ? "text-emerald-400" : "text-foreground")}>
+                        Set your BGG username
+                      </p>
+                      <p className="text-muted-foreground text-sm">Connect to BoardGameGeek</p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-stone-900/50 border border-stone-800">
-                  <div className="w-8 h-8 rounded-full bg-stone-800 text-stone-400 flex items-center justify-center text-sm font-bold">
-                    3
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-white">Sync your collection</p>
-                    <p className="text-stone-500 text-sm">Import games from BGG</p>
-                  </div>
-                </div>
+                <Card className="py-0">
+                  <CardContent className="flex items-center gap-4 py-4">
+                    <div className="size-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-bold">
+                      3
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">Sync your collection</p>
+                      <p className="text-muted-foreground text-sm">Import games from BGG</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
             {currentUser ? (
-              <Link
-                href="/settings?section=collection"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-lg shadow-amber-500/20"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Go to Settings
-              </Link>
+              <Button asChild size="lg" className="gap-2 shadow-lg shadow-primary/20">
+                <Link href="/settings?section=collection">
+                  <SettingsIcon className="size-5" />
+                  Go to Settings
+                </Link>
+              </Button>
             ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white px-6 py-3 rounded-lg font-medium transition-all shadow-lg shadow-amber-500/20"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-                Login to Get Started
-              </Link>
+              <Button asChild size="lg" className="gap-2 shadow-lg shadow-primary/20">
+                <Link href="/login">
+                  <LogIn className="size-5" />
+                  Login to Get Started
+                </Link>
+              </Button>
             )}
           </div>
         ) : filteredAndSortedGames.length === 0 ? (
           // No search results
           <div className="text-center py-16">
             <div className="text-5xl mb-4">🔍</div>
-            <h2 className="text-xl font-bold text-white mb-2">No games found</h2>
-            <p className="text-stone-400 mb-4">
+            <h2 className="text-xl font-bold text-foreground mb-2">No games found</h2>
+            <p className="text-muted-foreground mb-4">
               No games match &quot;{searchQuery}&quot;
             </p>
-            <button
-              onClick={() => setSearchQuery("")}
-              className="text-amber-500 hover:text-amber-400 font-medium"
-            >
+            <Button variant="link" onClick={() => setSearchQuery("")} className="text-primary">
               Clear search
-            </button>
+            </Button>
           </div>
         ) : viewMode === "grid" ? (
           <>
@@ -421,13 +422,13 @@ export function HomeClient({
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-stone-800 py-6 px-6 print:hidden">
+      <footer className="border-t border-border py-6 px-6 print:hidden">
         <div className="max-w-7xl mx-auto flex flex-col items-center gap-4">
           <a
             href="https://boardgamegeek.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="group px-4 py-2 rounded-lg hover:bg-stone-900/50 transition-all"
+            className="group px-4 py-2 rounded-lg hover:bg-muted/50 transition-all"
           >
             <Image
               src="/powered-by-bgg.svg"
@@ -437,28 +438,30 @@ export function HomeClient({
               className="h-10 w-auto opacity-80 group-hover:opacity-100 transition-opacity"
             />
           </a>
-          <div className="flex items-center gap-3 text-stone-600 text-xs">
-          {bggUsername && (
+          <div className="flex items-center gap-3 text-muted-foreground text-xs">
+            {bggUsername && (
               <>
-              <a
-                href={`https://boardgamegeek.com/collection/user/${bggUsername}`}
-                  className="hover:text-amber-400 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+                <a
+                  href={`https://boardgamegeek.com/collection/user/${bggUsername}`}
+                  className="hover:text-primary transition-colors inline-flex items-center gap-1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   View on BGG
-              </a>
+                  <ExternalLink className="size-3" />
+                </a>
                 <span>•</span>
               </>
             )}
             {games.length > 0 && (
               <button
                 onClick={() => window.print()}
-                className="hover:text-amber-400 transition-colors"
+                className="hover:text-primary transition-colors inline-flex items-center gap-1"
               >
+                <Printer className="size-3" />
                 Print Collection
               </button>
-          )}
+            )}
           </div>
         </div>
       </footer>

@@ -2,7 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Dice6 } from "lucide-react";
 import type { GameData } from "@/lib/games";
+
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface GameCardProps {
   game: GameData;
@@ -57,82 +62,85 @@ export function GameCard({ game }: GameCardProps) {
   const ratingColor = game.rating ? getRatingColor(game.rating) : undefined;
 
   return (
-    <Link
-      href={`/game/${game.id}`}
-      className="bg-stone-900 rounded-xl overflow-hidden flex flex-col print:shadow-none print:border-stone-300 print:break-inside-avoid hover:bg-stone-800 hover:ring-1 hover:ring-amber-500/50 transition-all duration-200 cursor-pointer group"
-    >
-      {/* Game Cover Image with Blurred Background */}
-      <div className="aspect-square relative overflow-hidden bg-stone-800">
-        {imageUrl ? (
-          <>
-            {/* Blurred background layer - scaled up to ensure full coverage */}
-            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+    <Link href={`/game/${game.id}`} className="block">
+      <Card className={cn(
+        "overflow-hidden flex flex-col py-0 gap-0 border-0",
+        "print:shadow-none print:border-stone-300 print:break-inside-avoid",
+        "hover:bg-accent hover:ring-1 hover:ring-primary/50 transition-all duration-200 cursor-pointer group"
+      )}>
+        {/* Game Cover Image with Blurred Background */}
+        <div className="aspect-square relative overflow-hidden bg-muted">
+          {imageUrl ? (
+            <>
+              {/* Blurred background layer - scaled up to ensure full coverage */}
+              <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                <Image
+                  src={imageUrl}
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  sizes="300px"
+                  className="object-cover blur-3xl saturate-150 opacity-80 scale-[3]"
+                />
+              </div>
+
+              {/* Subtle vignette overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
+
+              {/* Main image - shown at natural aspect ratio, centered */}
               <Image
                 src={imageUrl}
-                alt=""
-                aria-hidden="true"
+                alt={game.name}
                 fill
-                sizes="300px"
-                className="object-cover blur-3xl saturate-150 opacity-80 scale-[3]"
+                sizes="(max-width: 640px) 50vw, 16vw"
+                className="object-contain z-10 drop-shadow-lg group-hover:scale-105 transition-transform duration-300"
               />
-            </div>
-
-            {/* Subtle vignette overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
-
-            {/* Main image - shown at natural aspect ratio, centered */}
-            <Image
-              src={imageUrl}
-              alt={game.name}
-              fill
-              sizes="(max-width: 640px) 50vw, 16vw"
-              className="object-contain z-10 drop-shadow-lg group-hover:scale-105 transition-transform duration-300"
-            />
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center p-4 bg-gradient-to-br from-stone-800 to-stone-900">
-            <div className="text-center">
-              <div className="text-4xl mb-2">🎲</div>
-              <span className="text-stone-500 text-xs font-medium line-clamp-2">
-                {game.name}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Game Info - Unified layout for both screen and print */}
-      <div className="p-3 print:p-1 flex flex-col flex-grow">
-        <h3 className="font-semibold text-white text-sm print:text-[8px] leading-tight print:leading-snug line-clamp-2 print:line-clamp-none group-hover:text-amber-400 transition-colors">
-          {game.name}
-        </h3>
-
-        {game.yearPublished && (
-          <p className="text-xs print:text-[7px] text-stone-500 mt-0.5">
-            {game.yearPublished}
-          </p>
-        )}
-
-        <div className="flex items-center justify-start gap-1.5 print:gap-1 text-xs print:text-[7px] text-stone-400 mt-auto pt-1.5 print:pt-0.5">
-          {game.rating && (
-            <span
-              className="text-white font-bold px-1.5 py-0.5 rounded text-[10px] print:text-[6px] print:px-1 print:py-0"
-              style={{ backgroundColor: ratingColor }}
-            >
-              {game.rating.toFixed(1)}
-            </span>
-          )}
-          {playerCount && (
-            <span>{playerCount}</span>
-          )}
-          {playtime && (
-            <>
-              <span className="text-stone-600">•</span>
-              <span>{playtime}</span>
             </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center p-4 bg-gradient-to-br from-muted to-muted/80">
+              <div className="text-center">
+                <Dice6 className="size-10 text-muted-foreground mx-auto mb-2" />
+                <span className="text-muted-foreground text-xs font-medium line-clamp-2">
+                  {game.name}
+                </span>
+              </div>
+            </div>
           )}
         </div>
-      </div>
+
+        {/* Game Info - Unified layout for both screen and print */}
+        <div className="p-3 print:p-1 flex flex-col flex-grow">
+          <h3 className="font-semibold text-foreground text-sm print:text-[8px] leading-tight print:leading-snug line-clamp-2 print:line-clamp-none group-hover:text-primary transition-colors">
+            {game.name}
+          </h3>
+
+          {game.yearPublished && (
+            <p className="text-xs print:text-[7px] text-muted-foreground mt-0.5">
+              {game.yearPublished}
+            </p>
+          )}
+
+          <div className="flex items-center justify-start gap-1.5 print:gap-1 text-xs print:text-[7px] text-muted-foreground mt-auto pt-1.5 print:pt-0.5">
+            {game.rating && (
+              <Badge
+                className="text-white font-bold px-1.5 py-0.5 text-[10px] print:text-[6px] print:px-1 print:py-0 border-0"
+                style={{ backgroundColor: ratingColor }}
+              >
+                {game.rating.toFixed(1)}
+              </Badge>
+            )}
+            {playerCount && (
+              <span>{playerCount}</span>
+            )}
+            {playtime && (
+              <>
+                <span className="text-muted-foreground/50">•</span>
+                <span>{playtime}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </Card>
     </Link>
   );
 }

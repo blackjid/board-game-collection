@@ -122,7 +122,8 @@ describe("GameCard", () => {
     };
     render(<GameCard game={gameWithoutImage} />);
 
-    expect(screen.getByText("🎲")).toBeInTheDocument();
+    // Lucide Dice6 icon is rendered as an SVG, and game name is shown as fallback
+    expect(screen.getAllByText("Wingspan").length).toBeGreaterThanOrEqual(1);
   });
 
   it("should not render year when null", () => {

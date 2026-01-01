@@ -2,7 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Dice6, Users, Clock } from "lucide-react";
 import type { GameData } from "@/lib/games";
+
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface GameListItemProps {
   game: GameData;
@@ -51,101 +56,106 @@ export function GameListItem({ game }: GameListItemProps) {
   const ageDisplay = game.minAge;
 
   return (
-    <Link
-      href={`/game/${game.id}`}
-      className="flex items-start gap-4 bg-stone-900 rounded-xl p-4 hover:bg-stone-800 hover:ring-1 hover:ring-amber-500/50 transition-all cursor-pointer group"
-    >
-      {/* Thumbnail */}
-      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-stone-800 relative">
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={game.name}
-            fill
-            sizes="80px"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-stone-800 to-stone-900">
-            🎲
-          </div>
-        )}
-        {/* Expansion badge */}
-        {game.isExpansion && (
-          <div className="absolute top-1 left-1 bg-purple-600 text-white text-[8px] font-bold px-1 py-0.5 rounded">
-            EXP
-          </div>
-        )}
-      </div>
-
-      {/* Main Info */}
-      <div className="flex-grow min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="font-semibold text-white text-base truncate group-hover:text-amber-400 transition-colors">
-              {game.name}
-            </h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              {game.yearPublished && (
-                <span className="text-xs text-stone-500">{game.yearPublished}</span>
-              )}
-              {ageDisplay && (
-                <span className="text-xs text-stone-400 bg-stone-800 px-1.5 py-0.5 rounded">
-                  {ageDisplay}+
-                </span>
-              )}
+    <Link href={`/game/${game.id}`} className="block">
+      <Card className={cn(
+        "flex items-start gap-4 p-4 py-4 border-0",
+        "hover:bg-accent hover:ring-1 hover:ring-primary/50 transition-all cursor-pointer group"
+      )}>
+        {/* Thumbnail */}
+        <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted relative">
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={game.name}
+              fill
+              sizes="80px"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/80">
+              <Dice6 className="size-8 text-muted-foreground" />
             </div>
-          </div>
-
-          {/* Rating */}
-          {game.rating && (
-            <span
-              className="text-white font-bold px-2 py-1 rounded text-sm flex-shrink-0"
-              style={{ backgroundColor: ratingColor }}
-            >
-              ★ {game.rating.toFixed(1)}
-            </span>
+          )}
+          {/* Expansion badge */}
+          {game.isExpansion && (
+            <Badge className="absolute top-1 left-1 bg-purple-600 hover:bg-purple-600 text-white text-[8px] font-bold px-1 py-0.5 border-0">
+              EXP
+            </Badge>
           )}
         </div>
 
-        {/* Description */}
-        {game.description && (
-          <p className="text-xs text-stone-400 mt-2 line-clamp-1">
-            {game.description}
-          </p>
-        )}
+        {/* Main Info */}
+        <div className="flex-grow min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-foreground text-base truncate group-hover:text-primary transition-colors">
+                {game.name}
+              </h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                {game.yearPublished && (
+                  <span className="text-xs text-muted-foreground">{game.yearPublished}</span>
+                )}
+                {ageDisplay && (
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                    {ageDisplay}+
+                  </Badge>
+                )}
+              </div>
+            </div>
 
-        {/* Bottom row: metadata + categories */}
-        <div className="flex items-center gap-3 mt-2 flex-wrap">
-          {/* Game stats */}
-          <div className="flex items-center gap-2 text-xs text-stone-400">
-            {playerCount && (
-              <span className="bg-stone-800 px-2 py-0.5 rounded">
-                👥 {playerCount}
-              </span>
-            )}
-            {playtime && (
-              <span className="bg-stone-800 px-2 py-0.5 rounded">
-                ⏱ {playtime}
-              </span>
+            {/* Rating */}
+            {game.rating && (
+              <Badge
+                className="text-white font-bold px-2 py-1 text-sm flex-shrink-0 border-0"
+                style={{ backgroundColor: ratingColor }}
+              >
+                ★ {game.rating.toFixed(1)}
+              </Badge>
             )}
           </div>
 
-          {/* Categories */}
-          {game.categories && game.categories.length > 0 && (
-            <div className="flex items-center gap-1">
-              {game.categories.slice(0, 3).map((cat, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] bg-amber-900/50 text-amber-400 px-1.5 py-0.5 rounded"
-                >
-                  {cat}
-                </span>
-              ))}
-            </div>
+          {/* Description */}
+          {game.description && (
+            <p className="text-xs text-muted-foreground mt-2 line-clamp-1">
+              {game.description}
+            </p>
           )}
+
+          {/* Bottom row: metadata + categories */}
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {/* Game stats */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {playerCount && (
+                <Badge variant="secondary" className="px-2 py-0.5 gap-1">
+                  <Users className="size-3" />
+                  {playerCount}
+                </Badge>
+              )}
+              {playtime && (
+                <Badge variant="secondary" className="px-2 py-0.5 gap-1">
+                  <Clock className="size-3" />
+                  {playtime}
+                </Badge>
+              )}
+            </div>
+
+            {/* Categories */}
+            {game.categories && game.categories.length > 0 && (
+              <div className="flex items-center gap-1">
+                {game.categories.slice(0, 3).map((cat, i) => (
+                  <Badge
+                    key={i}
+                    variant="outline"
+                    className="text-[10px] bg-primary/10 text-primary border-primary/30 px-1.5 py-0.5"
+                  >
+                    {cat}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </Card>
     </Link>
   );
 }

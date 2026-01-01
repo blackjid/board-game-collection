@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { HomeClient } from "./HomeClient";
 import type { GameData } from "@/lib/games";
 
@@ -24,6 +24,9 @@ global.fetch = mockFetch;
 // Mock window.print
 const mockPrint = vi.fn();
 Object.defineProperty(window, "print", { value: mockPrint });
+
+// Mock scrollIntoView for Radix UI Select (not available in JSDOM)
+Element.prototype.scrollIntoView = vi.fn();
 
 describe("HomeClient", () => {
   beforeEach(() => {
@@ -232,11 +235,9 @@ describe("HomeClient", () => {
       const searchInput = screen.getByPlaceholderText("Search games...");
       fireEvent.change(searchInput, { target: { value: "wing" } });
 
-      // Click clear button
-      const clearButton = screen.getAllByRole("button").find(
-        btn => btn.querySelector("svg path[d='M6 18L18 6M6 6l12 12']")
-      );
-      if (clearButton) fireEvent.click(clearButton);
+      // Click clear button (X icon button next to search input)
+      const clearButton = screen.getByRole("button", { name: /clear search/i });
+      fireEvent.click(clearButton);
 
       expect(screen.getByText("Wingspan")).toBeInTheDocument();
       expect(screen.getByText("Catan")).toBeInTheDocument();
@@ -252,21 +253,31 @@ describe("HomeClient", () => {
       expect(gameNames).toEqual(["Azul", "Catan", "Wingspan"]);
     });
 
-    it("should sort by year when selected (newest first)", () => {
+    it("should sort by year when selected (newest first)", async () => {
       render(<HomeClient {...defaultProps} />);
 
-      const sortSelect = screen.getByRole("combobox");
-      fireEvent.change(sortSelect, { target: { value: "year" } });
+      // shadcn Select uses Radix UI - click to open, then click option
+      const sortTrigger = screen.getByRole("combobox");
+      fireEvent.click(sortTrigger);
+
+      // Wait for dropdown to open and find the option
+      const yearOption = await screen.findByRole("option", { name: "Year" });
+      fireEvent.click(yearOption);
 
       const gameNames = screen.getAllByRole("heading", { level: 3 }).map(h => h.textContent);
       expect(gameNames).toEqual(["Wingspan", "Azul", "Catan"]); // 2019, 2017, 1995
     });
 
-    it("should sort by rating when selected (highest first)", () => {
+    it("should sort by rating when selected (highest first)", async () => {
       render(<HomeClient {...defaultProps} />);
 
-      const sortSelect = screen.getByRole("combobox");
-      fireEvent.change(sortSelect, { target: { value: "rating" } });
+      // shadcn Select uses Radix UI - click to open, then click option
+      const sortTrigger = screen.getByRole("combobox");
+      fireEvent.click(sortTrigger);
+
+      // Wait for dropdown to open and find the option
+      const ratingOption = await screen.findByRole("option", { name: "Rating" });
+      fireEvent.click(ratingOption);
 
       const gameNames = screen.getAllByRole("heading", { level: 3 }).map(h => h.textContent);
       expect(gameNames).toEqual(["Wingspan", "Azul", "Catan"]); // 8.1, 7.8, 7.2

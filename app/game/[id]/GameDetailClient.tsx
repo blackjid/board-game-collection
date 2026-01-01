@@ -3,7 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowLeft, ExternalLink, Dice6, Users, Clock, Baby } from "lucide-react";
 import type { GameData } from "@/lib/games";
+
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 // Calculate rating color: red (4) -> yellow (6) -> green (8+)
 function getRatingColor(rating: number): string {
@@ -62,7 +67,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
   const ageDisplay = game.minAge;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-900 via-stone-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-b from-card via-background to-background text-foreground">
       {/* Hero Section with Background */}
       <div className="relative">
         {/* Blurred background */}
@@ -75,38 +80,30 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               sizes="100vw"
               className="object-cover blur-3xl opacity-30 scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-stone-900/50 via-stone-900/80 to-stone-900" />
+            <div className="absolute inset-0 bg-gradient-to-b from-card/50 via-background/80 to-background" />
           </div>
         )}
 
         {/* Navigation */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-stone-400 hover:text-white transition-colors group text-sm sm:text-base"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            <span className="hidden sm:inline">Back to Collection</span>
-            <span className="sm:hidden">Back</span>
-          </Link>
+          <Button variant="ghost" asChild className="gap-2">
+            <Link href="/">
+              <ArrowLeft className="size-4" />
+              <span className="hidden sm:inline">Back to Collection</span>
+              <span className="sm:hidden">Back</span>
+            </Link>
+          </Button>
 
           {/* Let's Play Button */}
-          <button
+          <Button
             onClick={() => {
               alert(`Tonight you're playing ${game.name}! 🎲`);
             }}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-full font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-105"
+            className="rounded-full font-bold gap-2 shadow-lg shadow-primary/20"
           >
             Let&apos;s Play!
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-              <circle cx="16" cy="8" r="1.5" fill="currentColor" />
-              <circle cx="8" cy="16" r="1.5" fill="currentColor" />
-              <circle cx="16" cy="16" r="1.5" fill="currentColor" />
-              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-            </svg>
-          </button>
+            <Dice6 className="size-5" />
+          </Button>
         </div>
 
         {/* Main Content */}
@@ -115,7 +112,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
             {/* Left: Image Gallery */}
             <div className="lg:w-2/5 flex-shrink-0">
               {/* Main Image */}
-              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-stone-800 aspect-square sm:aspect-[3/4]">
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-border bg-muted aspect-square sm:aspect-[3/4]">
                 {displayImage ? (
                   <Image
                     src={displayImage}
@@ -132,9 +129,9 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
 
                 {/* Expansion badge */}
                 {game.isExpansion && (
-                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-purple-600 text-white text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 rounded-lg">
+                  <Badge className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-purple-600 hover:bg-purple-600 text-white text-xs sm:text-sm font-bold">
                     Expansion
-                  </div>
+                  </Badge>
                 )}
 
                 {/* Rating badge */}
@@ -155,11 +152,12 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                     <button
                       key={i}
                       onClick={() => setSelectedImage(img)}
-                      className={`w-14 h-14 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all relative ${
+                      className={cn(
+                        "w-14 h-14 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all relative",
                         (selectedImage || mainImage) === img
-                          ? "border-amber-500 ring-2 ring-amber-500/30"
-                          : "border-white/10 hover:border-white/30"
-                      }`}
+                          ? "border-primary ring-2 ring-primary/30"
+                          : "border-border hover:border-muted-foreground"
+                      )}
                     >
                       <Image src={img} alt="" fill sizes="80px" className="object-cover" />
                     </button>
@@ -174,7 +172,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               <div className="mb-4 sm:mb-6">
                 <div className="flex items-center gap-3 mb-2 sm:mb-3">
                   {game.yearPublished && (
-                    <span className="text-amber-400 text-xs sm:text-sm font-semibold tracking-wider">
+                    <span className="text-primary text-xs sm:text-sm font-semibold tracking-wider">
                       {game.yearPublished}
                     </span>
                   )}
@@ -187,21 +185,30 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               {/* Quick Stats */}
               <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8">
                 {playerCount && (
-                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-white/10 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-white/5">
-                    <span className="text-stone-400 block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Players</span>
-                    <span className="text-white">👥 {playerCount}</span>
+                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-muted rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-border">
+                    <span className="text-muted-foreground block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Players</span>
+                    <span className="text-foreground flex items-center gap-1.5">
+                      <Users className="size-4" />
+                      {playerCount}
+                    </span>
                   </div>
                 )}
                 {playtime && (
-                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-white/10 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-white/5">
-                    <span className="text-stone-400 block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Playtime</span>
-                    <span className="text-white">⏱ {playtime}</span>
+                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-muted rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-border">
+                    <span className="text-muted-foreground block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Playtime</span>
+                    <span className="text-foreground flex items-center gap-1.5">
+                      <Clock className="size-4" />
+                      {playtime}
+                    </span>
                   </div>
                 )}
                 {ageDisplay && (
-                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-white/10 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-white/5">
-                    <span className="text-stone-400 block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Age</span>
-                    <span className="text-white">{ageDisplay}+</span>
+                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-muted rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-border">
+                    <span className="text-muted-foreground block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Age</span>
+                    <span className="text-foreground flex items-center gap-1.5">
+                      <Baby className="size-4" />
+                      {ageDisplay}+
+                    </span>
                   </div>
                 )}
               </div>
@@ -209,8 +216,8 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               {/* Description */}
               {game.description && (
                 <div className="mb-6 sm:mb-8">
-                  <h2 className="text-base sm:text-lg font-semibold text-stone-300 mb-2 sm:mb-3">About</h2>
-                  <p className="text-stone-400 leading-relaxed text-sm sm:text-base">
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3">About</h2>
+                  <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
                     {game.description}
                   </p>
                 </div>
@@ -219,13 +226,13 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               {/* Component Images */}
               {componentImages.length > 0 && (
                 <div className="mb-6 sm:mb-8">
-                  <h2 className="text-base sm:text-lg font-semibold text-stone-300 mb-2 sm:mb-3">Game Components</h2>
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3">Game Components</h2>
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     {componentImages.map((img: string, i: number) => (
                       <button
                         key={i}
                         onClick={() => setSelectedImage(img)}
-                        className="aspect-square rounded-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all relative"
+                        className="aspect-square rounded-lg overflow-hidden border border-border hover:border-muted-foreground transition-all relative"
                       >
                         <Image src={img} alt="" fill sizes="33vw" className="object-cover" />
                       </button>
@@ -237,15 +244,16 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               {/* Categories */}
               {game.categories && game.categories.length > 0 && (
                 <div className="mb-4 sm:mb-6">
-                  <h2 className="text-base sm:text-lg font-semibold text-stone-300 mb-2 sm:mb-3">Categories</h2>
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3">Categories</h2>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {game.categories.map((cat: string, i: number) => (
-                      <span
+                      <Badge
                         key={i}
-                        className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-500/20 text-blue-300 rounded-lg text-xs sm:text-sm border border-blue-500/30"
+                        variant="outline"
+                        className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs sm:text-sm"
                       >
                         {cat}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -254,27 +262,28 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
               {/* Mechanics */}
               {game.mechanics && game.mechanics.length > 0 && (
                 <div className="mb-6 sm:mb-8">
-                  <h2 className="text-base sm:text-lg font-semibold text-stone-300 mb-2 sm:mb-3">Mechanics</h2>
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3">Mechanics</h2>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {game.mechanics.map((mech: string, i: number) => (
-                      <span
+                      <Badge
                         key={i}
-                        className="px-2 sm:px-4 py-1 sm:py-2 bg-emerald-500/20 text-emerald-300 rounded-lg text-xs sm:text-sm border border-emerald-500/30"
+                        variant="outline"
+                        className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs sm:text-sm"
                       >
                         {mech}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
                 </div>
               )}
 
               {/* External Link */}
-              <div className="pt-4 sm:pt-6 border-t border-white/10 flex items-center gap-4">
+              <div className="pt-4 sm:pt-6 border-t border-border flex items-center gap-4">
                 <a
                   href={`https://boardgamegeek.com/boardgame/${game.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-orange-500/50 transition-all"
+                  className="group flex items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg bg-muted border border-border hover:border-primary/50 transition-all"
                 >
                   <Image
                     src="/powered-by-bgg.svg"
@@ -283,19 +292,7 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
                     height={24}
                     className="h-5 sm:h-6 w-auto opacity-80 group-hover:opacity-100 transition-opacity"
                   />
-                  <svg
-                    className="w-3 sm:w-4 h-3 sm:h-4 text-stone-500 group-hover:text-amber-400 transition-colors"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
+                  <ExternalLink className="size-3 sm:size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </a>
               </div>
             </div>
