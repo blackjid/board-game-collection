@@ -2,7 +2,7 @@
 -- This migration:
 -- 1. Creates Collection and CollectionGame tables
 -- 2. Migrates data from old schema to new collections
--- 3. Removes isVisible and source from Game
+-- 3. Removes isActive and source from Game
 -- 4. Removes sync settings from Settings (now in Collection)
 
 -- CreateTable
@@ -46,7 +46,7 @@ CREATE UNIQUE INDEX "CollectionGame_collectionId_gameId_key" ON "CollectionGame"
 -- Create primary collection from existing Settings (if bggUsername exists, it's a bgg_sync type)
 -- Use a random UUID for the collection ID
 INSERT INTO "Collection" ("id", "name", "type", "isPrimary", "bggUsername", "syncSchedule", "autoScrapeNewGames", "lastSyncedAt", "createdAt", "updatedAt")
-SELECT 
+SELECT
     lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))) as id,
     COALESCE(s."collectionName", 'My Collection') as name,
     CASE WHEN s."bggUsername" IS NOT NULL AND s."bggUsername" != '' THEN 'bgg_sync' ELSE 'manual' END as type,
@@ -63,7 +63,7 @@ LIMIT 1;
 
 -- If no Settings exist, create a default primary collection
 INSERT INTO "Collection" ("id", "name", "type", "isPrimary", "createdAt", "updatedAt")
-SELECT 
+SELECT
     lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))) as id,
     'My Collection' as name,
     'manual' as type,
@@ -74,7 +74,7 @@ WHERE NOT EXISTS (SELECT 1 FROM "Collection" WHERE "isPrimary" = 1);
 
 -- Link all visible games to the primary collection
 INSERT INTO "CollectionGame" ("id", "collectionId", "gameId", "addedBy", "addedAt")
-SELECT 
+SELECT
     lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))) as id,
     c.id as collectionId,
     g.id as gameId,
@@ -82,7 +82,7 @@ SELECT
     g.createdAt as addedAt
 FROM "Game" g
 CROSS JOIN "Collection" c
-WHERE g."isVisible" = 1 AND c."isPrimary" = 1;
+WHERE g."isActive" = 1 AND c."isPrimary" = 1;
 
 -- =============================================================================
 -- SCHEMA CHANGES: Drop deprecated columns
@@ -91,7 +91,7 @@ WHERE g."isVisible" = 1 AND c."isPrimary" = 1;
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
 
--- Recreate Game table without isVisible and source columns
+-- Recreate Game table without isActive and source columns
 CREATE TABLE "new_Game" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,

@@ -246,15 +246,15 @@ export async function getActiveGames(): Promise<GameData[]> {
   const primaryCollection = await prisma.collection.findFirst({
     where: { isPrimary: true },
   });
-  
+
   if (!primaryCollection) return [];
-  
+
   const collectionGames = await prisma.collectionGame.findMany({
     where: { collectionId: primaryCollection.id },
     include: { game: true },
     orderBy: { game: { name: "asc" } },
   });
-  
+
   return collectionGames.map((cg) => transformGame(cg.game));
 }
 ```
@@ -320,13 +320,13 @@ model Collection {
   name                String
   type                String   @default("manual")  // "bgg_sync" | "manual"
   isPrimary           Boolean  @default(false)
-  
+
   // BGG sync settings (only for type="bgg_sync")
   bggUsername         String?
   syncSchedule        String   @default("manual")
   autoScrapeNewGames  Boolean  @default(true)
   lastSyncedAt        DateTime?
-  
+
   games               CollectionGame[]
 }
 
@@ -335,10 +335,10 @@ model CollectionGame {
   gameId       String
   addedBy      String   @default("manual")  // "sync" | "manual"
   addedAt      DateTime @default(now())
-  
+
   collection   Collection @relation(...)
   game         Game       @relation(...)
-  
+
   @@id([collectionId, gameId])
 }
 ```
