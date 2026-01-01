@@ -1,8 +1,6 @@
 import { chromium } from "playwright";
 import prisma from "@/lib/prisma";
 
-const DEFAULT_BGG_USERNAME = "";
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -35,28 +33,53 @@ export interface ScrapeResult {
 }
 
 // ============================================================================
-// Settings Helpers
+// Collection Helpers
 // ============================================================================
 
-export async function getBggUsername(): Promise<string> {
-  const settings = await prisma.settings.findUnique({
-    where: { id: "default" },
-  });
-  return settings?.bggUsername || DEFAULT_BGG_USERNAME;
-}
-
-export async function getSettings() {
-  let settings = await prisma.settings.findUnique({
-    where: { id: "default" },
+/**
+ * Get the primary collection (or create one if it doesn't exist)
+ */
+export async function getPrimaryCollection() {
+  let collection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
   });
 
-  if (!settings) {
-    settings = await prisma.settings.create({
-      data: { id: "default" },
+  if (!collection) {
+    collection = await prisma.collection.create({
+      data: {
+        name: "My Collection",
+        type: "manual",
+        isPrimary: true,
+      },
     });
   }
 
-  return settings;
+  return collection;
+}
+
+/**
+ * Get the BGG username from the primary collection
+ */
+export async function getBggUsername(): Promise<string> {
+  const collection = await getPrimaryCollection();
+  return collection.bggUsername || "";
+}
+
+/**
+ * Get settings from the primary collection
+ * This is a compatibility layer for code that expects the old Settings model
+ */
+export async function getSettings() {
+  const collection = await getPrimaryCollection();
+
+  return {
+    id: collection.id,
+    bggUsername: collection.bggUsername,
+    collectionName: collection.name,
+    syncSchedule: collection.syncSchedule,
+    autoScrapeNewGames: collection.autoScrapeNewGames,
+    lastScheduledSync: collection.lastSyncedAt,
+  };
 }
 
 // ============================================================================
@@ -132,8 +155,39 @@ async function scrapeCollection(username: string): Promise<ScrapedGame[]> {
 // Sync Collection (Main Import Function)
 // ============================================================================
 
-export async function syncCollection(): Promise<SyncResult> {
-  const bggUsername = await getBggUsername();
+/**
+ * Sync a specific collection from BGG
+ * @param collectionId - The collection ID to sync. If not provided, syncs the primary collection.
+ */
+export async function syncCollection(collectionId?: string): Promise<SyncResult> {
+  // Get the collection to sync
+  const collection = collectionId
+    ? await prisma.collection.findUnique({ where: { id: collectionId } })
+    : await getPrimaryCollection();
+
+  if (!collection) {
+    return {
+      success: false,
+      total: 0,
+      created: 0,
+      updated: 0,
+      newGameIds: [],
+      error: "Collection not found",
+    };
+  }
+
+  if (!collection.bggUsername) {
+    return {
+      success: false,
+      total: 0,
+      created: 0,
+      updated: 0,
+      newGameIds: [],
+      error: "No BGG username configured for this collection",
+    };
+  }
+
+  const bggUsername = collection.bggUsername;
   console.log(`[Sync] Starting collection import for user: ${bggUsername}...`);
 
   try {
@@ -168,13 +222,38 @@ export async function syncCollection(): Promise<SyncResult> {
             name: game.name,
             yearPublished: game.yearPublished,
             isExpansion: game.isExpansion,
-            source: "bgg_collection",
           },
         });
         created++;
         newGameIds.push(game.id);
       }
+
+      // Ensure game is in this collection
+      const existingLink = await prisma.collectionGame.findUnique({
+        where: {
+          collectionId_gameId: {
+            collectionId: collection.id,
+            gameId: game.id,
+          },
+        },
+      });
+
+      if (!existingLink) {
+        await prisma.collectionGame.create({
+          data: {
+            collectionId: collection.id,
+            gameId: game.id,
+            addedBy: "sync",
+          },
+        });
+      }
     }
+
+    // Update collection's lastSyncedAt
+    await prisma.collection.update({
+      where: { id: collection.id },
+      data: { lastSyncedAt: new Date() },
+    });
 
     // Log the sync
     await prisma.syncLog.create({
@@ -222,15 +301,32 @@ export async function syncCollection(): Promise<SyncResult> {
 // ============================================================================
 
 export async function performSyncWithAutoScrape(
+  collectionId?: string,
   skipAutoScrape: boolean = false
 ): Promise<SyncWithAutoScrapeResult> {
   // Import queue here to avoid circular dependency
   const { enqueueScrapeMany } = await import("./scrape-queue");
 
-  const settings = await getSettings();
+  // Get the collection to sync
+  const collection = collectionId
+    ? await prisma.collection.findUnique({ where: { id: collectionId } })
+    : await getPrimaryCollection();
+
+  if (!collection) {
+    return {
+      success: false,
+      total: 0,
+      created: 0,
+      updated: 0,
+      newGameIds: [],
+      autoScraped: 0,
+      autoScrapeFailed: 0,
+      error: "Collection not found",
+    };
+  }
 
   // Run the sync
-  const result = await syncCollection();
+  const result = await syncCollection(collection.id);
 
   // Count of games queued for auto-scrape
   let autoScraped = 0;
@@ -239,17 +335,11 @@ export async function performSyncWithAutoScrape(
   // Auto-scrape new games if enabled and not skipped
   if (
     result.success &&
-    settings.autoScrapeNewGames &&
+    collection.autoScrapeNewGames &&
     !skipAutoScrape &&
     result.newGameIds.length > 0
   ) {
     console.log(`[Sync] Queueing ${result.newGameIds.length} new games for auto-scrape...`);
-
-    // First, mark new games as active
-    await prisma.game.updateMany({
-      where: { id: { in: result.newGameIds } },
-      data: { isVisible: true },
-    });
 
     // Get game names for the queue
     const games = await prisma.game.findMany({
@@ -478,24 +568,24 @@ export async function scrapeGames(gameIds: string[]): Promise<ScrapeResult> {
 // ============================================================================
 
 export async function isSyncDue(): Promise<boolean> {
-  const settings = await getSettings();
+  const collection = await getPrimaryCollection();
 
-  if (settings.syncSchedule === "manual") {
+  if (collection.syncSchedule === "manual") {
     return false;
   }
 
-  if (!settings.lastScheduledSync) {
+  if (!collection.lastSyncedAt) {
     // Never synced before, sync now
     return true;
   }
 
   const now = new Date();
-  const lastSync = new Date(settings.lastScheduledSync);
+  const lastSync = new Date(collection.lastSyncedAt);
   const diffMs = now.getTime() - lastSync.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
   const diffDays = diffHours / 24;
 
-  switch (settings.syncSchedule) {
+  switch (collection.syncSchedule) {
     case "daily":
       return diffHours >= 24;
     case "weekly":
@@ -510,15 +600,10 @@ export async function isSyncDue(): Promise<boolean> {
 export async function runScheduledSync(): Promise<void> {
   console.log("[Scheduler] Running scheduled sync...");
 
-  const result = await performSyncWithAutoScrape();
+  const collection = await getPrimaryCollection();
+  const result = await performSyncWithAutoScrape(collection.id);
 
   if (result.success) {
-    // Update last scheduled sync time
-    await prisma.settings.update({
-      where: { id: "default" },
-      data: { lastScheduledSync: new Date() },
-    });
-
     if (result.autoScraped > 0) {
       console.log(`[Scheduler] Auto-scraped ${result.autoScraped} new games`);
     }

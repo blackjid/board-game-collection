@@ -14,10 +14,8 @@ model Game {
   name            String
   yearPublished   Int?
 
-  // Import status
-  isVisible       Boolean  @default(false)
+  // Scraping status
   lastScraped     DateTime?
-  source          String   @default("bgg_collection") // "bgg_collection" | "manual"
 
   // Scraped data (populated after scraping)
   image           String?
@@ -56,15 +54,7 @@ model SyncLog {
 }
 
 model Settings {
-  id             String  @id @default("default")
-  collectionName String?
-  bggUsername    String?
-
-  // Sync scheduling
-  syncSchedule        String   @default("manual") // "manual", "daily", "weekly", "monthly"
-  autoScrapeNewGames  Boolean  @default(false)
-  lastScheduledSync   DateTime?
-
+  id             String   @id @default("default")
   updatedAt      DateTime @updatedAt
 }
 
@@ -159,23 +149,37 @@ model PickSessionVote {
   @@index([sessionId])
 }
 
-// Custom Collections - curated subsets of games
+// Collections - unified abstraction for both BGG-synced and manual collections
 model Collection {
   id          String   @id @default(cuid())
   name        String
   description String?
+
+  // Collection type and designation
+  type        String   @default("manual")  // "bgg_sync" | "manual"
+  isPrimary   Boolean  @default(false)     // The main/default collection
+
+  // BGG sync settings (only used when type = "bgg_sync")
+  bggUsername        String?
+  syncSchedule       String   @default("manual")  // "manual" | "daily" | "weekly"
+  autoScrapeNewGames Boolean  @default(false)
+  lastSyncedAt       DateTime?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   games       CollectionGame[]
 
   @@index([name])
+  @@index([type])
+  @@index([isPrimary])
 }
 
 model CollectionGame {
   id           String   @id @default(cuid())
   collectionId String
   gameId       String
+  addedBy      String   @default("manual")  // "sync" | "manual"
   addedAt      DateTime @default(now())
 
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)

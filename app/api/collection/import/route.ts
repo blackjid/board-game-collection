@@ -10,16 +10,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Check for skipAutoScrape in request body
+  // Check for skipAutoScrape and collectionId in request body
   let skipAutoScrape = false;
+  let collectionId: string | undefined;
   try {
     const body = await request.json();
     skipAutoScrape = body.skipAutoScrape === true;
+    collectionId = body.collectionId;
   } catch {
-    // No body or invalid JSON - use default (don't skip)
+    // No body or invalid JSON - use defaults
   }
 
-  const result = await performSyncWithAutoScrape(skipAutoScrape);
+  const result = await performSyncWithAutoScrape(collectionId, skipAutoScrape);
 
   if (!result.success) {
     return NextResponse.json(
@@ -46,11 +48,25 @@ export async function GET() {
   });
 
   const totalGames = await prisma.game.count();
-  const activeGames = await prisma.game.count({ where: { isVisible: true } });
-  const scrapedGames = await prisma.game.count({ where: { lastScraped: { not: null } } });
-  const unscrapedActiveGames = await prisma.game.count({
-    where: { isVisible: true, lastScraped: null },
+
+  // Count games in collections (active games)
+  const activeGameIds = await prisma.collectionGame.findMany({
+    select: { gameId: true },
+    distinct: ["gameId"],
   });
+  const activeGames = activeGameIds.length;
+
+  const scrapedGames = await prisma.game.count({ where: { lastScraped: { not: null } } });
+
+  // Unscraped active games
+  const unscrapedActiveGameIds = await prisma.collectionGame.findMany({
+    where: {
+      game: { lastScraped: null },
+    },
+    select: { gameId: true },
+    distinct: ["gameId"],
+  });
+  const unscrapedActiveGames = unscrapedActiveGameIds.length;
 
   const bggUsername = await getBggUsername();
 

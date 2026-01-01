@@ -69,6 +69,22 @@ describe("HomeClient", () => {
     role: "admin",
   };
 
+  const mockCollections = [
+    {
+      id: "col-1",
+      name: "Primary Collection",
+      description: null,
+      type: "bgg_sync",
+      isPrimary: true,
+      bggUsername: "testuser",
+      lastSyncedAt: null,
+      syncSchedule: "manual",
+      autoScrapeNewGames: false,
+      gameCount: 3,
+      previewImages: [],
+    },
+  ];
+
   const defaultProps = {
     games: mockGames,
     totalGames: 3,
@@ -76,6 +92,8 @@ describe("HomeClient", () => {
     bggUsername: "testuser",
     lastSyncedAt: new Date().toISOString(),
     currentUser: null,
+    collections: mockCollections,
+    selectedCollection: null,
   };
 
   describe("rendering", () => {

@@ -9,12 +9,26 @@ vi.mock("@/lib/prisma", () => ({
     game: {
       findMany: vi.fn(),
     },
+    collection: {
+      findFirst: vi.fn(),
+    },
+    collectionGame: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
 describe("Games API Route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock for primary collection
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+      id: "primary-collection-id",
+    } as never);
+    // Default mock for collection games (games in primary collection)
+    vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([
+      { gameId: "1" },
+    ] as never);
   });
 
   // ============================================================================
@@ -40,7 +54,6 @@ describe("Games API Route", () => {
         categories: '["Card Game", "Animals"]',
         mechanics: '["Hand Management", "Engine Building"]',
         isExpansion: false,
-        isVisible: true,
         lastScraped: new Date(),
         availableImages: '["img1.jpg", "img2.jpg"]',
         componentImages: "[]",
@@ -64,7 +77,6 @@ describe("Games API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isVisible: false,
         lastScraped: null,
         availableImages: null,
         componentImages: null,
@@ -88,15 +100,23 @@ describe("Games API Route", () => {
     });
 
     it("should filter active games when active=true", async () => {
-      vi.mocked(prisma.game.findMany).mockResolvedValue([mockGames[0]]);
+      // Mock collectionGame.findMany for active games query
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([
+        { gameId: "1", game: mockGames[0] },
+      ] as never);
 
       const request = new NextRequest("http://localhost:3000/api/games?active=true");
-      await GET(request);
+      const response = await GET(request);
 
-      expect(prisma.game.findMany).toHaveBeenCalledWith({
-        where: { isVisible: true },
-        orderBy: { name: "asc" },
-      });
+      expect(response.status).toBe(200);
+      // Should only return games from primary collection
+      expect(prisma.collectionGame.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            collectionId: "primary-collection-id",
+          }),
+        })
+      );
     });
 
     it("should filter scraped games when scraped=true", async () => {
@@ -112,15 +132,22 @@ describe("Games API Route", () => {
     });
 
     it("should combine filters when both active=true and scraped=true", async () => {
-      vi.mocked(prisma.game.findMany).mockResolvedValue([mockGames[0]]);
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([
+        { gameId: "1", game: mockGames[0] },
+      ] as never);
 
       const request = new NextRequest("http://localhost:3000/api/games?active=true&scraped=true");
-      await GET(request);
+      const response = await GET(request);
 
-      expect(prisma.game.findMany).toHaveBeenCalledWith({
-        where: { isVisible: true, lastScraped: { not: null } },
-        orderBy: { name: "asc" },
-      });
+      expect(response.status).toBe(200);
+      expect(prisma.collectionGame.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            collectionId: "primary-collection-id",
+            game: { lastScraped: { not: null } },
+          }),
+        })
+      );
     });
 
     it("should parse JSON fields correctly", async () => {

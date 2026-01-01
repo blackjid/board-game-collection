@@ -5,18 +5,21 @@ import { requireAdmin } from "@/lib/auth";
 const SETTINGS_ID = "default";
 
 export async function GET() {
-  let settings = await prisma.settings.findUnique({
-    where: { id: SETTINGS_ID },
+  // Get settings from the primary collection for backward compatibility
+  const primaryCollection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
   });
 
-  // Create default settings if not exists
-  if (!settings) {
-    settings = await prisma.settings.create({
-      data: { id: SETTINGS_ID },
-    });
-  }
-
-  return NextResponse.json(settings);
+  // Return a settings-like object from the primary collection
+  return NextResponse.json({
+    id: SETTINGS_ID,
+    collectionName: primaryCollection?.name || null,
+    bggUsername: primaryCollection?.bggUsername || null,
+    syncSchedule: primaryCollection?.syncSchedule || "manual",
+    autoScrapeNewGames: primaryCollection?.autoScrapeNewGames || false,
+    lastScheduledSync: primaryCollection?.lastSyncedAt || null,
+    updatedAt: primaryCollection?.updatedAt || new Date(),
+  });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -29,43 +32,59 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json();
   const { collectionName, bggUsername, syncSchedule, autoScrapeNewGames } = body;
 
-  // Check if BGG username is being changed
-  if (bggUsername !== undefined) {
-    const currentSettings = await prisma.settings.findUnique({
-      where: { id: SETTINGS_ID },
-    });
-
-    // If username is changing from one value to a different value, clear the games database
-    if (
-      currentSettings?.bggUsername &&
-      bggUsername !== currentSettings.bggUsername
-    ) {
-      console.log(
-        `[Settings] BGG username changing from "${currentSettings.bggUsername}" to "${bggUsername}". Clearing games database.`
-      );
-
-      // Delete all games and sync logs
-      await prisma.game.deleteMany({});
-      await prisma.syncLog.deleteMany({});
-    }
-  }
-
-  const settings = await prisma.settings.upsert({
-    where: { id: SETTINGS_ID },
-    update: {
-      ...(collectionName !== undefined && { collectionName }),
-      ...(bggUsername !== undefined && { bggUsername }),
-      ...(syncSchedule !== undefined && { syncSchedule }),
-      ...(autoScrapeNewGames !== undefined && { autoScrapeNewGames }),
-    },
-    create: {
-      id: SETTINGS_ID,
-      collectionName,
-      bggUsername,
-      syncSchedule: syncSchedule || "manual",
-      autoScrapeNewGames: autoScrapeNewGames || false,
-    },
+  // Get or create the primary collection
+  let primaryCollection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
   });
 
-  return NextResponse.json(settings);
+  if (!primaryCollection) {
+    primaryCollection = await prisma.collection.create({
+      data: {
+        name: collectionName || "My Collection",
+        type: bggUsername ? "bgg_sync" : "manual",
+        isPrimary: true,
+        bggUsername: bggUsername || null,
+        syncSchedule: syncSchedule || "manual",
+        autoScrapeNewGames: autoScrapeNewGames || false,
+      },
+    });
+  } else {
+    // Check if BGG username is being changed
+    if (bggUsername !== undefined && primaryCollection.bggUsername && bggUsername !== primaryCollection.bggUsername) {
+      console.log(
+        `[Settings] BGG username changing from "${primaryCollection.bggUsername}" to "${bggUsername}". Clearing collection games.`
+      );
+
+      // Remove all games from the primary collection
+      await prisma.collectionGame.deleteMany({
+        where: { collectionId: primaryCollection.id },
+      });
+      await prisma.syncLog.deleteMany({});
+    }
+
+    // Update the primary collection
+    primaryCollection = await prisma.collection.update({
+      where: { id: primaryCollection.id },
+      data: {
+        ...(collectionName !== undefined && { name: collectionName }),
+        ...(bggUsername !== undefined && {
+          bggUsername,
+          type: bggUsername ? "bgg_sync" : "manual",
+        }),
+        ...(syncSchedule !== undefined && { syncSchedule }),
+        ...(autoScrapeNewGames !== undefined && { autoScrapeNewGames }),
+      },
+    });
+  }
+
+  // Return a settings-like object
+  return NextResponse.json({
+    id: SETTINGS_ID,
+    collectionName: primaryCollection.name,
+    bggUsername: primaryCollection.bggUsername,
+    syncSchedule: primaryCollection.syncSchedule,
+    autoScrapeNewGames: primaryCollection.autoScrapeNewGames,
+    lastScheduledSync: primaryCollection.lastSyncedAt,
+    updatedAt: primaryCollection.updatedAt,
+  });
 }

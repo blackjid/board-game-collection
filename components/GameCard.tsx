@@ -9,6 +9,18 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+// Get collection badge color based on type
+function getCollectionColor(type: string): string {
+  switch (type) {
+    case "bgg_sync":
+      return "bg-blue-500/90";
+    case "manual":
+      return "bg-amber-500/90";
+    default:
+      return "bg-stone-500/90";
+  }
+}
+
 interface GameCardProps {
   game: GameData;
 }
@@ -104,6 +116,27 @@ export function GameCard({ game }: GameCardProps) {
                   {game.name}
                 </span>
               </div>
+            </div>
+          )}
+
+          {/* Collection badges - small dots in top right */}
+          {game.collections && game.collections.length > 0 && (
+            <div className="absolute top-2 right-2 z-20 flex gap-1 print:hidden">
+              {game.collections.slice(0, 3).map((col) => (
+                <div
+                  key={col.id}
+                  className={cn(
+                    "size-2.5 rounded-full shadow-md",
+                    getCollectionColor(col.type)
+                  )}
+                  title={col.name}
+                />
+              ))}
+              {game.collections.length > 3 && (
+                <div className="size-2.5 rounded-full bg-stone-400 shadow-md flex items-center justify-center">
+                  <span className="text-[6px] font-bold text-white">+{game.collections.length - 3}</span>
+                </div>
+              )}
             </div>
           )}
         </div>

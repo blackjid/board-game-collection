@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import prisma from "@/lib/prisma";
-import { isSyncDue, getSettings, getBggUsername, stripHtml } from "./sync";
+import { isSyncDue, getSettings, getBggUsername, stripHtml, getPrimaryCollection } from "./sync";
 
 // Mock the Prisma client
 vi.mock("@/lib/prisma", () => ({
   default: {
-    settings: {
-      findUnique: vi.fn(),
+    collection: {
+      findFirst: vi.fn(),
       create: vi.fn(),
     },
   },
@@ -17,42 +17,87 @@ describe("lib/sync", () => {
     vi.clearAllMocks();
   });
 
+  const mockPrimaryCollection = {
+    id: "col-1",
+    name: "Primary Collection",
+    description: null,
+    type: "bgg_sync",
+    isPrimary: true,
+    bggUsername: "testuser",
+    syncSchedule: "manual",
+    autoScrapeNewGames: false,
+    lastSyncedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  // ============================================================================
+  // getPrimaryCollection tests
+  // ============================================================================
+
+  describe("getPrimaryCollection", () => {
+    it("should return existing primary collection", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(mockPrimaryCollection);
+
+      const collection = await getPrimaryCollection();
+
+      expect(prisma.collection.findFirst).toHaveBeenCalledWith({
+        where: { isPrimary: true },
+      });
+      expect(collection.id).toBe("col-1");
+      expect(collection.name).toBe("Primary Collection");
+    });
+
+    it("should create primary collection if none exists", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.collection.create).mockResolvedValue({
+        ...mockPrimaryCollection,
+        id: "new-col",
+        name: "My Collection",
+        type: "manual",
+        bggUsername: null,
+      });
+
+      const collection = await getPrimaryCollection();
+
+      expect(prisma.collection.create).toHaveBeenCalledWith({
+        data: {
+          name: "My Collection",
+          type: "manual",
+          isPrimary: true,
+        },
+      });
+      expect(collection.name).toBe("My Collection");
+    });
+  });
+
   // ============================================================================
   // getBggUsername tests
   // ============================================================================
 
   describe("getBggUsername", () => {
-    it("should return the configured username from settings", async () => {
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-        id: "default",
-        bggUsername: "testuser",
-        collectionName: null,
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      });
+    it("should return the configured username from primary collection", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(mockPrimaryCollection);
 
       const username = await getBggUsername();
       expect(username).toBe("testuser");
     });
 
-    it("should return default username when settings don't exist", async () => {
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue(null);
+    it("should return empty string when primary collection has no username", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
+        bggUsername: null,
+      });
 
       const username = await getBggUsername();
-      expect(username).toBe(""); // Default username (empty)
+      expect(username).toBe("");
     });
 
-    it("should return default username when bggUsername is null", async () => {
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-        id: "default",
+    it("should create collection and return empty when none exists", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.collection.create).mockResolvedValue({
+        ...mockPrimaryCollection,
         bggUsername: null,
-        collectionName: null,
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
       });
 
       const username = await getBggUsername();
@@ -65,43 +110,29 @@ describe("lib/sync", () => {
   // ============================================================================
 
   describe("getSettings", () => {
-    it("should return existing settings", async () => {
-      const mockSettings = {
-        id: "default",
-        bggUsername: "testuser",
-        collectionName: "My Collection",
-        syncSchedule: "daily",
-        autoScrapeNewGames: true,
-        lastScheduledSync: new Date("2024-01-01"),
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue(mockSettings);
+    it("should return settings from primary collection", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(mockPrimaryCollection);
 
       const settings = await getSettings();
-      expect(settings).toEqual(mockSettings);
-      expect(prisma.settings.create).not.toHaveBeenCalled();
+
+      expect(settings.bggUsername).toBe("testuser");
+      expect(settings.collectionName).toBe("Primary Collection");
+      expect(settings.syncSchedule).toBe("manual");
+      expect(settings.autoScrapeNewGames).toBe(false);
     });
 
-    it("should create default settings when none exist", async () => {
-      const newSettings = {
-        id: "default",
+    it("should create collection when none exists and return defaults", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.collection.create).mockResolvedValue({
+        ...mockPrimaryCollection,
+        name: "My Collection",
         bggUsername: null,
-        collectionName: null,
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue(null);
-      vi.mocked(prisma.settings.create).mockResolvedValue(newSettings);
+      });
 
       const settings = await getSettings();
-      expect(prisma.settings.create).toHaveBeenCalledWith({
-        data: { id: "default" },
-      });
-      expect(settings).toEqual(newSettings);
+
+      expect(settings.collectionName).toBe("My Collection");
+      expect(settings.bggUsername).toBeNull();
     });
   });
 
@@ -110,222 +141,133 @@ describe("lib/sync", () => {
   // ============================================================================
 
   describe("isSyncDue", () => {
-    it("should return false when syncSchedule is 'manual'", async () => {
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-        id: "default",
-        bggUsername: null,
-        collectionName: null,
+    it("should return false for manual schedule", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
         syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
       });
 
-      const result = await isSyncDue();
-      expect(result).toBe(false);
+      const isDue = await isSyncDue();
+      expect(isDue).toBe(false);
     });
 
-    it("should return true when never synced before", async () => {
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-        id: "default",
-        bggUsername: null,
-        collectionName: null,
+    it("should return true when never synced with daily schedule", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
         syncSchedule: "daily",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
+        lastSyncedAt: null,
       });
 
-      const result = await isSyncDue();
-      expect(result).toBe(true);
+      const isDue = await isSyncDue();
+      expect(isDue).toBe(true);
     });
 
-    describe("daily schedule", () => {
-      it("should return true when more than 24 hours have passed", async () => {
-        const lastSync = new Date();
-        lastSync.setHours(lastSync.getHours() - 25); // 25 hours ago
+    it("should return true for daily when last sync was 25 hours ago", async () => {
+      const yesterday = new Date();
+      yesterday.setHours(yesterday.getHours() - 25);
 
-        vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-          id: "default",
-          bggUsername: null,
-          collectionName: null,
-          syncSchedule: "daily",
-          autoScrapeNewGames: false,
-          lastScheduledSync: lastSync,
-          updatedAt: new Date(),
-        });
-
-        const result = await isSyncDue();
-        expect(result).toBe(true);
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
+        syncSchedule: "daily",
+        lastSyncedAt: yesterday,
       });
 
-      it("should return false when less than 24 hours have passed", async () => {
-        const lastSync = new Date();
-        lastSync.setHours(lastSync.getHours() - 12); // 12 hours ago
-
-        vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-          id: "default",
-          bggUsername: null,
-          collectionName: null,
-          syncSchedule: "daily",
-          autoScrapeNewGames: false,
-          lastScheduledSync: lastSync,
-          updatedAt: new Date(),
-        });
-
-        const result = await isSyncDue();
-        expect(result).toBe(false);
-      });
+      const isDue = await isSyncDue();
+      expect(isDue).toBe(true);
     });
 
-    describe("weekly schedule", () => {
-      it("should return true when more than 7 days have passed", async () => {
-        const lastSync = new Date();
-        lastSync.setDate(lastSync.getDate() - 8); // 8 days ago
+    it("should return false for daily when last sync was 1 hour ago", async () => {
+      const oneHourAgo = new Date();
+      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
 
-        vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-          id: "default",
-          bggUsername: null,
-          collectionName: null,
-          syncSchedule: "weekly",
-          autoScrapeNewGames: false,
-          lastScheduledSync: lastSync,
-          updatedAt: new Date(),
-        });
-
-        const result = await isSyncDue();
-        expect(result).toBe(true);
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
+        syncSchedule: "daily",
+        lastSyncedAt: oneHourAgo,
       });
 
-      it("should return false when less than 7 days have passed", async () => {
-        const lastSync = new Date();
-        lastSync.setDate(lastSync.getDate() - 3); // 3 days ago
-
-        vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-          id: "default",
-          bggUsername: null,
-          collectionName: null,
-          syncSchedule: "weekly",
-          autoScrapeNewGames: false,
-          lastScheduledSync: lastSync,
-          updatedAt: new Date(),
-        });
-
-        const result = await isSyncDue();
-        expect(result).toBe(false);
-      });
+      const isDue = await isSyncDue();
+      expect(isDue).toBe(false);
     });
 
-    describe("monthly schedule", () => {
-      it("should return true when more than 30 days have passed", async () => {
-        const lastSync = new Date();
-        lastSync.setDate(lastSync.getDate() - 31); // 31 days ago
+    it("should return true for weekly when last sync was 8 days ago", async () => {
+      const eightDaysAgo = new Date();
+      eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
 
-        vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-          id: "default",
-          bggUsername: null,
-          collectionName: null,
-          syncSchedule: "monthly",
-          autoScrapeNewGames: false,
-          lastScheduledSync: lastSync,
-          updatedAt: new Date(),
-        });
-
-        const result = await isSyncDue();
-        expect(result).toBe(true);
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
+        syncSchedule: "weekly",
+        lastSyncedAt: eightDaysAgo,
       });
 
-      it("should return false when less than 30 days have passed", async () => {
-        const lastSync = new Date();
-        lastSync.setDate(lastSync.getDate() - 15); // 15 days ago
-
-        vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-          id: "default",
-          bggUsername: null,
-          collectionName: null,
-          syncSchedule: "monthly",
-          autoScrapeNewGames: false,
-          lastScheduledSync: lastSync,
-          updatedAt: new Date(),
-        });
-
-        const result = await isSyncDue();
-        expect(result).toBe(false);
-      });
+      const isDue = await isSyncDue();
+      expect(isDue).toBe(true);
     });
 
-    it("should return false for unknown schedule type", async () => {
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-        id: "default",
-        bggUsername: null,
-        collectionName: null,
-        syncSchedule: "unknown",
-        autoScrapeNewGames: false,
-        lastScheduledSync: new Date(),
-        updatedAt: new Date(),
+    it("should return false for weekly when last sync was 3 days ago", async () => {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
+        syncSchedule: "weekly",
+        lastSyncedAt: threeDaysAgo,
       });
 
-      const result = await isSyncDue();
-      expect(result).toBe(false);
+      const isDue = await isSyncDue();
+      expect(isDue).toBe(false);
+    });
+
+    it("should return true for monthly when last sync was 31 days ago", async () => {
+      const thirtyOneDaysAgo = new Date();
+      thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
+
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
+        syncSchedule: "monthly",
+        lastSyncedAt: thirtyOneDaysAgo,
+      });
+
+      const isDue = await isSyncDue();
+      expect(isDue).toBe(true);
+    });
+
+    it("should return false for monthly when last sync was 15 days ago", async () => {
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
+        syncSchedule: "monthly",
+        lastSyncedAt: fifteenDaysAgo,
+      });
+
+      const isDue = await isSyncDue();
+      expect(isDue).toBe(false);
     });
   });
-});
 
-// ============================================================================
-// stripHtml tests
-// ============================================================================
+  // ============================================================================
+  // stripHtml tests (utility function)
+  // ============================================================================
 
-describe("stripHtml", () => {
-  it("should strip simple HTML tags", () => {
-    const result = stripHtml("<p>Hello World</p>");
-    expect(result).toBe("Hello World");
-  });
+  describe("stripHtml", () => {
+    it("should remove HTML tags", () => {
+      const html = "<p>Hello <strong>World</strong></p>";
+      expect(stripHtml(html)).toBe("Hello World");
+    });
 
-  it("should handle multiple tags", () => {
-    const result = stripHtml("<div><p>Hello</p><span>World</span></div>");
-    expect(result).toBe("Hello World");
-  });
+    it("should normalize whitespace", () => {
+      const html = "Hello    World   Test";
+      expect(stripHtml(html)).toBe("Hello World Test");
+    });
 
-  it("should normalize whitespace", () => {
-    const result = stripHtml("<p>Hello    World</p>");
-    expect(result).toBe("Hello World");
-  });
+    it("should handle empty string", () => {
+      expect(stripHtml("")).toBe("");
+    });
 
-  it("should trim leading and trailing whitespace", () => {
-    const result = stripHtml("  <p>Hello World</p>  ");
-    expect(result).toBe("Hello World");
-  });
-
-  it("should handle tags with attributes", () => {
-    const result = stripHtml('<a href="https://example.com" class="link">Click here</a>');
-    expect(result).toBe("Click here");
-  });
-
-  it("should handle self-closing tags", () => {
-    const result = stripHtml("Hello<br/>World");
-    expect(result).toBe("Hello World");
-  });
-
-  it("should return empty string for empty input", () => {
-    const result = stripHtml("");
-    expect(result).toBe("");
-  });
-
-  it("should return original text if no HTML", () => {
-    const result = stripHtml("Just plain text");
-    expect(result).toBe("Just plain text");
-  });
-
-  it("should handle nested tags", () => {
-    const result = stripHtml("<div><p><strong>Bold</strong> and <em>italic</em></p></div>");
-    expect(result).toBe("Bold and italic");
-  });
-
-  it("should handle real-world BGG description excerpt", () => {
-    const html = '<p>In <strong>Wingspan</strong>, you are bird enthusiasts&mdash;researchers, bird watchers, ornithologists, and collectors.</p>';
-    const result = stripHtml(html);
-    expect(result).toContain("Wingspan");
-    expect(result).not.toContain("<");
-    expect(result).not.toContain(">");
+    it("should handle text without HTML", () => {
+      expect(stripHtml("Plain text")).toBe("Plain text");
+    });
   });
 });

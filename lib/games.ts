@@ -1,5 +1,9 @@
 import prisma from "./prisma";
 
+// ============================================================================
+// Game Data Types
+// ============================================================================
+
 export interface GameData {
   id: string;
   name: string;
@@ -19,6 +23,8 @@ export interface GameData {
   isExpansion: boolean;
   availableImages: string[];
   componentImages: string[];
+  // Collections this game belongs to
+  collections?: { id: string; name: string; type: string }[];
 }
 
 function parseJsonArray(json: string | null): string[] {
@@ -55,33 +61,104 @@ function transformGame(game: Awaited<ReturnType<typeof prisma.game.findFirst>>):
   };
 }
 
+// ============================================================================
+// Game Queries
+// ============================================================================
+
+/**
+ * Get all games that belong to at least one collection (union of all collections)
+ * This replaces the old `isVisible: true` query
+ */
 export async function getActiveGames(): Promise<GameData[]> {
-  const games = await prisma.game.findMany({
-    where: {
-      isVisible: true,
-      lastScraped: { not: null },
+  // Get all games that are in at least one collection and have been scraped
+  const collectionGames = await prisma.collectionGame.findMany({
+    include: {
+      game: true,
+      collection: {
+        select: { id: true, name: true, type: true },
+      },
     },
-    orderBy: { name: "asc" },
+    where: {
+      game: {
+        lastScraped: { not: null },
+      },
+    },
   });
 
-  return games.map(transformGame).filter((g): g is GameData => g !== null);
+  // Group by game ID to deduplicate and collect collection memberships
+  const gameMap = new Map<string, GameData>();
+
+  for (const cg of collectionGames) {
+    const gameId = cg.game.id;
+
+    if (!gameMap.has(gameId)) {
+      const gameData = transformGame(cg.game);
+      if (gameData) {
+        gameData.collections = [];
+        gameMap.set(gameId, gameData);
+      }
+    }
+
+    const gameData = gameMap.get(gameId);
+    if (gameData && gameData.collections) {
+      gameData.collections.push({
+        id: cg.collection.id,
+        name: cg.collection.name,
+        type: cg.collection.type,
+      });
+    }
+  }
+
+  // Convert to array and sort by name
+  return Array.from(gameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getGameById(id: string): Promise<GameData | null> {
   const game = await prisma.game.findUnique({
     where: { id },
+    include: {
+      collections: {
+        include: {
+          collection: {
+            select: { id: true, name: true, type: true },
+          },
+        },
+      },
+    },
   });
 
-  return transformGame(game);
+  if (!game) return null;
+
+  const gameData = transformGame(game);
+  if (gameData) {
+    gameData.collections = game.collections.map((cg) => ({
+      id: cg.collection.id,
+      name: cg.collection.name,
+      type: cg.collection.type,
+    }));
+  }
+
+  return gameData;
 }
 
 export async function getGameCount(): Promise<{ total: number; active: number }> {
-  const [total, active] = await Promise.all([
-    prisma.game.count(),
-    prisma.game.count({ where: { isVisible: true, lastScraped: { not: null } } }),
-  ]);
+  // Total: all games in the database
+  const total = await prisma.game.count();
 
-  return { total, active };
+  // Active: games that are in at least one collection and have been scraped
+  const activeGames = await prisma.collectionGame.findMany({
+    where: {
+      game: {
+        lastScraped: { not: null },
+      },
+    },
+    select: {
+      gameId: true,
+    },
+    distinct: ["gameId"],
+  });
+
+  return { total, active: activeGames.length };
 }
 
 // Helper to get the display image (selectedThumbnail or fallback to image)
@@ -89,21 +166,49 @@ export function getDisplayImage(game: GameData): string | null {
   return game.selectedThumbnail || game.image || game.thumbnail;
 }
 
+// ============================================================================
+// Collection Types
+// ============================================================================
+
+export interface CollectionSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  type: string; // "bgg_sync" | "manual"
+  isPrimary: boolean;
+  bggUsername: string | null;
+  lastSyncedAt: Date | null;
+  syncSchedule: string;
+  autoScrapeNewGames: boolean;
+  gameCount: number;
+  previewImages: string[];
+}
+
+export interface CollectionWithGames extends CollectionSummary {
+  games: GameData[];
+}
+
+// ============================================================================
+// Collection Settings (Legacy compatibility)
+// ============================================================================
+
 export interface CollectionSettings {
   collectionName: string | null;
   bggUsername: string | null;
 }
 
-const DEFAULT_BGG_USERNAME = "";
-
+/**
+ * Get collection settings from the primary collection
+ * This provides backward compatibility with code expecting the old Settings model
+ */
 export async function getCollectionSettings(): Promise<CollectionSettings> {
-  const settings = await prisma.settings.findUnique({
-    where: { id: "default" },
+  const primaryCollection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
   });
 
   return {
-    collectionName: settings?.collectionName || null,
-    bggUsername: settings?.bggUsername || DEFAULT_BGG_USERNAME,
+    collectionName: primaryCollection?.name || null,
+    bggUsername: primaryCollection?.bggUsername || null,
   };
 }
 
@@ -121,5 +226,146 @@ export async function getLastSyncInfo(): Promise<LastSyncInfo> {
   return {
     syncedAt: lastSync?.syncedAt || null,
     gamesFound: lastSync?.gamesFound || 0,
+  };
+}
+
+// ============================================================================
+// Collection Queries
+// ============================================================================
+
+/**
+ * Get the primary collection (main BGG-synced collection)
+ */
+export async function getPrimaryCollection(): Promise<CollectionSummary | null> {
+  const collection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
+    include: {
+      games: {
+        include: {
+          game: {
+            select: {
+              selectedThumbnail: true,
+              thumbnail: true,
+              image: true,
+            },
+          },
+        },
+        orderBy: { addedAt: "desc" },
+        take: 4,
+      },
+      _count: {
+        select: { games: true },
+      },
+    },
+  });
+
+  if (!collection) return null;
+
+  return {
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    type: collection.type,
+    isPrimary: collection.isPrimary,
+    bggUsername: collection.bggUsername,
+    lastSyncedAt: collection.lastSyncedAt,
+    syncSchedule: collection.syncSchedule,
+    autoScrapeNewGames: collection.autoScrapeNewGames,
+    gameCount: collection._count.games,
+    previewImages: collection.games
+      .map((cg) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
+      .filter((img): img is string => img !== null),
+  };
+}
+
+/**
+ * Get all collections with their game counts and preview images
+ */
+export async function getCollections(): Promise<CollectionSummary[]> {
+  const collections = await prisma.collection.findMany({
+    include: {
+      games: {
+        include: {
+          game: {
+            select: {
+              selectedThumbnail: true,
+              thumbnail: true,
+              image: true,
+            },
+          },
+        },
+        orderBy: { addedAt: "desc" },
+        take: 4,
+      },
+      _count: {
+        select: { games: true },
+      },
+    },
+    orderBy: [
+      { isPrimary: "desc" }, // Primary collection first
+      { updatedAt: "desc" },
+    ],
+  });
+
+  return collections.map((collection) => ({
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    type: collection.type,
+    isPrimary: collection.isPrimary,
+    bggUsername: collection.bggUsername,
+    lastSyncedAt: collection.lastSyncedAt,
+    syncSchedule: collection.syncSchedule,
+    autoScrapeNewGames: collection.autoScrapeNewGames,
+    gameCount: collection._count.games,
+    previewImages: collection.games
+      .map((cg) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
+      .filter((img): img is string => img !== null),
+  }));
+}
+
+/**
+ * Get a specific collection with all its games
+ */
+export async function getCollectionWithGames(collectionId: string): Promise<CollectionWithGames | null> {
+  const collection = await prisma.collection.findUnique({
+    where: { id: collectionId },
+    include: {
+      games: {
+        include: {
+          game: true,
+        },
+        orderBy: { addedAt: "desc" },
+      },
+      _count: {
+        select: { games: true },
+      },
+    },
+  });
+
+  if (!collection) return null;
+
+  // Filter to only include games that have been scraped (have full data)
+  const games = collection.games
+    .filter((cg) => cg.game.lastScraped !== null)
+    .map((cg) => transformGame(cg.game))
+    .filter((g): g is GameData => g !== null);
+
+  return {
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    type: collection.type,
+    isPrimary: collection.isPrimary,
+    bggUsername: collection.bggUsername,
+    lastSyncedAt: collection.lastSyncedAt,
+    syncSchedule: collection.syncSchedule,
+    autoScrapeNewGames: collection.autoScrapeNewGames,
+    gameCount: collection._count.games,
+    previewImages: collection.games
+      .slice(0, 4)
+      .map((cg) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
+      .filter((img): img is string => img !== null),
+    games,
   };
 }

@@ -5,7 +5,7 @@ import { enqueueScrapeMany, getQueueStatus } from "@/lib/scrape-queue";
 
 /**
  * POST /api/games/scrape-active
- * Queue all active games for scraping (fire-and-forget)
+ * Queue all games in any collection for scraping (fire-and-forget)
  */
 export async function POST() {
   try {
@@ -14,10 +14,17 @@ export async function POST() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const activeGames = await prisma.game.findMany({
-    where: { isVisible: true },
-    select: { id: true, name: true },
+  // Get all games that are in at least one collection
+  const collectionGames = await prisma.collectionGame.findMany({
+    include: {
+      game: {
+        select: { id: true, name: true },
+      },
+    },
+    distinct: ["gameId"],
   });
+
+  const activeGames = collectionGames.map((cg) => cg.game);
 
   if (activeGames.length === 0) {
     return NextResponse.json({

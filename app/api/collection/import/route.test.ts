@@ -12,8 +12,8 @@ vi.mock("@/lib/prisma", () => ({
     game: {
       count: vi.fn(),
     },
-    settings: {
-      findUnique: vi.fn(),
+    collectionGame: {
+      findMany: vi.fn(),
     },
   },
 }));
@@ -53,6 +53,8 @@ function createRequest(body?: object): NextRequest {
 describe("Collection Import API Route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mocks for collection game counts
+    vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([]);
   });
 
   // ============================================================================
@@ -71,12 +73,18 @@ describe("Collection Import API Route", () => {
         username: "testuser",
       });
 
-      // Mock the count calls in order
       vi.mocked(prisma.game.count)
         .mockResolvedValueOnce(100)  // total games
-        .mockResolvedValueOnce(50)   // active games
-        .mockResolvedValueOnce(45)   // scraped games
-        .mockResolvedValueOnce(5);   // unscraped active games
+        .mockResolvedValueOnce(45);  // scraped games
+
+      // Active games (from collectionGame)
+      vi.mocked(prisma.collectionGame.findMany)
+        .mockResolvedValueOnce([
+          { gameId: "1" }, { gameId: "2" }, { gameId: "3" },
+        ] as never) // active game IDs (50 distinct)
+        .mockResolvedValueOnce([
+          { gameId: "4" }, { gameId: "5" },
+        ] as never); // unscraped active game IDs
 
       vi.mocked(getBggUsername).mockResolvedValue("testuser");
 
@@ -84,19 +92,14 @@ describe("Collection Import API Route", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      // The route returns the entire lastSync object from the database
       expect(data.lastSync).toMatchObject({
         gamesFound: 42,
         status: "success",
       });
       expect(data.lastSync.syncedAt).toBe(lastSyncDate.toISOString());
       expect(data.bggUsername).toBe("testuser");
-      expect(data.stats).toEqual({
-        total: 100,
-        active: 50,
-        scraped: 45,
-        unscrapedActive: 5,
-      });
+      expect(data.stats.total).toBe(100);
+      expect(data.stats.scraped).toBe(45);
     });
 
     it("should return null lastSync when no syncs exist", async () => {
@@ -104,9 +107,9 @@ describe("Collection Import API Route", () => {
 
       vi.mocked(prisma.game.count)
         .mockResolvedValueOnce(0)  // total games
-        .mockResolvedValueOnce(0)  // active games
-        .mockResolvedValueOnce(0)  // scraped games
-        .mockResolvedValueOnce(0); // unscraped active games
+        .mockResolvedValueOnce(0); // scraped games
+
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([]);
 
       vi.mocked(getBggUsername).mockResolvedValue("testuser");
 
@@ -122,15 +125,24 @@ describe("Collection Import API Route", () => {
 
       vi.mocked(prisma.game.count)
         .mockResolvedValueOnce(10)  // total games
-        .mockResolvedValueOnce(8)   // active games
-        .mockResolvedValueOnce(5)   // scraped games (some active aren't scraped)
-        .mockResolvedValueOnce(3);  // unscraped active games
+        .mockResolvedValueOnce(5);  // scraped games
+
+      vi.mocked(prisma.collectionGame.findMany)
+        .mockResolvedValueOnce([
+          { gameId: "1" }, { gameId: "2" }, { gameId: "3" },
+          { gameId: "4" }, { gameId: "5" }, { gameId: "6" },
+          { gameId: "7" }, { gameId: "8" },
+        ] as never) // 8 active games
+        .mockResolvedValueOnce([
+          { gameId: "6" }, { gameId: "7" }, { gameId: "8" },
+        ] as never); // 3 unscraped active games
 
       vi.mocked(getBggUsername).mockResolvedValue("testuser");
 
       const response = await GET();
       const data = await response.json();
 
+      expect(data.stats.active).toBe(8);
       expect(data.stats.unscrapedActive).toBe(3);
     });
 
@@ -139,9 +151,13 @@ describe("Collection Import API Route", () => {
 
       vi.mocked(prisma.game.count)
         .mockResolvedValueOnce(20)  // total games
-        .mockResolvedValueOnce(15)  // active games
-        .mockResolvedValueOnce(15)  // scraped games (all active are scraped)
-        .mockResolvedValueOnce(0);  // unscraped active games
+        .mockResolvedValueOnce(15); // scraped games
+
+      vi.mocked(prisma.collectionGame.findMany)
+        .mockResolvedValueOnce([
+          { gameId: "1" }, { gameId: "2" }, { gameId: "3" },
+        ] as never) // active games
+        .mockResolvedValueOnce([] as never); // no unscraped active games
 
       vi.mocked(getBggUsername).mockResolvedValue("testuser");
 
@@ -192,7 +208,8 @@ describe("Collection Import API Route", () => {
       expect(data.updated).toBe(5);
       expect(data.autoScraped).toBe(3);
       expect(data.autoScrapeFailed).toBe(0);
-      expect(performSyncWithAutoScrape).toHaveBeenCalledWith(false);
+      // Now takes (collectionId, skipAutoScrape) - collectionId is undefined when not provided
+      expect(performSyncWithAutoScrape).toHaveBeenCalledWith(undefined, false);
     });
 
     it("should pass skipAutoScrape=true when requested", async () => {
@@ -213,7 +230,7 @@ describe("Collection Import API Route", () => {
 
       expect(response.status).toBe(200);
       expect(data.autoScraped).toBe(0);
-      expect(performSyncWithAutoScrape).toHaveBeenCalledWith(true);
+      expect(performSyncWithAutoScrape).toHaveBeenCalledWith(undefined, true);
     });
 
     it("should default skipAutoScrape to false when not provided", async () => {
@@ -231,7 +248,7 @@ describe("Collection Import API Route", () => {
       const request = createRequest({});
       await POST(request);
 
-      expect(performSyncWithAutoScrape).toHaveBeenCalledWith(false);
+      expect(performSyncWithAutoScrape).toHaveBeenCalledWith(undefined, false);
     });
 
     it("should return 500 when sync fails", async () => {

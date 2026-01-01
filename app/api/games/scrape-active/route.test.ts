@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 // Mock Prisma
 vi.mock("@/lib/prisma", () => ({
   default: {
-    game: {
+    collectionGame: {
       findMany: vi.fn(),
     },
   },
@@ -65,7 +65,7 @@ describe("Scrape Active Games API Route", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      vi.mocked(prisma.game.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([]);
 
       const response = await POST();
       const data = await response.json();
@@ -77,10 +77,10 @@ describe("Scrape Active Games API Route", () => {
     });
 
     it("should queue all active games for scraping", async () => {
-      const mockActiveGames = [
-        { id: "1", name: "Game One", yearPublished: 2020, image: null, thumbnail: null, selectedThumbnail: null, description: null, minPlayers: null, maxPlayers: null, minPlaytime: null, maxPlaytime: null, rating: null, minAge: null, categories: null, mechanics: null, isExpansion: false, isVisible: true, lastScraped: null, availableImages: null, componentImages: null, createdAt: new Date(), updatedAt: new Date() },
-        { id: "2", name: "Game Two", yearPublished: 2020, image: null, thumbnail: null, selectedThumbnail: null, description: null, minPlayers: null, maxPlayers: null, minPlaytime: null, maxPlaytime: null, rating: null, minAge: null, categories: null, mechanics: null, isExpansion: false, isVisible: true, lastScraped: null, availableImages: null, componentImages: null, createdAt: new Date(), updatedAt: new Date() },
-        { id: "3", name: "Game Three", yearPublished: 2020, image: null, thumbnail: null, selectedThumbnail: null, description: null, minPlayers: null, maxPlayers: null, minPlaytime: null, maxPlaytime: null, rating: null, minAge: null, categories: null, mechanics: null, isExpansion: false, isVisible: true, lastScraped: null, availableImages: null, componentImages: null, createdAt: new Date(), updatedAt: new Date() },
+      const mockCollectionGames = [
+        { game: { id: "1", name: "Game One" } },
+        { game: { id: "2", name: "Game Two" } },
+        { game: { id: "3", name: "Game Three" } },
       ];
       const mockJobs = [
         { id: "job-1", gameId: "1", gameName: "Game One", status: "pending" as const, createdAt: new Date() },
@@ -97,7 +97,7 @@ describe("Scrape Active Games API Route", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      vi.mocked(prisma.game.findMany).mockResolvedValue(mockActiveGames);
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue(mockCollectionGames as never);
       vi.mocked(enqueueScrapeMany).mockResolvedValue(mockJobs);
       vi.mocked(getQueueStatus).mockResolvedValue({
         isProcessing: true,
@@ -126,7 +126,7 @@ describe("Scrape Active Games API Route", () => {
       ]);
     });
 
-    it("should query only active games with id and name", async () => {
+    it("should query games from collections", async () => {
       vi.mocked(requireAdmin).mockResolvedValue({
         id: "admin-1",
         email: "admin@example.com",
@@ -136,19 +136,23 @@ describe("Scrape Active Games API Route", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      vi.mocked(prisma.game.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([]);
 
       await POST();
 
-      expect(prisma.game.findMany).toHaveBeenCalledWith({
-        where: { isVisible: true },
-        select: { id: true, name: true },
+      expect(prisma.collectionGame.findMany).toHaveBeenCalledWith({
+        include: {
+          game: {
+            select: { id: true, name: true },
+          },
+        },
+        distinct: ["gameId"],
       });
     });
 
     it("should return immediately without waiting for scraping to complete", async () => {
-      const mockActiveGames = [
-        { id: "1", name: "Game One", yearPublished: 2020, image: null, thumbnail: null, selectedThumbnail: null, description: null, minPlayers: null, maxPlayers: null, minPlaytime: null, maxPlaytime: null, rating: null, minAge: null, categories: null, mechanics: null, isExpansion: false, isVisible: true, lastScraped: null, availableImages: null, componentImages: null, createdAt: new Date(), updatedAt: new Date() },
+      const mockCollectionGames = [
+        { game: { id: "1", name: "Game One" } },
       ];
       const mockJobs = [
         { id: "job-1", gameId: "1", gameName: "Game One", status: "pending" as const, createdAt: new Date() },
@@ -163,7 +167,7 @@ describe("Scrape Active Games API Route", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      vi.mocked(prisma.game.findMany).mockResolvedValue(mockActiveGames);
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue(mockCollectionGames as never);
       vi.mocked(enqueueScrapeMany).mockResolvedValue(mockJobs);
 
       const startTime = Date.now();

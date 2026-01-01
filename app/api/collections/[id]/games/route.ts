@@ -76,8 +76,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           name,
           yearPublished: yearPublished ?? null,
           isExpansion: isExpansion ?? false,
-          isVisible: false, // Not in main collection
-          source: "manual",
         },
       });
       wasCreated = true;

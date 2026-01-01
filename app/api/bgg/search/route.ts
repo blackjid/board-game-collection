@@ -95,6 +95,15 @@ export async function GET(request: NextRequest) {
         where: {
           name: { contains: query },
         },
+        include: {
+          collections: {
+            include: {
+              collection: {
+                select: { isPrimary: true },
+              },
+            },
+          },
+        },
         take: 15,
         orderBy: { rating: 'desc' },
       });
@@ -104,24 +113,34 @@ export async function GET(request: NextRequest) {
         name: game.name,
         yearPublished: game.yearPublished,
         thumbnail: game.selectedThumbnail || game.thumbnail || game.image,
-        isInMainCollection: game.source === 'bgg_collection' && game.isVisible,
+        isInMainCollection: game.collections.some(cg => cg.collection.isPrimary),
         isExpansion: game.isExpansion,
       }));
 
       return NextResponse.json({ results });
     }
 
-    // Get IDs of games we already have in the main collection
+    // Get IDs of games we already have in the primary collection
     const gameIds = items.map((item) => item.objectid);
-    const existingGames = await prisma.game.findMany({
-      where: { id: { in: gameIds } },
-      select: { id: true, source: true, isVisible: true },
+
+    // Get primary collection
+    const primaryCollection = await prisma.collection.findFirst({
+      where: { isPrimary: true },
+      select: { id: true },
     });
-    const mainCollectionIds = new Set(
-      existingGames
-        .filter((g) => g.source === "bgg_collection" && g.isVisible)
-        .map((g) => g.id)
-    );
+
+    // Find which games are in the primary collection
+    const mainCollectionIds = new Set<string>();
+    if (primaryCollection) {
+      const existingLinks = await prisma.collectionGame.findMany({
+        where: {
+          collectionId: primaryCollection.id,
+          gameId: { in: gameIds },
+        },
+        select: { gameId: true },
+      });
+      existingLinks.forEach(link => mainCollectionIds.add(link.gameId));
+    }
 
     // Enrich items with additional details from geekitems API
     const results: BggSearchResult[] = await Promise.all(

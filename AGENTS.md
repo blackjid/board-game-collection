@@ -241,13 +241,21 @@ function transformGame(game: PrismaGame): GameData {
   };
 }
 
-// Export data access functions
+// Export data access functions - query via collections
 export async function getActiveGames(): Promise<GameData[]> {
-  const games = await prisma.game.findMany({
-    where: { isVisible: true },
-    orderBy: { name: "asc" },
+  const primaryCollection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
   });
-  return games.map(transformGame);
+  
+  if (!primaryCollection) return [];
+  
+  const collectionGames = await prisma.collectionGame.findMany({
+    where: { collectionId: primaryCollection.id },
+    include: { game: true },
+    orderBy: { game: { name: "asc" } },
+  });
+  
+  return collectionGames.map((cg) => transformGame(cg.game));
 }
 ```
 
@@ -293,6 +301,81 @@ function parseJsonArray(json: string | null): string[] {
   if (!json) return [];
   try { return JSON.parse(json); } catch { return []; }
 }
+```
+
+### Unified Collection Model
+
+All game lists (BGG-synced collections, manual curated lists) use a single `Collection` model. This provides a unified abstraction for managing games across different sources.
+
+**Key concepts:**
+
+- **Collection types**: `bgg_sync` (automatically synced from BGG) or `manual` (user-curated)
+- **Primary collection**: One collection is marked as `isPrimary: true` - this is the main collection displayed by default
+- **Game membership**: Games belong to collections via `CollectionGame` junction table
+- **Active games**: A game is "active" (visible) if it belongs to at least one collection
+
+```prisma
+model Collection {
+  id                  String   @id @default(uuid())
+  name                String
+  type                String   @default("manual")  // "bgg_sync" | "manual"
+  isPrimary           Boolean  @default(false)
+  
+  // BGG sync settings (only for type="bgg_sync")
+  bggUsername         String?
+  syncSchedule        String   @default("manual")
+  autoScrapeNewGames  Boolean  @default(true)
+  lastSyncedAt        DateTime?
+  
+  games               CollectionGame[]
+}
+
+model CollectionGame {
+  collectionId String
+  gameId       String
+  addedBy      String   @default("manual")  // "sync" | "manual"
+  addedAt      DateTime @default(now())
+  
+  collection   Collection @relation(...)
+  game         Game       @relation(...)
+  
+  @@id([collectionId, gameId])
+}
+```
+
+**Querying active games:**
+
+```tsx
+// Get games in primary collection
+const primaryCollection = await prisma.collection.findFirst({
+  where: { isPrimary: true },
+});
+
+const games = await prisma.collectionGame.findMany({
+  where: { collectionId: primaryCollection.id },
+  include: { game: true },
+});
+
+// Check if a game is "active" (in any collection)
+const isActive = game.collections.length > 0;
+```
+
+**Adding/removing from collections:**
+
+```tsx
+// Add game to collection
+await prisma.collectionGame.upsert({
+  where: {
+    collectionId_gameId: { collectionId, gameId },
+  },
+  create: { collectionId, gameId, addedBy: "manual" },
+  update: {},
+});
+
+// Remove game from collection
+await prisma.collectionGame.deleteMany({
+  where: { collectionId, gameId },
+});
 ```
 
 ---
@@ -819,6 +902,18 @@ socket.on("session-update", (data) => { ... });
 9. **Don't hardcode port 3000** - Use `process.env.PORT || "3000"`
 
 10. **Don't forget `dynamic = "force-dynamic"`** - Required for pages with auth/dynamic data
+
+11. **Don't use `isVisible` on Game model** - Game visibility is determined by collection membership
+   ```tsx
+   // Bad - isVisible field no longer exists
+   await prisma.game.findMany({ where: { isVisible: true } });
+
+   // Good - query via collections
+   const collectionGames = await prisma.collectionGame.findMany({
+     where: { collectionId: primaryCollection.id },
+     include: { game: true },
+   });
+   ```
 
 ---
 

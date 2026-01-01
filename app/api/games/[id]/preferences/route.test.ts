@@ -52,7 +52,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: true,
+        
         lastScraped: null,
         availableImages: '["img1.jpg", "img2.jpg", "img3.jpg"]',
         componentImages: '["comp1.jpg", "comp2.jpg"]',
@@ -101,7 +101,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: true,
+        
         lastScraped: null,
         availableImages: null,
         componentImages: null,
@@ -191,7 +191,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: true,
+        
         lastScraped: null,
         availableImages: null,
         componentImages: null,
@@ -215,7 +215,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: true,
+        
         lastScraped: null,
         availableImages: null,
         componentImages: "[]",
@@ -267,7 +267,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: true,
+        
         lastScraped: null,
         availableImages: null,
         componentImages: null,
@@ -291,7 +291,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: true,
+        
         lastScraped: null,
         availableImages: null,
         componentImages: '["comp1.jpg", "comp2.jpg", "comp3.jpg"]',
@@ -342,7 +342,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: true,
+        
         lastScraped: null,
         availableImages: null,
         componentImages: null,
@@ -366,7 +366,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
-        isActive: true,
+        
         lastScraped: null,
         availableImages: null,
         componentImages: '["comp.jpg"]',

@@ -8,7 +8,13 @@ vi.mock("@/lib/prisma", () => ({
   default: {
     game: {
       findUnique: vi.fn(),
-      update: vi.fn(),
+    },
+    collection: {
+      findFirst: vi.fn(),
+    },
+    collectionGame: {
+      upsert: vi.fn(),
+      deleteMany: vi.fn(),
     },
   },
 }));
@@ -46,12 +52,21 @@ describe("Game [id] API Route", () => {
     categories: '["Card Game", "Animals"]',
     mechanics: '["Hand Management"]',
     isExpansion: false,
-    isActive: true,
     lastScraped: new Date(),
     availableImages: '["img1.jpg"]',
     componentImages: '["comp1.jpg"]',
     createdAt: new Date(),
     updatedAt: new Date(),
+    collections: [
+      {
+        collection: {
+          id: "primary-collection",
+          name: "My Collection",
+          type: "bgg_sync",
+          isPrimary: true,
+        },
+      },
+    ],
   };
 
   // ============================================================================
@@ -60,7 +75,7 @@ describe("Game [id] API Route", () => {
 
   describe("GET /api/games/[id]", () => {
     it("should return game by id", async () => {
-      vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
+      vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame as never);
 
       const request = new NextRequest("http://localhost:3000/api/games/123");
       const response = await GET(request, createMockParams("123"));
@@ -71,6 +86,7 @@ describe("Game [id] API Route", () => {
       expect(data.game.name).toBe("Wingspan");
       expect(data.game.categories).toEqual(["Card Game", "Animals"]);
       expect(data.game.mechanics).toEqual(["Hand Management"]);
+      expect(data.game.isActive).toBe(true); // Has collections
     });
 
     it("should return 404 when game not found", async () => {
@@ -92,7 +108,7 @@ describe("Game [id] API Route", () => {
         availableImages: null,
         componentImages: null,
       };
-      vi.mocked(prisma.game.findUnique).mockResolvedValue(gameWithNullFields);
+      vi.mocked(prisma.game.findUnique).mockResolvedValue(gameWithNullFields as never);
 
       const request = new NextRequest("http://localhost:3000/api/games/123");
       const response = await GET(request, createMockParams("123"));
@@ -110,6 +126,13 @@ describe("Game [id] API Route", () => {
   // ============================================================================
 
   describe("PATCH /api/games/[id]", () => {
+    const mockPrimaryCollection = {
+      id: "primary-collection",
+      name: "My Collection",
+      type: "bgg_sync",
+      isPrimary: true,
+    };
+
     it("should return 403 when not admin", async () => {
       vi.mocked(requireAdmin).mockRejectedValue(new Error("Forbidden"));
 
@@ -149,7 +172,7 @@ describe("Game [id] API Route", () => {
       expect(data.error).toBe("Game not found");
     });
 
-    it("should update isActive to true", async () => {
+    it("should add game to primary collection when isActive=true", async () => {
       vi.mocked(requireAdmin).mockResolvedValue({
         id: "admin-1",
         email: "admin@example.com",
@@ -159,11 +182,9 @@ describe("Game [id] API Route", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
-      vi.mocked(prisma.game.update).mockResolvedValue({
-        ...mockGame,
-        isActive: true,
-      });
+      vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame as never);
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(mockPrimaryCollection as never);
+      vi.mocked(prisma.collectionGame.upsert).mockResolvedValue({} as never);
 
       const request = new NextRequest("http://localhost:3000/api/games/123", {
         method: "PATCH",
@@ -173,13 +194,23 @@ describe("Game [id] API Route", () => {
       const response = await PATCH(request, createMockParams("123"));
 
       expect(response.status).toBe(200);
-      expect(prisma.game.update).toHaveBeenCalledWith({
-        where: { id: "123" },
-        data: { isVisible: true },
+      expect(prisma.collectionGame.upsert).toHaveBeenCalledWith({
+        where: {
+          collectionId_gameId: {
+            collectionId: "primary-collection",
+            gameId: "123",
+          },
+        },
+        create: {
+          collectionId: "primary-collection",
+          gameId: "123",
+          addedBy: "manual",
+        },
+        update: {},
       });
     });
 
-    it("should update isActive to false", async () => {
+    it("should remove game from primary collection when isActive=false", async () => {
       vi.mocked(requireAdmin).mockResolvedValue({
         id: "admin-1",
         email: "admin@example.com",
@@ -189,11 +220,9 @@ describe("Game [id] API Route", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
-      vi.mocked(prisma.game.update).mockResolvedValue({
-        ...mockGame,
-        isActive: false,
-      });
+      vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame as never);
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(mockPrimaryCollection as never);
+      vi.mocked(prisma.collectionGame.deleteMany).mockResolvedValue({ count: 1 });
 
       const request = new NextRequest("http://localhost:3000/api/games/123", {
         method: "PATCH",
@@ -202,13 +231,15 @@ describe("Game [id] API Route", () => {
 
       await PATCH(request, createMockParams("123"));
 
-      expect(prisma.game.update).toHaveBeenCalledWith({
-        where: { id: "123" },
-        data: { isVisible: false },
+      expect(prisma.collectionGame.deleteMany).toHaveBeenCalledWith({
+        where: {
+          collectionId: "primary-collection",
+          gameId: "123",
+        },
       });
     });
 
-    it("should ignore other fields", async () => {
+    it("should not modify collection when isActive not provided", async () => {
       vi.mocked(requireAdmin).mockResolvedValue({
         id: "admin-1",
         email: "admin@example.com",
@@ -218,13 +249,11 @@ describe("Game [id] API Route", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame);
-      vi.mocked(prisma.game.update).mockResolvedValue(mockGame);
+      vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGame as never);
 
       const request = new NextRequest("http://localhost:3000/api/games/123", {
         method: "PATCH",
         body: JSON.stringify({
-          isActive: true,
           name: "Hacked Name",
           rating: 10,
         }),
@@ -232,11 +261,10 @@ describe("Game [id] API Route", () => {
 
       await PATCH(request, createMockParams("123"));
 
-      // Only isActive should be updated
-      expect(prisma.game.update).toHaveBeenCalledWith({
-        where: { id: "123" },
-        data: { isVisible: true },
-      });
+      // Should not call collection methods when isActive not provided
+      expect(prisma.collection.findFirst).not.toHaveBeenCalled();
+      expect(prisma.collectionGame.upsert).not.toHaveBeenCalled();
+      expect(prisma.collectionGame.deleteMany).not.toHaveBeenCalled();
     });
   });
 });

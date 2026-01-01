@@ -6,12 +6,12 @@ import prisma from "@/lib/prisma";
 // Mock Prisma
 vi.mock("@/lib/prisma", () => ({
   default: {
-    settings: {
-      findUnique: vi.fn(),
+    collection: {
+      findFirst: vi.fn(),
       create: vi.fn(),
-      upsert: vi.fn(),
+      update: vi.fn(),
     },
-    game: {
+    collectionGame: {
       deleteMany: vi.fn(),
     },
     syncLog: {
@@ -27,12 +27,16 @@ vi.mock("@/lib/auth", () => ({
 
 import { requireAdmin } from "@/lib/auth";
 
-const mockAdminUser = {
-  id: "admin-1",
-  email: "admin@example.com",
-  name: "Admin",
-  role: "admin",
-  passwordHash: "hashed",
+const mockPrimaryCollection = {
+  id: "col-1",
+  name: "My Games",
+  description: null,
+  type: "bgg_sync",
+  isPrimary: true,
+  bggUsername: "testuser",
+  syncSchedule: "daily",
+  autoScrapeNewGames: true,
+  lastSyncedAt: new Date("2024-01-01"),
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -47,18 +51,8 @@ describe("Settings API Route", () => {
   // ============================================================================
 
   describe("GET /api/settings", () => {
-    it("should return existing settings", async () => {
-      const mockSettings = {
-        id: "default",
-        collectionName: "My Games",
-        bggUsername: "testuser",
-        syncSchedule: "daily",
-        autoScrapeNewGames: true,
-        lastScheduledSync: new Date("2024-01-01"),
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue(mockSettings);
+    it("should return settings from primary collection", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(mockPrimaryCollection);
 
       const response = await GET();
       const data = await response.json();
@@ -70,19 +64,8 @@ describe("Settings API Route", () => {
       expect(data.autoScrapeNewGames).toBe(true);
     });
 
-    it("should return default values when no settings exist", async () => {
-      const defaultSettings = {
-        id: "default",
-        collectionName: null,
-        bggUsername: null,
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue(null);
-      vi.mocked(prisma.settings.create).mockResolvedValue(defaultSettings);
+    it("should return null values when no primary collection exists", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
 
       const response = await GET();
       const data = await response.json();
@@ -90,9 +73,8 @@ describe("Settings API Route", () => {
       expect(response.status).toBe(200);
       expect(data.collectionName).toBeNull();
       expect(data.bggUsername).toBeNull();
-      expect(prisma.settings.create).toHaveBeenCalledWith({
-        data: { id: "default" },
-      });
+      expect(data.syncSchedule).toBe("manual");
+      expect(data.autoScrapeNewGames).toBe(false);
     });
   });
 
@@ -101,36 +83,68 @@ describe("Settings API Route", () => {
   // ============================================================================
 
   describe("PATCH /api/settings", () => {
-    it("should return 403 when not admin", async () => {
-      vi.mocked(requireAdmin).mockRejectedValue(new Error("Not authorized"));
+    it("should require admin authentication", async () => {
+      vi.mocked(requireAdmin).mockRejectedValue(new Error("Unauthorized"));
 
-      const request = new NextRequest("http://localhost:3000/api/settings", {
+      const request = new NextRequest("http://localhost/api/settings", {
         method: "PATCH",
-        body: JSON.stringify({ bggUsername: "newuser" }),
+        body: JSON.stringify({ collectionName: "Test" }),
       });
 
       const response = await PATCH(request);
-
       expect(response.status).toBe(403);
     });
 
-    it("should update bggUsername", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue(null);
-
-      const updatedSettings = {
-        id: "default",
-        collectionName: null,
-        bggUsername: "newuser",
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
+    it("should update collection name", async () => {
+      vi.mocked(requireAdmin).mockResolvedValue({
+        id: "admin-1",
+        email: "admin@example.com",
+        name: "Admin",
+        role: "admin",
+        passwordHash: "hashed",
+        createdAt: new Date(),
         updatedAt: new Date(),
-      };
+      });
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(mockPrimaryCollection);
+      vi.mocked(prisma.collection.update).mockResolvedValue({
+        ...mockPrimaryCollection,
+        name: "Updated Name",
+      });
 
-      vi.mocked(prisma.settings.upsert).mockResolvedValue(updatedSettings);
+      const request = new NextRequest("http://localhost/api/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ collectionName: "Updated Name" }),
+      });
 
-      const request = new NextRequest("http://localhost:3000/api/settings", {
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.collectionName).toBe("Updated Name");
+    });
+
+    it("should update bggUsername and set type to bgg_sync", async () => {
+      vi.mocked(requireAdmin).mockResolvedValue({
+        id: "admin-1",
+        email: "admin@example.com",
+        name: "Admin",
+        role: "admin",
+        passwordHash: "hashed",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        ...mockPrimaryCollection,
+        bggUsername: null,
+        type: "manual",
+      });
+      vi.mocked(prisma.collection.update).mockResolvedValue({
+        ...mockPrimaryCollection,
+        bggUsername: "newuser",
+        type: "bgg_sync",
+      });
+
+      const request = new NextRequest("http://localhost/api/settings", {
         method: "PATCH",
         body: JSON.stringify({ bggUsername: "newuser" }),
       });
@@ -140,190 +154,65 @@ describe("Settings API Route", () => {
 
       expect(response.status).toBe(200);
       expect(data.bggUsername).toBe("newuser");
-      expect(prisma.settings.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          update: expect.objectContaining({
-            bggUsername: "newuser",
-          }),
-        })
-      );
     });
 
-    it("should clear games when changing bggUsername to a different value", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
-
-      // Mock existing settings with a username
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-        id: "default",
-        collectionName: null,
-        bggUsername: "olduser",
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
+    it("should clear collection games when changing bggUsername", async () => {
+      vi.mocked(requireAdmin).mockResolvedValue({
+        id: "admin-1",
+        email: "admin@example.com",
+        name: "Admin",
+        role: "admin",
+        passwordHash: "hashed",
+        createdAt: new Date(),
         updatedAt: new Date(),
       });
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(mockPrimaryCollection);
+      vi.mocked(prisma.collection.update).mockResolvedValue({
+        ...mockPrimaryCollection,
+        bggUsername: "differentuser",
+      });
 
-      const updatedSettings = {
-        id: "default",
-        collectionName: null,
-        bggUsername: "newuser",
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.upsert).mockResolvedValue(updatedSettings);
-      vi.mocked(prisma.game.deleteMany).mockResolvedValue({ count: 10 });
-      vi.mocked(prisma.syncLog.deleteMany).mockResolvedValue({ count: 5 });
-
-      const request = new NextRequest("http://localhost:3000/api/settings", {
+      const request = new NextRequest("http://localhost/api/settings", {
         method: "PATCH",
-        body: JSON.stringify({ bggUsername: "newuser" }),
+        body: JSON.stringify({ bggUsername: "differentuser" }),
+      });
+
+      await PATCH(request);
+
+      expect(prisma.collectionGame.deleteMany).toHaveBeenCalledWith({
+        where: { collectionId: "col-1" },
+      });
+      expect(prisma.syncLog.deleteMany).toHaveBeenCalled();
+    });
+
+    it("should create primary collection if none exists", async () => {
+      vi.mocked(requireAdmin).mockResolvedValue({
+        id: "admin-1",
+        email: "admin@example.com",
+        name: "Admin",
+        role: "admin",
+        passwordHash: "hashed",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.collection.create).mockResolvedValue({
+        ...mockPrimaryCollection,
+        id: "new-col",
+        name: "New Collection",
+      });
+
+      const request = new NextRequest("http://localhost/api/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ collectionName: "New Collection" }),
       });
 
       const response = await PATCH(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.bggUsername).toBe("newuser");
-      expect(prisma.game.deleteMany).toHaveBeenCalledWith({});
-      expect(prisma.syncLog.deleteMany).toHaveBeenCalledWith({});
-    });
-
-    it("should not clear games when setting same bggUsername", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
-
-      // Mock existing settings with the same username
-      vi.mocked(prisma.settings.findUnique).mockResolvedValue({
-        id: "default",
-        collectionName: null,
-        bggUsername: "sameuser",
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      });
-
-      const updatedSettings = {
-        id: "default",
-        collectionName: null,
-        bggUsername: "sameuser",
-        syncSchedule: "manual",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.upsert).mockResolvedValue(updatedSettings);
-
-      const request = new NextRequest("http://localhost:3000/api/settings", {
-        method: "PATCH",
-        body: JSON.stringify({ bggUsername: "sameuser" }),
-      });
-
-      const response = await PATCH(request);
-
-      expect(response.status).toBe(200);
-      expect(prisma.game.deleteMany).not.toHaveBeenCalled();
-      expect(prisma.syncLog.deleteMany).not.toHaveBeenCalled();
-    });
-
-    it("should update syncSchedule", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
-
-      const updatedSettings = {
-        id: "default",
-        collectionName: null,
-        bggUsername: null,
-        syncSchedule: "weekly",
-        autoScrapeNewGames: false,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.upsert).mockResolvedValue(updatedSettings);
-
-      const request = new NextRequest("http://localhost:3000/api/settings", {
-        method: "PATCH",
-        body: JSON.stringify({ syncSchedule: "weekly" }),
-      });
-
-      const response = await PATCH(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.syncSchedule).toBe("weekly");
-    });
-
-    it("should update autoScrapeNewGames", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
-
-      const updatedSettings = {
-        id: "default",
-        collectionName: null,
-        bggUsername: null,
-        syncSchedule: "manual",
-        autoScrapeNewGames: true,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.upsert).mockResolvedValue(updatedSettings);
-
-      const request = new NextRequest("http://localhost:3000/api/settings", {
-        method: "PATCH",
-        body: JSON.stringify({ autoScrapeNewGames: true }),
-      });
-
-      const response = await PATCH(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.autoScrapeNewGames).toBe(true);
-    });
-
-    it("should update multiple fields at once", async () => {
-      vi.mocked(requireAdmin).mockResolvedValue(mockAdminUser);
-
-      const updatedSettings = {
-        id: "default",
-        collectionName: "Board Games",
-        bggUsername: "gamer123",
-        syncSchedule: "daily",
-        autoScrapeNewGames: true,
-        lastScheduledSync: null,
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(prisma.settings.upsert).mockResolvedValue(updatedSettings);
-
-      const request = new NextRequest("http://localhost:3000/api/settings", {
-        method: "PATCH",
-        body: JSON.stringify({
-          collectionName: "Board Games",
-          bggUsername: "gamer123",
-          syncSchedule: "daily",
-          autoScrapeNewGames: true,
-        }),
-      });
-
-      const response = await PATCH(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.collectionName).toBe("Board Games");
-      expect(data.syncSchedule).toBe("daily");
-      expect(prisma.settings.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          update: expect.objectContaining({
-            collectionName: "Board Games",
-            bggUsername: "gamer123",
-            syncSchedule: "daily",
-            autoScrapeNewGames: true,
-          }),
-        })
-      );
+      expect(prisma.collection.create).toHaveBeenCalled();
+      expect(data.collectionName).toBe("New Collection");
     });
   });
 });

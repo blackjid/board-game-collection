@@ -122,14 +122,26 @@ function detectPersona(categoryCount: Record<string, number>): string {
 export async function GET() {
   const settings = await getSettings();
 
-  // Fetch all active, scraped games
-  const rawGames = await prisma.game.findMany({
-    where: {
-      isVisible: true,
-      lastScraped: { not: null },
+  // Fetch all games that are in at least one collection and have been scraped
+  const collectionGames = await prisma.collectionGame.findMany({
+    include: {
+      game: true,
     },
-    orderBy: { rating: "desc" },
+    where: {
+      game: {
+        lastScraped: { not: null },
+      },
+    },
   });
+
+  // Deduplicate by game ID and collect unique games
+  const gameMap = new Map<string, typeof collectionGames[0]["game"]>();
+  for (const cg of collectionGames) {
+    if (!gameMap.has(cg.game.id)) {
+      gameMap.set(cg.game.id, cg.game);
+    }
+  }
+  const rawGames = Array.from(gameMap.values()).sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
   const games = rawGames.map(transformGame);
 
