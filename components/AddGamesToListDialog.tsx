@@ -238,7 +238,7 @@ export function AddGamesToListDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-3xl h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Add Games to &quot;{listName}&quot;</DialogTitle>
           <DialogDescription>
