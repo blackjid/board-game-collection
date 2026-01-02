@@ -1208,7 +1208,11 @@ export function HomeClient({
                 <div key={game.id} className="relative">
                   {/* Selection checkbox for admin */}
                   {isAdmin && (
-                    <div className="absolute top-2 left-2 z-10">
+                    <div
+                      className="absolute top-2 left-2 z-20"
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
                       <Checkbox
                         checked={selectedGameIds.has(game.id)}
                         onCheckedChange={() => toggleGameSelection(game.id)}
