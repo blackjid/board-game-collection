@@ -17,6 +17,7 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
+  FolderPlus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -119,6 +120,14 @@ interface QueueStatus {
   failedCount: number;
   cancelledCount: number;
   recentJobs: ScrapeJob[];
+}
+
+interface CollectionSummary {
+  id: string;
+  name: string;
+  type: string;
+  isPrimary: boolean;
+  gameCount: number;
 }
 
 interface ImageEditorProps {
@@ -291,6 +300,15 @@ export function CollectionSection() {
   // Queue status
   const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null);
 
+  // Collections state (for "Add to List" feature)
+  const [collections, setCollections] = useState<CollectionSummary[]>([]);
+  const [showAddToListDialog, setShowAddToListDialog] = useState(false);
+  const [addingToList, setAddingToList] = useState(false);
+  const [gameIdsToAddToList, setGameIdsToAddToList] = useState<string[]>([]);
+
+  // Filter collections to only show manual (non-synced) lists
+  const manualCollections = collections.filter((c) => c.type === "manual");
+
   // Row selection for bulk actions
   const filteredGames = games.filter((game) => {
     if (filter === "active") return game.isActive;
@@ -314,20 +332,23 @@ export function CollectionSection() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [syncRes, settingsRes, gamesRes] = await Promise.all([
+      const [syncRes, settingsRes, gamesRes, collectionsRes] = await Promise.all([
         fetch("/api/collection/import"),
         fetch("/api/settings"),
         fetch("/api/games"),
+        fetch("/api/collections"),
       ]);
-      const [syncData, settingsData, gamesData] = await Promise.all([
+      const [syncData, settingsData, gamesData, collectionsData] = await Promise.all([
         syncRes.json(),
         settingsRes.json(),
         gamesRes.json(),
+        collectionsRes.json(),
       ]);
       setSyncStatus(syncData);
       setSettings(settingsData);
       setUsernameInput(settingsData.bggUsername || "");
       setGames(gamesData.games);
+      setCollections(collectionsData.collections || []);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -482,6 +503,47 @@ export function CollectionSection() {
     }
     clearSelection();
     await fetchQueueStatus();
+  };
+
+  // Add game(s) to a collection/list
+  const handleAddToList = async (collectionId: string, gameIds: string[]) => {
+    setAddingToList(true);
+    try {
+      await Promise.all(
+        gameIds.map((gameId) =>
+          fetch(`/api/collections/${collectionId}/games`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gameId }),
+          })
+        )
+      );
+      // Refresh collections to update game counts
+      const collectionsRes = await fetch("/api/collections");
+      const collectionsData = await collectionsRes.json();
+      setCollections(collectionsData.collections || []);
+    } catch (error) {
+      console.error("Failed to add games to list:", error);
+    } finally {
+      setAddingToList(false);
+    }
+  };
+
+  // Open add to list dialog for specific game(s)
+  const openAddToListDialog = (gameIds: string[]) => {
+    setGameIdsToAddToList(gameIds);
+    setShowAddToListDialog(true);
+  };
+
+  // Handle adding game(s) to a list from the dialog
+  const handleDialogAddToList = async (collectionId: string) => {
+    await handleAddToList(collectionId, gameIdsToAddToList);
+    // Clear selection if it was a bulk action
+    if (gameIdsToAddToList.length > 1) {
+      clearSelection();
+    }
+    setShowAddToListDialog(false);
+    setGameIdsToAddToList([]);
   };
 
   const activeCount = games.filter((g) => g.isActive).length;
@@ -837,6 +899,15 @@ export function CollectionSection() {
                       <RefreshCw className="size-4" />
                       Scrape Selected
                     </DropdownMenuItem>
+                    {manualCollections.length > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => openAddToListDialog(selectedItems.map((g) => g.id))}>
+                          <FolderPlus className="size-4" />
+                          Add to List
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button variant="ghost" size="sm" onClick={clearSelection}>
@@ -900,6 +971,16 @@ export function CollectionSection() {
                       <ImageIcon className="size-4" />
                       Edit Images
                     </MenuItem>
+
+                    {manualCollections.length > 0 && (
+                      <MenuItem
+                        onClick={() => openAddToListDialog([game.id])}
+                        className="gap-2"
+                      >
+                        <FolderPlus className="size-4" />
+                        Add to List
+                      </MenuItem>
+                    )}
 
                     <MenuSeparator />
 
@@ -1127,6 +1208,61 @@ export function CollectionSection() {
             </Button>
             <Button onClick={saveUsername}>
               Yes, Change Username
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add to List Dialog */}
+      <Dialog
+        open={showAddToListDialog}
+        onOpenChange={(open) => {
+          setShowAddToListDialog(open);
+          if (!open) setGameIdsToAddToList([]);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="size-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <FolderPlus className="size-6 text-primary" />
+              </div>
+              Add to List
+            </DialogTitle>
+            <DialogDescription>
+              Add {gameIdsToAddToList.length} game{gameIdsToAddToList.length !== 1 ? "s" : ""} to a list
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 py-4">
+            {manualCollections.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">
+                No lists available. Create a list in the &quot;Game Lists&quot; section first.
+              </p>
+            ) : (
+              manualCollections.map((collection) => (
+                <button
+                  key={collection.id}
+                  onClick={() => handleDialogAddToList(collection.id)}
+                  disabled={addingToList}
+                  className={cn(
+                    "w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors",
+                    "bg-muted/50 hover:bg-muted",
+                    addingToList && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <span className="font-medium text-foreground">{collection.name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {collection.gameCount} game{collection.gameCount !== 1 ? "s" : ""}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowAddToListDialog(false)}>
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

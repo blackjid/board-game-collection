@@ -36,6 +36,8 @@ export async function GET() {
       id: collection.id,
       name: collection.name,
       description: collection.description,
+      type: collection.type,
+      isPrimary: collection.isPrimary,
       gameCount: collection._count.games,
       createdAt: collection.createdAt,
       updatedAt: collection.updatedAt,
