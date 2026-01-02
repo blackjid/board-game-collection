@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import type { Game, PickSessionPlayer } from "@prisma/client";
 
 interface Params {
   params: Promise<{ code: string }>;
 }
+
+type GameMetadata = { name: string; image: string | null; rating: number | null };
 
 /**
  * Full game result with vote data AND game metadata (for API response)
@@ -104,8 +107,8 @@ export async function GET(request: NextRequest, { params }: Params) {
         where: { id: { in: allResultIds } },
         select: { id: true, name: true, selectedThumbnail: true, image: true, thumbnail: true, rating: true },
       });
-      const gameMap = new Map(
-        games.map((g) => [g.id, {
+      const gameMap = new Map<string, GameMetadata>(
+        games.map((g: Pick<Game, "id" | "name" | "selectedThumbnail" | "image" | "thumbnail" | "rating">) => [g.id, {
           name: g.name,
           image: g.selectedThumbnail || g.image || g.thumbnail,
           rating: g.rating,
@@ -124,7 +127,7 @@ export async function GET(request: NextRequest, { params }: Params) {
           totalGames: gameIds.length,
           totalPlayers,
         },
-        players: session.players.map((p) => ({
+        players: session.players.map((p: PickSessionPlayer) => ({
           id: p.id,
           name: p.name,
           isHost: p.isHost,
@@ -143,8 +146,8 @@ export async function GET(request: NextRequest, { params }: Params) {
       where: { id: { in: gameIds } },
     });
 
-    const gameMap = new Map(games.map((g) => [g.id, g]));
-    const playerMap = new Map(session.players.map((p) => [p.id, p.name]));
+    const gameMap = new Map<string, Game>(games.map((g: Game) => [g.id, g]));
+    const playerMap = new Map<string, string>(session.players.map((p: PickSessionPlayer) => [p.id, p.name]));
 
     // Aggregate votes by game
     const gameVotes: Map<string, { likes: string[]; picks: string[]; skips: string[] }> = new Map();
@@ -171,7 +174,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     const results: GameResult[] = [];
 
     for (const [gameId, votes] of gameVotes) {
-      const game = gameMap.get(gameId);
+      const game: Game | undefined = gameMap.get(gameId);
       if (!game) continue;
 
       const totalPositive = votes.likes.length + votes.picks.length;
@@ -220,7 +223,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         totalGames: gameIds.length,
         totalPlayers,
       },
-      players: session.players.map((p) => ({
+      players: session.players.map((p: PickSessionPlayer) => ({
         id: p.id,
         name: p.name,
         isHost: p.isHost,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import type { PickSessionPlayer } from "@prisma/client";
 
 interface Params {
   params: Promise<{ code: string }>;
@@ -45,7 +46,7 @@ async function computeFinalResults(sessionId: string): Promise<{
   }
 
   const gameIds: string[] = JSON.parse(session.gameIdsJson);
-  const playerMap = new Map(session.players.map((p) => [p.id, p.name]));
+  const playerMap = new Map<string, string>(session.players.map((p: PickSessionPlayer) => [p.id, p.name]));
   const totalPlayers = session.players.length;
 
   // Aggregate votes by game
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     // Verify the player is the host
-    const player = session.players.find((p) => p.id === playerId);
+    const player = session.players.find((p: PickSessionPlayer) => p.id === playerId);
     if (!player?.isHost) {
       return NextResponse.json(
         { error: "Only the host can end the session" },

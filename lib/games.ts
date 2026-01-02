@@ -1,4 +1,26 @@
 import prisma from "./prisma";
+import type { Collection, CollectionGame, Game } from "@prisma/client";
+
+// ============================================================================
+// Prisma Result Types (for callback type annotations)
+// ============================================================================
+
+type CollectionGameWithGame = CollectionGame & {
+  game: Game;
+};
+
+type CollectionGameWithCollection = CollectionGame & {
+  collection: Pick<Collection, "id" | "name" | "type">;
+};
+
+type CollectionGameWithGamePreview = CollectionGame & {
+  game: Pick<Game, "selectedThumbnail" | "thumbnail" | "image">;
+};
+
+type CollectionWithGamesAndCount = Collection & {
+  games: CollectionGameWithGamePreview[];
+  _count: { games: number };
+};
 
 // ============================================================================
 // Game Data Types
@@ -131,7 +153,7 @@ export async function getGameById(id: string): Promise<GameData | null> {
 
   const gameData = transformGame(game);
   if (gameData) {
-    gameData.collections = game.collections.map((cg) => ({
+    gameData.collections = game.collections.map((cg: CollectionGameWithCollection) => ({
       id: cg.collection.id,
       name: cg.collection.name,
       type: cg.collection.type,
@@ -273,8 +295,8 @@ export async function getPrimaryCollection(): Promise<CollectionSummary | null> 
     autoScrapeNewGames: collection.autoScrapeNewGames,
     gameCount: collection._count.games,
     previewImages: collection.games
-      .map((cg) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
-      .filter((img): img is string => img !== null),
+      .map((cg: CollectionGameWithGamePreview) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
+      .filter((img: string | null): img is string => img !== null),
   };
 }
 
@@ -307,7 +329,7 @@ export async function getCollections(): Promise<CollectionSummary[]> {
     ],
   });
 
-  return collections.map((collection) => ({
+  return collections.map((collection: CollectionWithGamesAndCount) => ({
     id: collection.id,
     name: collection.name,
     description: collection.description,
@@ -319,8 +341,8 @@ export async function getCollections(): Promise<CollectionSummary[]> {
     autoScrapeNewGames: collection.autoScrapeNewGames,
     gameCount: collection._count.games,
     previewImages: collection.games
-      .map((cg) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
-      .filter((img): img is string => img !== null),
+      .map((cg: CollectionGameWithGamePreview) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
+      .filter((img: string | null): img is string => img !== null),
   }));
 }
 
@@ -347,9 +369,9 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
 
   // Filter to only include games that have been scraped (have full data)
   const games = collection.games
-    .filter((cg) => cg.game.lastScraped !== null)
-    .map((cg) => transformGame(cg.game))
-    .filter((g): g is GameData => g !== null);
+    .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null)
+    .map((cg: CollectionGameWithGame) => transformGame(cg.game))
+    .filter((g: GameData | null): g is GameData => g !== null);
 
   return {
     id: collection.id,
@@ -364,8 +386,8 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
     gameCount: collection._count.games,
     previewImages: collection.games
       .slice(0, 4)
-      .map((cg) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
-      .filter((img): img is string => img !== null),
+      .map((cg: CollectionGameWithGame) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
+      .filter((img: string | null): img is string => img !== null),
     games,
   };
 }
