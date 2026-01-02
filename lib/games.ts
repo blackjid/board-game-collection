@@ -45,6 +45,7 @@ export interface GameData {
   isExpansion: boolean;
   availableImages: string[];
   componentImages: string[];
+  lastScraped: string | null;
   // Collections this game belongs to
   collections?: { id: string; name: string; type: string }[];
 }
@@ -80,6 +81,7 @@ function transformGame(game: Awaited<ReturnType<typeof prisma.game.findFirst>>):
     isExpansion: game.isExpansion,
     availableImages: parseJsonArray(game.availableImages),
     componentImages: parseJsonArray(game.componentImages),
+    lastScraped: game.lastScraped?.toISOString() ?? null,
   };
 }
 
