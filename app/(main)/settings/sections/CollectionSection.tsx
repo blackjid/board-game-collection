@@ -1,30 +1,22 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
+import Link from "next/link";
 import {
   RefreshCw,
   AlertTriangle,
   CheckCircle,
   XCircle,
   Clock,
-  Play,
   Square,
-  ImageIcon,
   Loader2,
-  ChevronDown,
-  MoreVertical,
-  Eye,
-  EyeOff,
   ExternalLink,
-  FolderPlus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
@@ -48,22 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-  ContextMenuSeparator,
-} from "@/components/ui/context-menu";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRowSelection } from "@/components/ui/multi-select";
 import { cn } from "@/lib/utils";
 
 interface SyncStatus {
@@ -88,21 +64,6 @@ interface Settings {
   lastScheduledSync: string | null;
 }
 
-interface Game {
-  id: string;
-  name: string;
-  yearPublished: number | null;
-  isActive: boolean;
-  isExpansion: boolean;
-  lastScraped: string | null;
-  image: string | null;
-  thumbnail: string | null;
-  selectedThumbnail: string | null;
-  availableImages: string[];
-  componentImages: string[];
-  rating: number | null;
-}
-
 interface ScrapeJob {
   id: string;
   gameId: string;
@@ -122,158 +83,6 @@ interface QueueStatus {
   recentJobs: ScrapeJob[];
 }
 
-interface CollectionSummary {
-  id: string;
-  name: string;
-  type: string;
-  isPrimary: boolean;
-  gameCount: number;
-}
-
-interface ImageEditorProps {
-  game: Game;
-  onClose: () => void;
-  onSave: () => void;
-}
-
-function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
-  const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(
-    game.selectedThumbnail
-  );
-  const [componentImages, setComponentImages] = useState<string[]>(
-    game.componentImages || []
-  );
-  const [saving, setSaving] = useState(false);
-
-  const allImages = [
-    ...(game.image ? [game.image] : []),
-    ...game.availableImages,
-  ].filter((img, index, self) => self.indexOf(img) === index);
-
-  const handleThumbnailSelect = (url: string) => {
-    setSelectedThumbnail(url === selectedThumbnail ? null : url);
-  };
-
-  const handleComponentToggle = (url: string) => {
-    if (componentImages.includes(url)) {
-      setComponentImages(componentImages.filter((img) => img !== url));
-    } else {
-      setComponentImages([...componentImages, url]);
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await fetch(`/api/games/${game.id}/preferences`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedThumbnail, componentImages }),
-      });
-      onSave();
-      onClose();
-    } catch (error) {
-      console.error("Failed to save preferences:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle>{game.name}</DialogTitle>
-          <DialogDescription>
-            Select thumbnail and component images
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto space-y-6 py-4">
-          {allImages.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No images available. Scrape this game first to fetch images.</p>
-            </div>
-          ) : (
-            <>
-              <div>
-                <h3 className="text-base font-semibold text-foreground mb-3">
-                  Thumbnail
-                  <span className="text-muted-foreground font-normal ml-2 text-sm">
-                    (Click to select)
-                  </span>
-                </h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                  {allImages.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleThumbnailSelect(img)}
-                      className={cn(
-                        "aspect-square rounded-lg overflow-hidden border-2 transition-all relative",
-                        selectedThumbnail === img
-                          ? "border-primary ring-2 ring-primary/50"
-                          : img === game.image && !selectedThumbnail
-                          ? "border-blue-500/50"
-                          : "border-border hover:border-muted-foreground"
-                      )}
-                    >
-                      <Image src={img} alt="" fill sizes="100px" className="object-cover" />
-                      {selectedThumbnail === img && (
-                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                          <Badge>THUMB</Badge>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-base font-semibold text-foreground mb-3">
-                  Component Images
-                  <span className="text-muted-foreground font-normal ml-2 text-sm">
-                    (Click to toggle)
-                  </span>
-                </h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                  {allImages.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleComponentToggle(img)}
-                      className={cn(
-                        "aspect-square rounded-lg overflow-hidden border-2 transition-all relative",
-                        componentImages.includes(img)
-                          ? "border-emerald-500 ring-2 ring-emerald-500/50"
-                          : "border-border hover:border-muted-foreground"
-                      )}
-                    >
-                      <Image src={img} alt="" fill sizes="100px" className="object-cover" />
-                      {componentImages.includes(img) && (
-                        <div className="absolute top-1 right-1 bg-emerald-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                          {componentImages.indexOf(img) + 1}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export function CollectionSection() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [settings, setSettings] = useState<Settings>({
@@ -290,65 +99,22 @@ export function CollectionSection() {
   const [showSyncDialog, setShowSyncDialog] = useState(false);
   const [syncDialogAutoScrape, setSyncDialogAutoScrape] = useState(true);
 
-  // Games state
-  const [games, setGames] = useState<Game[]>([]);
-  const [scraping, setScraping] = useState<string | null>(null);
-  const [scrapingAll, setScrapingAll] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  const [filter, setFilter] = useState<"all" | "active" | "scraped">("all");
-
   // Queue status
   const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null);
 
-  // Collections state (for "Add to List" feature)
-  const [collections, setCollections] = useState<CollectionSummary[]>([]);
-  const [showAddToListDialog, setShowAddToListDialog] = useState(false);
-  const [addingToList, setAddingToList] = useState(false);
-  const [gameIdsToAddToList, setGameIdsToAddToList] = useState<string[]>([]);
-
-  // Filter collections to only show manual (non-synced) lists
-  const manualCollections = collections.filter((c) => c.type === "manual");
-
-  // Row selection for bulk actions
-  const filteredGames = games.filter((game) => {
-    if (filter === "active") return game.isActive;
-    if (filter === "scraped") return game.lastScraped !== null;
-    return true;
-  });
-
-  const {
-    selectedItems,
-    selectedCount,
-    toggleItem,
-    toggleAll,
-    clearSelection,
-    isSelected,
-    allSelected,
-    someSelected,
-  } = useRowSelection({
-    items: filteredGames,
-    getItemId: (game) => game.id,
-  });
-
   const fetchData = useCallback(async () => {
     try {
-      const [syncRes, settingsRes, gamesRes, collectionsRes] = await Promise.all([
+      const [syncRes, settingsRes] = await Promise.all([
         fetch("/api/collection/import"),
         fetch("/api/settings"),
-        fetch("/api/games"),
-        fetch("/api/collections"),
       ]);
-      const [syncData, settingsData, gamesData, collectionsData] = await Promise.all([
+      const [syncData, settingsData] = await Promise.all([
         syncRes.json(),
         settingsRes.json(),
-        gamesRes.json(),
-        collectionsRes.json(),
       ]);
       setSyncStatus(syncData);
       setSettings(settingsData);
       setUsernameInput(settingsData.bggUsername || "");
-      setGames(gamesData.games);
-      setCollections(collectionsData.collections || []);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -362,7 +128,7 @@ export function CollectionSection() {
       const data = await res.json();
       setQueueStatus(data);
 
-      // If queue is processing, also refresh game data
+      // If queue is processing, also refresh sync data
       if (data.isProcessing) {
         fetchData();
       }
@@ -438,115 +204,14 @@ export function CollectionSection() {
     }
   };
 
-  // Game handlers
-  const handleToggleActive = async (game: Game) => {
-    await fetch(`/api/games/${game.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: !game.isActive }),
-    });
-    await fetchData();
-  };
-
-  const handleScrape = async (gameId: string) => {
-    setScraping(gameId);
-    try {
-      await fetch(`/api/games/${gameId}/scrape`, { method: "POST" });
-      await fetchQueueStatus();
-    } finally {
-      setScraping(null);
-    }
-  };
-
   const handleScrapeAll = async () => {
-    setScrapingAll(true);
     try {
       await fetch("/api/games/scrape-active", { method: "POST" });
       await fetchQueueStatus();
-    } finally {
-      setScrapingAll(false);
-    }
-  };
-
-  // Bulk actions
-  const handleBulkActivate = async () => {
-    await Promise.all(
-      selectedItems.filter((g) => !g.isActive).map((game) =>
-        fetch(`/api/games/${game.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isActive: true }),
-        })
-      )
-    );
-    clearSelection();
-    await fetchData();
-  };
-
-  const handleBulkDeactivate = async () => {
-    await Promise.all(
-      selectedItems.filter((g) => g.isActive).map((game) =>
-        fetch(`/api/games/${game.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isActive: false }),
-        })
-      )
-    );
-    clearSelection();
-    await fetchData();
-  };
-
-  const handleBulkScrape = async () => {
-    for (const game of selectedItems) {
-      await fetch(`/api/games/${game.id}/scrape`, { method: "POST" });
-    }
-    clearSelection();
-    await fetchQueueStatus();
-  };
-
-  // Add game(s) to a collection/list
-  const handleAddToList = async (collectionId: string, gameIds: string[]) => {
-    setAddingToList(true);
-    try {
-      await Promise.all(
-        gameIds.map((gameId) =>
-          fetch(`/api/collections/${collectionId}/games`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ gameId }),
-          })
-        )
-      );
-      // Refresh collections to update game counts
-      const collectionsRes = await fetch("/api/collections");
-      const collectionsData = await collectionsRes.json();
-      setCollections(collectionsData.collections || []);
     } catch (error) {
-      console.error("Failed to add games to list:", error);
-    } finally {
-      setAddingToList(false);
+      console.error("Failed to start scraping:", error);
     }
   };
-
-  // Open add to list dialog for specific game(s)
-  const openAddToListDialog = (gameIds: string[]) => {
-    setGameIdsToAddToList(gameIds);
-    setShowAddToListDialog(true);
-  };
-
-  // Handle adding game(s) to a list from the dialog
-  const handleDialogAddToList = async (collectionId: string) => {
-    await handleAddToList(collectionId, gameIdsToAddToList);
-    // Clear selection if it was a bulk action
-    if (gameIdsToAddToList.length > 1) {
-      clearSelection();
-    }
-    setShowAddToListDialog(false);
-    setGameIdsToAddToList([]);
-  };
-
-  const activeCount = games.filter((g) => g.isActive).length;
 
   if (loading) {
     return (
@@ -559,9 +224,13 @@ export function CollectionSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground">Collection</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground">Collection Sync</h2>
         <p className="text-muted-foreground text-sm mt-1">
-          Manage your BoardGameGeek collection and games
+          Configure BoardGameGeek sync settings. Manage games in the{" "}
+          <Link href="/" className="text-primary hover:underline">
+            main collection view
+          </Link>
+          .
         </p>
       </div>
 
@@ -719,6 +388,18 @@ export function CollectionSection() {
               Last auto-sync: {new Date(settings.lastScheduledSync).toLocaleString()}
             </p>
           )}
+
+          {/* Link to manage games */}
+          {syncStatus && syncStatus.stats.total > 0 && (
+            <div className="flex items-center gap-2 pt-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/" className="gap-2">
+                  <ExternalLink className="size-4" />
+                  Manage Games in Collection
+                </Link>
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -813,312 +494,12 @@ export function CollectionSection() {
             </div>
             <Button
               onClick={handleScrapeAll}
-              disabled={scrapingAll}
               size="sm"
             >
-              {scrapingAll ? "Queuing..." : "Scrape All Visible"}
+              Scrape All Visible
             </Button>
           </CardContent>
         </Card>
-      )}
-
-      {/* Games List */}
-      <Card className="gap-0">
-        <CardHeader className="border-b border-border">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <CardTitle className="text-lg">Games</CardTitle>
-              <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="all" className="text-xs px-2.5">All</TabsTrigger>
-                  <TabsTrigger value="active" className="text-xs px-2.5">Visible</TabsTrigger>
-                  <TabsTrigger value="scraped" className="text-xs px-2.5">Scraped</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <span className="text-muted-foreground text-sm hidden sm:inline">
-                {filteredGames.length} games
-              </span>
-            </div>
-            <Button
-              onClick={handleScrapeAll}
-              disabled={scrapingAll || activeCount === 0}
-              size="sm"
-              variant="secondary"
-            >
-              {scrapingAll ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Scraping...
-                </>
-              ) : (
-                <>
-                  <Play className="size-4" />
-                    Scrape Visible ({activeCount})
-                </>
-              )}
-            </Button>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-0">
-          {/* Select All Header with Bulk Actions */}
-          <div className={cn(
-            "px-3 sm:px-4 h-12 border-b border-border flex items-center gap-3 sm:gap-4",
-            selectedCount > 0 ? "bg-primary/10" : "bg-muted/30"
-          )}>
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={toggleAll}
-              aria-label="Select all"
-              {...(someSelected ? { "data-state": "indeterminate" } : {})}
-            />
-            <span className="text-xs text-muted-foreground flex-1">
-              {selectedCount > 0
-                ? `${selectedCount} game${selectedCount !== 1 ? "s" : ""} selected`
-                : allSelected ? "Deselect all" : "Select all"}
-            </span>
-            {selectedCount > 0 && (
-              <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Actions
-                      <ChevronDown className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleBulkActivate}>
-                      <Eye className="size-4" />
-                      Show Selected
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleBulkDeactivate}>
-                      <EyeOff className="size-4" />
-                      Hide Selected
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleBulkScrape}>
-                      <RefreshCw className="size-4" />
-                      Scrape Selected
-                    </DropdownMenuItem>
-                    {manualCollections.length > 0 && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => openAddToListDialog(selectedItems.map((g) => g.id))}>
-                          <FolderPlus className="size-4" />
-                          Add to List
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button variant="ghost" size="sm" onClick={clearSelection}>
-                  Clear
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="divide-y divide-border">
-            {filteredGames.map((game) => {
-              const isInQueue = queueStatus?.recentJobs.some(
-                (j) => j.gameId === game.id && (j.status === "pending" || j.status === "processing")
-              );
-              const isCurrentlyProcessing = queueStatus?.currentJob?.gameId === game.id;
-              const isPending = queueStatus?.recentJobs.some(
-                (j) => j.gameId === game.id && j.status === "pending"
-              );
-
-              const GameActions = ({ asContext = false }: { asContext?: boolean }) => {
-                const MenuItem = asContext ? ContextMenuItem : DropdownMenuItem;
-                const MenuSeparator = asContext ? ContextMenuSeparator : DropdownMenuSeparator;
-
-                return (
-                  <>
-                    <MenuItem
-                      onClick={() => handleToggleActive(game)}
-                      className="gap-2"
-                    >
-                      {game.isActive ? (
-                        <>
-                          <EyeOff className="size-4" />
-                          Hide
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="size-4" />
-                          Show
-                        </>
-                      )}
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => handleScrape(game.id)}
-                      disabled={scraping === game.id || isInQueue}
-                      className="gap-2"
-                    >
-                      <RefreshCw className={cn("size-4", isCurrentlyProcessing && "animate-spin")} />
-                      {scraping === game.id || isCurrentlyProcessing
-                        ? "Scraping..."
-                        : isPending
-                        ? "Queued"
-                        : "Scrape Details"}
-                    </MenuItem>
-
-                    <MenuItem
-                      onClick={() => setSelectedGame(game)}
-                      disabled={!game.lastScraped}
-                      className="gap-2"
-                    >
-                      <ImageIcon className="size-4" />
-                      Edit Images
-                    </MenuItem>
-
-                    {manualCollections.length > 0 && (
-                      <MenuItem
-                        onClick={() => openAddToListDialog([game.id])}
-                        className="gap-2"
-                      >
-                        <FolderPlus className="size-4" />
-                        Add to List
-                      </MenuItem>
-                    )}
-
-                    <MenuSeparator />
-
-                    <MenuItem
-                      onClick={() => window.open(`https://boardgamegeek.com/boardgame/${game.id}`, "_blank")}
-                      className="gap-2"
-                    >
-                      <ExternalLink className="size-4" />
-                      View on BGG
-                    </MenuItem>
-                  </>
-                );
-              };
-
-              return (
-                <ContextMenu key={game.id}>
-                  <ContextMenuTrigger asChild>
-                    <div
-                      className={cn(
-                        "p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/50 transition-colors cursor-default",
-                        isSelected(game.id) && "bg-primary/5"
-                      )}
-                    >
-                      <Checkbox
-                        checked={isSelected(game.id)}
-                        onCheckedChange={() => toggleItem(game.id)}
-                        aria-label={`Select ${game.name}`}
-                      />
-
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
-                        {game.selectedThumbnail || game.thumbnail || game.image ? (
-                          <Image
-                            src={game.selectedThumbnail || game.thumbnail || game.image || ""}
-                            alt=""
-                            fill
-                            sizes="64px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ImageIcon className="size-6 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-foreground truncate text-sm sm:text-base">
-                            {game.name}
-                          </h4>
-                          {game.isExpansion && (
-                            <Badge variant="secondary" className="text-[10px] sm:text-xs">
-                              Exp
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-                          {game.yearPublished && <span>{game.yearPublished}</span>}
-                          {game.lastScraped && (
-                            <span className="text-muted-foreground hidden sm:inline">
-                              Scraped {new Date(game.lastScraped).toLocaleDateString()}
-                            </span>
-                          )}
-                          {game.lastScraped && (
-                            <CheckCircle className="size-3 text-emerald-400 sm:hidden" />
-                          )}
-                          {game.rating && (
-                            <span className="text-primary">★ {game.rating.toFixed(1)}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Status indicators and actions */}
-                      <div className="flex items-center gap-2">
-                        {/* Status badge */}
-                        <Badge
-                          variant={game.isActive ? "default" : "secondary"}
-                          className={cn(
-                            "text-xs hidden sm:flex",
-                            game.isActive && "bg-primary/20 text-primary hover:bg-primary/30"
-                          )}
-                        >
-                          {game.isActive ? "Visible" : "Hidden"}
-                        </Badge>
-
-                        {/* Mobile status dot */}
-                        <div
-                          className={cn(
-                            "size-2 rounded-full sm:hidden",
-                            game.isActive ? "bg-primary" : "bg-muted-foreground"
-                          )}
-                          title={game.isActive ? "Visible" : "Hidden"}
-                        />
-
-                        {/* Dropdown menu trigger */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              <MoreVertical className="size-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <GameActions />
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent className="w-48">
-                    <GameActions asContext />
-                  </ContextMenuContent>
-                </ContextMenu>
-              );
-            })}
-
-            {filteredGames.length === 0 && (
-              <div className="p-12 text-center text-muted-foreground">
-                {games.length === 0
-                  ? "No games yet. Click Sync Now to get your collection from BGG."
-                  : "No games match the current filter."}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Image Editor Modal */}
-      {selectedGame && (
-        <ImageEditor
-          game={selectedGame}
-          onClose={() => setSelectedGame(null)}
-          onSave={fetchData}
-        />
       )}
 
       {/* Manual Sync Confirmation Dialog */}
@@ -1208,61 +589,6 @@ export function CollectionSection() {
             </Button>
             <Button onClick={saveUsername}>
               Yes, Change Username
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add to List Dialog */}
-      <Dialog
-        open={showAddToListDialog}
-        onOpenChange={(open) => {
-          setShowAddToListDialog(open);
-          if (!open) setGameIdsToAddToList([]);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="size-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <FolderPlus className="size-6 text-primary" />
-              </div>
-              Add to List
-            </DialogTitle>
-            <DialogDescription>
-              Add {gameIdsToAddToList.length} game{gameIdsToAddToList.length !== 1 ? "s" : ""} to a list
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2 py-4">
-            {manualCollections.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-4">
-                No lists available. Create a list in the &quot;Game Lists&quot; section first.
-              </p>
-            ) : (
-              manualCollections.map((collection) => (
-                <button
-                  key={collection.id}
-                  onClick={() => handleDialogAddToList(collection.id)}
-                  disabled={addingToList}
-                  className={cn(
-                    "w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors",
-                    "bg-muted/50 hover:bg-muted",
-                    addingToList && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  <span className="font-medium text-foreground">{collection.name}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {collection.gameCount} game{collection.gameCount !== 1 ? "s" : ""}
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowAddToListDialog(false)}>
-              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
