@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getGameById } from "@/lib/games";
+import { getGameById, getManualLists } from "@/lib/games";
+import { getCurrentUser } from "@/lib/auth";
 import { GameDetailClient } from "./GameDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,13 @@ interface PageProps {
 
 export default async function GameDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const game = await getGameById(id);
+
+  // Fetch game, user, and lists in parallel
+  const [game, currentUser, lists] = await Promise.all([
+    getGameById(id),
+    getCurrentUser(),
+    getManualLists(),
+  ]);
 
   if (!game) {
     return (
@@ -29,5 +36,16 @@ export default async function GameDetailPage({ params }: PageProps) {
     );
   }
 
-  return <GameDetailClient game={game} />;
+  return (
+    <GameDetailClient
+      game={game}
+      currentUser={currentUser ? {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
+      } : null}
+      lists={lists}
+    />
+  );
 }

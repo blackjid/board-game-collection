@@ -347,6 +347,37 @@ export async function getCollections(): Promise<CollectionSummary[]> {
 }
 
 /**
+ * Get manual lists only (for "Add to List" dropdown)
+ * Returns a simplified list structure with just id, name, and game IDs
+ */
+export interface ManualListSummary {
+  id: string;
+  name: string;
+  gameIds: string[];
+}
+
+export async function getManualLists(): Promise<ManualListSummary[]> {
+  const collections = await prisma.collection.findMany({
+    where: {
+      type: "manual",
+      isPrimary: false,
+    },
+    include: {
+      games: {
+        select: { gameId: true },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+
+  return collections.map((collection) => ({
+    id: collection.id,
+    name: collection.name,
+    gameIds: collection.games.map((cg) => cg.gameId),
+  }));
+}
+
+/**
  * Get a specific collection with all its games
  */
 export async function getCollectionWithGames(collectionId: string): Promise<CollectionWithGames | null> {

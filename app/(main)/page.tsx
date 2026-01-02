@@ -3,7 +3,6 @@ import {
   getGameCount,
   getCollectionSettings,
   getLastSyncInfo,
-  getCollections,
   getCollectionWithGames,
 } from "@/lib/games";
 import { getCurrentUser } from "@/lib/auth";
@@ -20,12 +19,11 @@ export default async function Home({ searchParams }: PageProps) {
   const selectedCollectionId = params.collection || null;
 
   // Fetch base data in parallel
-  const [counts, settings, lastSync, currentUser, collections] = await Promise.all([
+  const [counts, settings, lastSync, currentUser] = await Promise.all([
     getGameCount(),
     getCollectionSettings(),
     getLastSyncInfo(),
     getCurrentUser(),
-    getCollections(),
   ]);
 
   // Fetch games based on whether a collection is selected
@@ -66,7 +64,6 @@ export default async function Home({ searchParams }: PageProps) {
         email: currentUser.email,
         role: currentUser.role,
       } : null}
-      collections={collections}
       selectedCollection={selectedCollection}
     />
   );

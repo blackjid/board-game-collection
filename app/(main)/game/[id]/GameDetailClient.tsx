@@ -1,14 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowLeft, ExternalLink, Dice6, Users, Clock, Baby } from "lucide-react";
-import type { GameData } from "@/lib/games";
+import { useRouter } from "next/navigation";
+import {
+  ExternalLink,
+  Dice6,
+  Users,
+  Clock,
+  Baby,
+  FolderPlus,
+  Check,
+  Plus,
+  Loader2,
+} from "lucide-react";
+import type { GameData, ManualListSummary } from "@/lib/games";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { SiteHeader } from "@/components/SiteHeader";
+import { CreateListDialog } from "@/components/ListDialogs";
 
 // Calculate rating color: red (4) -> yellow (6) -> green (8+)
 function getRatingColor(rating: number): string {
@@ -26,18 +45,40 @@ function getRatingColor(rating: number): string {
     const t = (normalized - 0.5) * 2;
     r = Math.round(220 - t * 140);
     g = Math.round(180 + t * 20);
-    b = Math.round(40 + t * 40);
+    b = Math.round(40 + t * 80);
   }
 
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-interface GameDetailClientProps {
-  game: GameData;
+interface CurrentUser {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
 }
 
-export function GameDetailClient({ game }: GameDetailClientProps) {
+interface GameDetailClientProps {
+  game: GameData;
+  currentUser: CurrentUser | null;
+  lists: ManualListSummary[];
+}
+
+export function GameDetailClient({ game, currentUser, lists }: GameDetailClientProps) {
+  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showCreateListDialog, setShowCreateListDialog] = useState(false);
+  const [togglingListId, setTogglingListId] = useState<string | null>(null);
+  const [localListMembership, setLocalListMembership] = useState<Map<string, boolean>>(() => {
+    // Initialize with current membership from lists prop
+    const map = new Map<string, boolean>();
+    lists.forEach((list) => {
+      map.set(list.id, list.gameIds.includes(game.id));
+    });
+    return map;
+  });
+
+  const isAdmin = currentUser?.role === "admin";
 
   // Use selectedThumbnail if available, otherwise fall back to image/thumbnail
   const mainImage = game.selectedThumbnail || game.image || game.thumbnail || null;
@@ -66,8 +107,152 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
 
   const ageDisplay = game.minAge;
 
+  // Check if game is in a list
+  const isInList = useCallback(
+    (listId: string) => localListMembership.get(listId) ?? false,
+    [localListMembership]
+  );
+
+  // Toggle game in/out of a list
+  const toggleListMembership = async (listId: string) => {
+    const currentlyInList = isInList(listId);
+    setTogglingListId(listId);
+
+    try {
+      if (currentlyInList) {
+        // Remove from list
+        const response = await fetch(`/api/collections/${listId}/games`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gameId: game.id }),
+        });
+        if (response.ok) {
+          setLocalListMembership((prev) => new Map(prev).set(listId, false));
+        }
+      } else {
+        // Add to list
+        const response = await fetch(`/api/collections/${listId}/games`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            gameId: game.id,
+            name: game.name,
+            yearPublished: game.yearPublished,
+            isExpansion: game.isExpansion,
+          }),
+        });
+        if (response.ok) {
+          setLocalListMembership((prev) => new Map(prev).set(listId, true));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to toggle list membership:", error);
+    } finally {
+      setTogglingListId(null);
+    }
+  };
+
+  // Handle creating a new list and adding the game to it
+  const handleListCreated = async (newList: { id: string; name: string }) => {
+    // Add the game to the newly created list
+    try {
+      await fetch(`/api/collections/${newList.id}/games`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gameId: game.id,
+          name: game.name,
+          yearPublished: game.yearPublished,
+          isExpansion: game.isExpansion,
+        }),
+      });
+      // Update local state
+      setLocalListMembership((prev) => new Map(prev).set(newList.id, true));
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to add game to new list:", error);
+    }
+  };
+
+  // Header actions for SiteHeader
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      {/* Add to List Button - Admin only */}
+      {isAdmin && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <FolderPlus className="size-4" />
+              <span className="hidden sm:inline">Add to List</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {lists.length === 0 ? (
+              <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                No lists yet
+              </div>
+            ) : (
+              lists.map((list) => {
+                const inList = isInList(list.id);
+                const isToggling = togglingListId === list.id;
+
+                return (
+                  <DropdownMenuItem
+                    key={list.id}
+                    onClick={() => toggleListMembership(list.id)}
+                    disabled={isToggling}
+                    className="flex items-center gap-2"
+                  >
+                    <div
+                      className={cn(
+                        "size-4 rounded border flex items-center justify-center",
+                        inList
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : "border-muted-foreground"
+                      )}
+                    >
+                      {isToggling ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : inList ? (
+                        <Check className="size-3" />
+                      ) : null}
+                    </div>
+                    <span className="flex-1 truncate">{list.name}</span>
+                  </DropdownMenuItem>
+                );
+              })
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setShowCreateListDialog(true)}>
+              <Plus className="size-4" />
+              Create New List
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Let's Play Button */}
+      <Button
+        onClick={() => {
+          alert(`Tonight you're playing ${game.name}! 🎲`);
+        }}
+        className="rounded-full font-bold gap-2 shadow-lg shadow-primary/20"
+        size="sm"
+      >
+        <span className="hidden sm:inline">Let&apos;s Play!</span>
+        <Dice6 className="size-5" />
+      </Button>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-card via-background to-background text-foreground">
+      {/* Site Header with breadcrumbs */}
+      <SiteHeader
+        breadcrumbs={[{ label: game.name }]}
+        actions={headerActions}
+      />
+
       {/* Hero Section with Background */}
       <div className="relative">
         {/* Blurred background */}
@@ -84,27 +269,6 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
           </div>
         )}
 
-        {/* Navigation */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
-          <Button variant="ghost" asChild className="gap-2">
-            <Link href="/">
-              <ArrowLeft className="size-4" />
-              <span className="hidden sm:inline">Back to Collection</span>
-              <span className="sm:hidden">Back</span>
-            </Link>
-          </Button>
-
-          {/* Let's Play Button */}
-          <Button
-            onClick={() => {
-              alert(`Tonight you're playing ${game.name}! 🎲`);
-            }}
-            className="rounded-full font-bold gap-2 shadow-lg shadow-primary/20"
-          >
-            Let&apos;s Play!
-            <Dice6 className="size-5" />
-          </Button>
-        </div>
 
         {/* Main Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-8 sm:pb-16">
@@ -299,6 +463,13 @@ export function GameDetailClient({ game }: GameDetailClientProps) {
           </div>
         </div>
       </div>
+
+      {/* Create List Dialog */}
+      <CreateListDialog
+        open={showCreateListDialog}
+        onOpenChange={setShowCreateListDialog}
+        onCreated={handleListCreated}
+      />
     </div>
   );
 }

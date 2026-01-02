@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { HomeClient } from "./HomeClient";
 import type { GameData } from "@/lib/games";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 // Mock next/link
 vi.mock("next/link", () => ({
@@ -14,6 +15,7 @@ vi.mock("next/link", () => ({
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     refresh: vi.fn(),
+    push: vi.fn(),
   }),
 }));
 
@@ -27,6 +29,30 @@ Object.defineProperty(window, "print", { value: mockPrint });
 
 // Mock scrollIntoView for Radix UI Select (not available in JSDOM)
 Element.prototype.scrollIntoView = vi.fn();
+
+// Mock window.matchMedia (not available in JSDOM, needed for use-mobile hook)
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// Helper to render with SidebarProvider
+function renderWithSidebar(ui: React.ReactElement) {
+  return render(
+    <SidebarProvider defaultOpen={false}>
+      {ui}
+    </SidebarProvider>
+  );
+}
 
 describe("HomeClient", () => {
   beforeEach(() => {
@@ -69,22 +95,6 @@ describe("HomeClient", () => {
     role: "admin",
   };
 
-  const mockCollections = [
-    {
-      id: "col-1",
-      name: "Primary Collection",
-      description: null,
-      type: "bgg_sync",
-      isPrimary: true,
-      bggUsername: "testuser",
-      lastSyncedAt: null,
-      syncSchedule: "manual",
-      autoScrapeNewGames: false,
-      gameCount: 3,
-      previewImages: [],
-    },
-  ];
-
   const defaultProps = {
     games: mockGames,
     totalGames: 3,
@@ -92,13 +102,12 @@ describe("HomeClient", () => {
     bggUsername: "testuser",
     lastSyncedAt: new Date().toISOString(),
     currentUser: null,
-    collections: mockCollections,
     selectedCollection: null,
   };
 
   describe("rendering", () => {
     it("should render collection name", () => {
-      render(
+      renderWithSidebar(
         <HomeClient {...defaultProps} collectionName="My Board Games" />
       );
 
@@ -108,7 +117,7 @@ describe("HomeClient", () => {
     });
 
     it("should render default collection name from username", () => {
-      render(
+      renderWithSidebar(
         <HomeClient {...defaultProps} collectionName={null} bggUsername="testuser" />
       );
 
@@ -118,7 +127,7 @@ describe("HomeClient", () => {
     });
 
     it("should render fallback collection name when no username", () => {
-      render(
+      renderWithSidebar(
         <HomeClient {...defaultProps} collectionName={null} bggUsername={null} />
       );
 
@@ -128,7 +137,7 @@ describe("HomeClient", () => {
     });
 
     it("should render total games count", () => {
-      render(
+      renderWithSidebar(
         <HomeClient {...defaultProps} totalGames={42} />
       );
 
@@ -138,21 +147,15 @@ describe("HomeClient", () => {
     });
 
     it("should render all game cards in grid view", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       expect(screen.getByText("Wingspan")).toBeInTheDocument();
       expect(screen.getByText("Catan")).toBeInTheDocument();
       expect(screen.getByText("Azul")).toBeInTheDocument();
     });
 
-    it("should render Login link when not authenticated", () => {
-      render(<HomeClient {...defaultProps} currentUser={null} />);
-
-      expect(screen.getByText("Login")).toBeInTheDocument();
-    });
-
     it("should render Pick a Game link", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       const pickLinks = screen.getAllByRole("link").filter(
         link => link.getAttribute("href") === "/pick"
@@ -162,20 +165,14 @@ describe("HomeClient", () => {
   });
 
   describe("auth-aware features", () => {
-    it("should show user menu when logged in as admin", () => {
-      render(<HomeClient {...defaultProps} currentUser={mockAdminUser} />);
-
-      expect(screen.getByText("Admin User")).toBeInTheDocument();
-    });
-
     it("should show sync button for admins", () => {
-      render(<HomeClient {...defaultProps} currentUser={mockAdminUser} />);
+      renderWithSidebar(<HomeClient {...defaultProps} currentUser={mockAdminUser} />);
 
       expect(screen.getByText("Sync")).toBeInTheDocument();
     });
 
     it("should not show sync button for guests", () => {
-      render(<HomeClient {...defaultProps} currentUser={null} />);
+      renderWithSidebar(<HomeClient {...defaultProps} currentUser={null} />);
 
       expect(screen.queryByText("Sync")).not.toBeInTheDocument();
     });
@@ -184,7 +181,7 @@ describe("HomeClient", () => {
       const syncedAt = new Date();
       syncedAt.setHours(syncedAt.getHours() - 2);
 
-      render(
+      renderWithSidebar(
         <HomeClient
           {...defaultProps}
           currentUser={mockAdminUser}
@@ -198,7 +195,7 @@ describe("HomeClient", () => {
 
   describe("empty state / onboarding", () => {
     it("should render onboarding when no games", () => {
-      render(
+      renderWithSidebar(
         <HomeClient {...defaultProps} games={[]} totalGames={0} currentUser={null} />
       );
 
@@ -207,7 +204,7 @@ describe("HomeClient", () => {
     });
 
     it("should show Go to Settings when logged in with empty collection", () => {
-      render(
+      renderWithSidebar(
         <HomeClient {...defaultProps} games={[]} totalGames={0} currentUser={mockAdminUser} />
       );
 
@@ -215,7 +212,7 @@ describe("HomeClient", () => {
     });
 
     it("should show onboarding steps", () => {
-      render(
+      renderWithSidebar(
         <HomeClient {...defaultProps} games={[]} totalGames={0} currentUser={null} />
       );
 
@@ -227,7 +224,7 @@ describe("HomeClient", () => {
 
   describe("search functionality", () => {
     it("should filter games by search query", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       const searchInput = screen.getByPlaceholderText("Search games...");
       fireEvent.change(searchInput, { target: { value: "wing" } });
@@ -238,7 +235,7 @@ describe("HomeClient", () => {
     });
 
     it("should show no results message when search has no matches", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       const searchInput = screen.getByPlaceholderText("Search games...");
       fireEvent.change(searchInput, { target: { value: "xyz" } });
@@ -248,7 +245,7 @@ describe("HomeClient", () => {
     });
 
     it("should clear search when clear button clicked", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       const searchInput = screen.getByPlaceholderText("Search games...");
       fireEvent.change(searchInput, { target: { value: "wing" } });
@@ -265,14 +262,14 @@ describe("HomeClient", () => {
 
   describe("sorting", () => {
     it("should sort by name by default (A-Z)", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       const gameNames = screen.getAllByRole("heading", { level: 3 }).map(h => h.textContent);
       expect(gameNames).toEqual(["Azul", "Catan", "Wingspan"]);
     });
 
     it("should sort by year when selected (newest first)", async () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       // shadcn Select uses Radix UI - click to open, then click option
       const sortTrigger = screen.getByRole("combobox");
@@ -287,7 +284,7 @@ describe("HomeClient", () => {
     });
 
     it("should sort by rating when selected (highest first)", async () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       // shadcn Select uses Radix UI - click to open, then click option
       const sortTrigger = screen.getByRole("combobox");
@@ -304,7 +301,7 @@ describe("HomeClient", () => {
 
   describe("view mode toggle", () => {
     it("should start in grid view", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       // Grid view shows game cards, check for the grid class
       const container = screen.getByRole("main");
@@ -312,7 +309,7 @@ describe("HomeClient", () => {
     });
 
     it("should switch to list view when list button clicked", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       const buttons = screen.getAllByRole("button");
       const listButton = buttons.find(b => b.getAttribute("title") === "List view");
@@ -329,7 +326,7 @@ describe("HomeClient", () => {
 
   describe("print functionality", () => {
     it("should call window.print when print button clicked", () => {
-      render(<HomeClient {...defaultProps} />);
+      renderWithSidebar(<HomeClient {...defaultProps} />);
 
       const printButton = screen.getByText("Print Collection");
       fireEvent.click(printButton);
@@ -340,7 +337,7 @@ describe("HomeClient", () => {
 
   describe("footer", () => {
     it("should render BGG link when username provided", () => {
-      render(<HomeClient {...defaultProps} bggUsername="testuser" />);
+      renderWithSidebar(<HomeClient {...defaultProps} bggUsername="testuser" />);
 
       const bggLink = screen.getByText("View on BGG");
       expect(bggLink.getAttribute("href")).toBe(

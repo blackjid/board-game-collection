@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Trash2, Edit, UserPlus, ChevronDown, MoreVertical, Shield, User } from "lucide-react";
 
-import { useSettings } from "../layout";
+import { useSettings } from "../SettingsClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
