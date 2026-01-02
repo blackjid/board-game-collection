@@ -299,7 +299,6 @@ export function CollectionSection() {
   });
 
   const {
-    selectedIds,
     selectedItems,
     selectedCount,
     toggleItem,
