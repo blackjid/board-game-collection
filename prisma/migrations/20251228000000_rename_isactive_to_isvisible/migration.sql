@@ -2,7 +2,7 @@
 -- This migration:
 -- 1. Creates Collection and CollectionGame tables
 -- 2. Migrates data from old schema to new collections
--- 3. Removes isActive and source from Game
+-- 3. Removes isActive from Game
 -- 4. Removes sync settings from Settings (now in Collection)
 
 -- CreateTable
@@ -78,7 +78,7 @@ SELECT
     lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))) as id,
     c.id as collectionId,
     g.id as gameId,
-    CASE WHEN g.source = 'bgg_collection' THEN 'sync' ELSE 'manual' END as addedBy,
+    'manual' as addedBy,
     g.createdAt as addedAt
 FROM "Game" g
 CROSS JOIN "Collection" c
@@ -91,7 +91,7 @@ WHERE g."isActive" = 1 AND c."isPrimary" = 1;
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
 
--- Recreate Game table without isActive and source columns
+-- Recreate Game table without isActive column
 CREATE TABLE "new_Game" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
