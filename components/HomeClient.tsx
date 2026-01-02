@@ -1060,10 +1060,10 @@ export function HomeClient({
               )}
             </div>
 
-            {/* Right: Size slider (card view only) */}
+            {/* Right: Size slider (card view only, desktop only) */}
             {viewMode === "card" && (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-xs hidden sm:inline">Size:</span>
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-muted-foreground text-xs">Size:</span>
                 <input
                   id="card-size"
                   type="range"
@@ -1071,7 +1071,7 @@ export function HomeClient({
                   max="10"
                   value={columns}
                   onChange={(e) => setColumns(Number(e.target.value))}
-                  className="w-20 sm:w-24 accent-primary"
+                  className="w-24 accent-primary"
                 />
                 <span className="text-muted-foreground text-xs w-6 text-right">{columns}</span>
               </div>
