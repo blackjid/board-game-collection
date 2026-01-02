@@ -318,9 +318,9 @@ describe("HomeClient", () => {
         fireEvent.click(listButton);
       }
 
-      // In list view, we should have flex column layout instead of grid
+      // In list view, we should have divide-y layout instead of grid
       const container = screen.getByRole("main");
-      expect(container.querySelector(".flex.flex-col")).toBeTruthy();
+      expect(container.querySelector(".divide-y")).toBeTruthy();
     });
   });
 

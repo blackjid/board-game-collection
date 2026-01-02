@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ import {
   X,
   LayoutGrid,
   List,
+  Table2,
   Settings as SettingsIcon,
   LogIn,
   Printer,
@@ -21,12 +22,19 @@ import {
   Trash2,
   Check,
   Loader2,
+  FolderPlus,
+  ChevronDown,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Square,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -41,17 +49,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 import { SiteHeader } from "@/components/SiteHeader";
 import { GameCard } from "@/components/GameCard";
-import { GameListItem } from "@/components/GameListItem";
+import { GameRowItem } from "@/components/GameRowItem";
+import { GameTable, SortField, SortDirection } from "@/components/GameTable";
 import { EditListDialog, DeleteListDialog } from "@/components/ListDialogs";
 import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
 import type { GameData } from "@/lib/games";
 
 type SortOption = "name" | "year" | "rating";
-type ViewMode = "grid" | "list";
+type ViewMode = "card" | "list" | "table";
 
 interface CurrentUser {
   id: string;
@@ -68,6 +85,32 @@ interface SelectedCollection {
   isPrimary: boolean;
   bggUsername: string | null;
   gameCount: number;
+}
+
+interface CollectionSummary {
+  id: string;
+  name: string;
+  type: string;
+  gameCount: number;
+}
+
+interface ScrapeJob {
+  id: string;
+  gameId: string;
+  gameName: string;
+  status: "pending" | "processing" | "completed" | "failed" | "cancelled";
+  error?: string;
+}
+
+interface QueueStatus {
+  isProcessing: boolean;
+  isStopping: boolean;
+  currentJob: ScrapeJob | null;
+  pendingCount: number;
+  completedCount: number;
+  failedCount: number;
+  cancelledCount: number;
+  recentJobs: ScrapeJob[];
 }
 
 interface HomeClientProps {
@@ -97,6 +140,158 @@ function formatRelativeTime(dateString: string | null): string {
   return date.toLocaleDateString();
 }
 
+// ============================================================================
+// Image Editor Dialog
+// ============================================================================
+
+interface ImageEditorProps {
+  game: GameData;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
+  const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(
+    game.selectedThumbnail
+  );
+  const [componentImages, setComponentImages] = useState<string[]>(
+    game.componentImages || []
+  );
+  const [saving, setSaving] = useState(false);
+
+  const allImages = [
+    ...(game.image ? [game.image] : []),
+    ...game.availableImages,
+  ].filter((img, index, self) => self.indexOf(img) === index);
+
+  const handleThumbnailSelect = (url: string) => {
+    setSelectedThumbnail(url === selectedThumbnail ? null : url);
+  };
+
+  const handleComponentToggle = (url: string) => {
+    if (componentImages.includes(url)) {
+      setComponentImages(componentImages.filter((img) => img !== url));
+    } else {
+      setComponentImages([...componentImages, url]);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await fetch(`/api/games/${game.id}/preferences`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedThumbnail, componentImages }),
+      });
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>{game.name}</DialogTitle>
+          <DialogDescription>
+            Select thumbnail and component images
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto space-y-6 py-4">
+          {allImages.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No images available. Scrape this game first to fetch images.</p>
+            </div>
+          ) : (
+            <>
+              <div>
+                <h3 className="text-base font-semibold text-foreground mb-3">
+                  Thumbnail
+                  <span className="text-muted-foreground font-normal ml-2 text-sm">
+                    (Click to select)
+                  </span>
+                </h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                  {allImages.map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleThumbnailSelect(img)}
+                      className={cn(
+                        "aspect-square rounded-lg overflow-hidden border-2 transition-all relative",
+                        selectedThumbnail === img
+                          ? "border-primary ring-2 ring-primary/50"
+                          : img === game.image && !selectedThumbnail
+                          ? "border-blue-500/50"
+                          : "border-border hover:border-muted-foreground"
+                      )}
+                    >
+                      <Image src={img} alt="" fill sizes="100px" className="object-cover" />
+                      {selectedThumbnail === img && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <Badge>THUMB</Badge>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-foreground mb-3">
+                  Component Images
+                  <span className="text-muted-foreground font-normal ml-2 text-sm">
+                    (Click to toggle)
+                  </span>
+                </h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                  {allImages.map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleComponentToggle(img)}
+                      className={cn(
+                        "aspect-square rounded-lg overflow-hidden border-2 transition-all relative",
+                        componentImages.includes(img)
+                          ? "border-emerald-500 ring-2 ring-emerald-500/50"
+                          : "border-border hover:border-muted-foreground"
+                      )}
+                    >
+                      <Image src={img} alt="" fill sizes="100px" className="object-cover" />
+                      {componentImages.includes(img) && (
+                        <div className="absolute top-1 right-1 bg-emerald-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                          {componentImages.indexOf(img) + 1}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
 export function HomeClient({
   games,
   totalGames,
@@ -109,9 +304,13 @@ export function HomeClient({
   const router = useRouter();
   const [columns, setColumns] = useState(6);
   const [sortBy, setSortBy] = useState<SortOption>("name");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [searchQuery, setSearchQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
+
+  // Table sorting state
+  const [tableSortField, setTableSortField] = useState<SortField>("name");
+  const [tableSortDirection, setTableSortDirection] = useState<SortDirection>("asc");
 
   // Admin list management state
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -127,8 +326,23 @@ export function HomeClient({
   const [editedName, setEditedName] = useState("");
   const [savingName, setSavingName] = useState(false);
 
+  // Admin game management state
+  const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
+  const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null);
+  const [selectedGameForImages, setSelectedGameForImages] = useState<GameData | null>(null);
+
+  // Collections for "Add to List" feature
+  const [collections, setCollections] = useState<CollectionSummary[]>([]);
+  const [showAddToListDialog, setShowAddToListDialog] = useState(false);
+  const [gameIdsToAddToList, setGameIdsToAddToList] = useState<string[]>([]);
+  const [addingToList, setAddingToList] = useState(false);
+
   const isAdmin = currentUser?.role === "admin";
   const isViewingList = selectedCollection && !selectedCollection.isPrimary && selectedCollection.type === "manual";
+
+  // Manual collections only (for add to list)
+  const manualCollections = collections.filter((c) => c.type === "manual");
+  const hasManualLists = manualCollections.length > 0;
 
   // Determine the display title based on whether a collection is selected
   const displayTitle = selectedCollection
@@ -153,6 +367,51 @@ export function HomeClient({
     ? [{ label: selectedCollection.name }]
     : [{ label: `${displayTitle} Collection` }];
 
+  // Queued game IDs
+  const queuedIds = useMemo(() => {
+    if (!queueStatus) return new Set<string>();
+    return new Set(
+      queueStatus.recentJobs
+        .filter((j) => j.status === "pending" || j.status === "processing")
+        .map((j) => j.gameId)
+    );
+  }, [queueStatus]);
+
+  // Fetch collections for "Add to List" feature
+  useEffect(() => {
+    if (isAdmin) {
+      fetch("/api/collections")
+        .then((res) => res.json())
+        .then((data) => setCollections(data.collections || []))
+        .catch(console.error);
+    }
+  }, [isAdmin]);
+
+  // Fetch queue status
+  const fetchQueueStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/scrape-status");
+      const data = await res.json();
+      setQueueStatus(data);
+    } catch (error) {
+      console.error("Failed to fetch queue status:", error);
+    }
+  }, []);
+
+  // Poll queue status while processing
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    fetchQueueStatus();
+
+    if (!queueStatus?.isProcessing && queueStatus?.pendingCount === 0) {
+      return;
+    }
+
+    const interval = setInterval(fetchQueueStatus, 2000);
+    return () => clearInterval(interval);
+  }, [isAdmin, queueStatus?.isProcessing, queueStatus?.pendingCount, fetchQueueStatus]);
+
   const filteredAndSortedGames = useMemo(() => {
     let result = [...games];
 
@@ -164,7 +423,36 @@ export function HomeClient({
       );
     }
 
-    // Sort
+    // Sort based on view mode
+    if (viewMode === "table") {
+      return result.sort((a, b) => {
+        const dir = tableSortDirection === "asc" ? 1 : -1;
+        switch (tableSortField) {
+          case "name":
+            return a.name.localeCompare(b.name) * dir;
+          case "year":
+            if (a.yearPublished === null) return 1;
+            if (b.yearPublished === null) return -1;
+            return (a.yearPublished - b.yearPublished) * dir;
+          case "rating":
+            if (a.rating === null) return 1;
+            if (b.rating === null) return -1;
+            return (a.rating - b.rating) * dir;
+          case "players":
+            if (a.maxPlayers === null) return 1;
+            if (b.maxPlayers === null) return -1;
+            return (a.maxPlayers - b.maxPlayers) * dir;
+          case "playtime":
+            if (a.maxPlaytime === null) return 1;
+            if (b.maxPlaytime === null) return -1;
+            return (a.maxPlaytime - b.maxPlaytime) * dir;
+          default:
+            return 0;
+        }
+      });
+    }
+
+    // Standard sort for card/list views
     return result.sort((a, b) => {
       switch (sortBy) {
         case "name":
@@ -181,7 +469,11 @@ export function HomeClient({
           return 0;
       }
     });
-  }, [games, sortBy, searchQuery]);
+  }, [games, sortBy, searchQuery, viewMode, tableSortField, tableSortDirection]);
+
+  // ============================================================================
+  // Handlers
+  // ============================================================================
 
   const handleQuickSync = async () => {
     setSyncing(true);
@@ -196,6 +488,15 @@ export function HomeClient({
       console.error("Sync failed:", error);
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleTableSort = (field: SortField) => {
+    if (tableSortField === field) {
+      setTableSortDirection(tableSortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setTableSortField(field);
+      setTableSortDirection("asc");
     }
   };
 
@@ -247,6 +548,21 @@ export function HomeClient({
     }
   };
 
+  // Remove single game from list
+  const handleRemoveFromList = async (gameId: string) => {
+    if (!selectedCollection) return;
+    try {
+      await fetch(`/api/collections/${selectedCollection.id}/games`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameId }),
+      });
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to remove game:", error);
+    }
+  };
+
   // Inline title edit handlers
   const startEditingTitle = () => {
     if (selectedCollection) {
@@ -280,6 +596,96 @@ export function HomeClient({
   const cancelEditingTitle = () => {
     setIsEditingTitle(false);
     setEditedName("");
+  };
+
+  // Admin game management handlers
+  const handleToggleVisibility = async (game: GameData) => {
+    const isVisible = game.collections && game.collections.length > 0;
+
+    if (isVisible && selectedCollection) {
+      // Remove from current collection
+      await fetch(`/api/collections/${selectedCollection.id}/games`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameId: game.id }),
+      });
+    } else {
+      // Add to primary collection if not visible
+      const primaryCollection = collections.find((c) => c.type === "bgg_sync");
+      if (primaryCollection) {
+        await fetch(`/api/collections/${primaryCollection.id}/games`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gameId: game.id }),
+        });
+      }
+    }
+    router.refresh();
+  };
+
+  const handleScrape = async (gameId: string) => {
+    setScrapingIds((prev) => new Set(prev).add(gameId));
+    try {
+      await fetch(`/api/games/${gameId}/scrape`, { method: "POST" });
+      await fetchQueueStatus();
+    } finally {
+      setScrapingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(gameId);
+        return next;
+      });
+    }
+  };
+
+  const handleBulkScrape = async () => {
+    for (const gameId of selectedGameIds) {
+      await fetch(`/api/games/${gameId}/scrape`, { method: "POST" });
+    }
+    clearSelection();
+    await fetchQueueStatus();
+  };
+
+  const handleStopQueue = async () => {
+    try {
+      await fetch("/api/scrape-status", { method: "POST" });
+      await fetchQueueStatus();
+    } catch (error) {
+      console.error("Failed to stop queue:", error);
+    }
+  };
+
+  // Add to list handlers
+  const openAddToListDialog = (gameIds: string[]) => {
+    setGameIdsToAddToList(gameIds);
+    setShowAddToListDialog(true);
+  };
+
+  const handleDialogAddToList = async (collectionId: string) => {
+    setAddingToList(true);
+    try {
+      await Promise.all(
+        gameIdsToAddToList.map((gameId) =>
+          fetch(`/api/collections/${collectionId}/games`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gameId }),
+          })
+        )
+      );
+      if (gameIdsToAddToList.length > 1) {
+        clearSelection();
+      }
+      setShowAddToListDialog(false);
+      setGameIdsToAddToList([]);
+      // Refresh collections
+      const collectionsRes = await fetch("/api/collections");
+      const collectionsData = await collectionsRes.json();
+      setCollections(collectionsData.collections || []);
+    } catch (error) {
+      console.error("Failed to add games to list:", error);
+    } finally {
+      setAddingToList(false);
+    }
   };
 
   // Selection state derived values
@@ -356,6 +762,61 @@ export function HomeClient({
     <div className="flex-1 min-w-0 min-h-screen bg-background print:bg-white">
       {/* Site Header with breadcrumbs */}
       <SiteHeader breadcrumbs={breadcrumbs} actions={headerActions} />
+
+      {/* Scrape Queue Status Banner */}
+      {isAdmin && queueStatus && (queueStatus.isProcessing || queueStatus.pendingCount > 0) && (
+        <div className={cn(
+          "border-b px-4 sm:px-6 py-3",
+          queueStatus.isStopping
+            ? "bg-amber-500/10 border-amber-500/30"
+            : "bg-emerald-500/10 border-emerald-500/30"
+        )}>
+          <div className="max-w-7xl mx-auto lg:mx-0 lg:max-w-none flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "size-2.5 rounded-full animate-pulse",
+                queueStatus.isStopping ? "bg-amber-500" : "bg-emerald-500"
+              )} />
+              <span className={cn(
+                "text-sm font-medium",
+                queueStatus.isStopping ? "text-amber-300" : "text-emerald-300"
+              )}>
+                {queueStatus.isStopping ? "Stopping..." : "Scraping"}
+                {queueStatus.currentJob && (
+                  <span className="text-muted-foreground ml-2">
+                    {queueStatus.currentJob.gameName}
+                  </span>
+                )}
+              </span>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="size-3" />
+                  {queueStatus.pendingCount} pending
+                </span>
+                <span className="flex items-center gap-1">
+                  <CheckCircle className="size-3 text-emerald-500" />
+                  {queueStatus.completedCount}
+                </span>
+                {queueStatus.failedCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <XCircle className="size-3 text-red-500" />
+                    {queueStatus.failedCount}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleStopQueue}
+              disabled={queueStatus.isStopping}
+            >
+              <Square className="size-3" />
+              Stop
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Content Header - Title, meta, search */}
       <div className="bg-gradient-to-b from-card to-card/95 border-b border-border print:hidden px-4 sm:px-6 py-4 sm:py-5">
@@ -479,10 +940,10 @@ export function HomeClient({
       {games.length > 0 && (
         <div className="bg-muted/30 border-b border-border py-2.5 px-4 sm:px-6 print:hidden">
           <div className="max-w-7xl mx-auto lg:mx-0 lg:max-w-none flex items-center justify-between">
-            {/* Left: Selection controls (admin list view) or View toggle */}
+            {/* Left: Selection controls and View toggle */}
             <div className="flex items-center gap-3 sm:gap-4">
-              {/* Select All checkbox for admin list view */}
-              {isAdmin && isViewingList && (
+              {/* Select All checkbox for admin */}
+              {isAdmin && (
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={allSelected}
@@ -496,23 +957,46 @@ export function HomeClient({
               )}
 
               {/* Selection action bar */}
-              {isAdmin && isViewingList && someSelected && (
+              {isAdmin && someSelected && (
                 <>
                   <div className="h-4 w-px bg-border" />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRemoveSelected}
-                    disabled={removingGames}
-                    className="gap-2 text-destructive hover:text-destructive"
-                  >
-                    {removingGames ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="size-4" />
-                    )}
-                    Remove {selectedGameIds.size}
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        Actions ({selectedGameIds.size})
+                        <ChevronDown className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem onClick={handleBulkScrape}>
+                        <RefreshCw className="size-4" />
+                        Scrape Selected
+                      </DropdownMenuItem>
+                      {hasManualLists && (
+                        <DropdownMenuItem onClick={() => openAddToListDialog(Array.from(selectedGameIds))}>
+                          <FolderPlus className="size-4" />
+                          Add to List
+                        </DropdownMenuItem>
+                      )}
+                      {isViewingList && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={handleRemoveSelected}
+                            disabled={removingGames}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            {removingGames ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="size-4" />
+                            )}
+                            Remove from List
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -525,18 +1009,18 @@ export function HomeClient({
               )}
 
               {/* Separator between selection and view controls */}
-              {isAdmin && isViewingList && <div className="h-4 w-px bg-border hidden sm:block" />}
+              {isAdmin && <div className="h-4 w-px bg-border hidden sm:block" />}
 
               {/* View Toggle */}
               <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
                 <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  variant={viewMode === "card" ? "default" : "ghost"}
                   size="icon-sm"
-                  onClick={() => setViewMode("grid")}
-                  title="Grid view"
+                  onClick={() => setViewMode("card")}
+                  title="Card view"
                 >
                   <LayoutGrid className="size-4" />
-                  <span className="sr-only">Grid view</span>
+                  <span className="sr-only">Card view</span>
                 </Button>
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
@@ -547,26 +1031,37 @@ export function HomeClient({
                   <List className="size-4" />
                   <span className="sr-only">List view</span>
                 </Button>
+                <Button
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="icon-sm"
+                  onClick={() => setViewMode("table")}
+                  title="Table view"
+                >
+                  <Table2 className="size-4" />
+                  <span className="sr-only">Table view</span>
+                </Button>
               </div>
 
-              {/* Sort Dropdown */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground text-xs hidden sm:inline">Sort:</span>
-                <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                  <SelectTrigger size="sm" className="w-24">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="year">Year</SelectItem>
-                    <SelectItem value="rating">Rating</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Sort Dropdown - only for card/list views */}
+              {viewMode !== "table" && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-xs hidden sm:inline">Sort:</span>
+                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                    <SelectTrigger size="sm" className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="year">Year</SelectItem>
+                      <SelectItem value="rating">Rating</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
-            {/* Right: Size slider (grid only) */}
-            {viewMode === "grid" && (
+            {/* Right: Size slider (card view only) */}
+            {viewMode === "card" && (
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-xs hidden sm:inline">Size:</span>
                 <input
@@ -585,8 +1080,11 @@ export function HomeClient({
         </div>
       )}
 
-      {/* Games Grid/List */}
-      <main className="max-w-7xl mx-auto lg:mx-0 lg:max-w-none px-6 py-8 print:px-0 print:py-0 print:max-w-none print:mx-0">
+      {/* Games Grid/List/Table */}
+      <main className={cn(
+        "max-w-7xl mx-auto lg:mx-0 lg:max-w-none print:px-0 print:py-0 print:max-w-none print:mx-0",
+        viewMode === "table" ? "px-0 py-4" : "px-6 py-8"
+      )}>
         {games.length === 0 && !selectedCollection ? (
           // Onboarding Empty State (only for main collection)
           <div className="text-center py-16 sm:py-24">
@@ -695,7 +1193,8 @@ export function HomeClient({
               Clear search
             </Button>
           </div>
-        ) : viewMode === "grid" ? (
+        ) : viewMode === "card" ? (
+          // Card Grid View
           <>
             <style>{`
               @media (min-width: 640px) {
@@ -707,8 +1206,8 @@ export function HomeClient({
             <div className="game-grid-custom grid gap-3 sm:gap-4 grid-cols-2 print:grid-cols-6 print:gap-2">
               {filteredAndSortedGames.map((game) => (
                 <div key={game.id} className="relative">
-                  {/* Selection checkbox for admin list view */}
-                  {isAdmin && isViewingList && (
+                  {/* Selection checkbox for admin */}
+                  {isAdmin && (
                     <div className="absolute top-2 left-2 z-10">
                       <Checkbox
                         checked={selectedGameIds.has(game.id)}
@@ -722,23 +1221,51 @@ export function HomeClient({
               ))}
             </div>
           </>
-        ) : (
-          <div className="flex flex-col gap-2">
+        ) : viewMode === "list" ? (
+          // List View (compact rows)
+          <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
             {filteredAndSortedGames.map((game) => (
-              <div key={game.id} className="flex items-center gap-3">
-                {/* Selection checkbox for admin list view */}
-                {isAdmin && isViewingList && (
-                  <Checkbox
-                    checked={selectedGameIds.has(game.id)}
-                    onCheckedChange={() => toggleGameSelection(game.id)}
-                  />
+              <GameRowItem
+                key={game.id}
+                game={game}
+                isAdmin={isAdmin}
+                isSelected={selectedGameIds.has(game.id)}
+                onSelect={toggleGameSelection}
+                onToggleVisibility={handleToggleVisibility}
+                onScrape={handleScrape}
+                onEditImages={setSelectedGameForImages}
+                onAddToList={(id) => openAddToListDialog([id])}
+                onRemoveFromList={handleRemoveFromList}
+                isScraping={scrapingIds.has(game.id)}
+                isInQueue={queuedIds.has(game.id)}
+                isPending={queueStatus?.recentJobs.some(
+                  (j) => j.gameId === game.id && j.status === "pending"
                 )}
-                <div className="flex-1">
-                  <GameListItem game={game} />
-                </div>
-              </div>
+                showRemoveFromList={!!isViewingList}
+                hasManualLists={hasManualLists}
+              />
             ))}
           </div>
+        ) : (
+          // Table View - no container styling, full width
+          <GameTable
+              games={filteredAndSortedGames}
+              isAdmin={isAdmin}
+              selectedIds={selectedGameIds}
+              onSelectGame={toggleGameSelection}
+              sortField={tableSortField}
+              sortDirection={tableSortDirection}
+              onSort={handleTableSort}
+              onToggleVisibility={handleToggleVisibility}
+              onScrape={handleScrape}
+              onEditImages={setSelectedGameForImages}
+              onAddToList={(id) => openAddToListDialog([id])}
+              onRemoveFromList={handleRemoveFromList}
+              scrapingIds={scrapingIds}
+              queuedIds={queuedIds}
+              showRemoveFromList={!!isViewingList}
+              hasManualLists={hasManualLists}
+            />
         )}
       </main>
 
@@ -818,6 +1345,70 @@ export function HomeClient({
           />
         </>
       )}
+
+      {/* Image Editor Dialog */}
+      {selectedGameForImages && (
+        <ImageEditor
+          game={selectedGameForImages}
+          onClose={() => setSelectedGameForImages(null)}
+          onSave={() => router.refresh()}
+        />
+      )}
+
+      {/* Add to List Dialog */}
+      <Dialog
+        open={showAddToListDialog}
+        onOpenChange={(open) => {
+          setShowAddToListDialog(open);
+          if (!open) setGameIdsToAddToList([]);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="size-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <FolderPlus className="size-6 text-primary" />
+              </div>
+              Add to List
+            </DialogTitle>
+            <DialogDescription>
+              Add {gameIdsToAddToList.length} game{gameIdsToAddToList.length !== 1 ? "s" : ""} to a list
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 py-4">
+            {manualCollections.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">
+                No lists available. Create a list first.
+              </p>
+            ) : (
+              manualCollections.map((collection) => (
+                <button
+                  key={collection.id}
+                  onClick={() => handleDialogAddToList(collection.id)}
+                  disabled={addingToList}
+                  className={cn(
+                    "w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors",
+                    "bg-muted/50 hover:bg-muted",
+                    addingToList && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <span className="font-medium text-foreground">{collection.name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {collection.gameCount} game{collection.gameCount !== 1 ? "s" : ""}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowAddToListDialog(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
