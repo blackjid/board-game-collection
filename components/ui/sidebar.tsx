@@ -194,6 +194,28 @@ function Sidebar({
             } as React.CSSProperties
           }
           side={side}
+          onPointerDown={(e) => {
+            const target = e.currentTarget
+            const startX = e.clientX
+            let currentX = startX
+
+            const onPointerMove = (moveEvent: PointerEvent) => {
+              currentX = moveEvent.clientX
+            }
+
+            const onPointerUp = () => {
+              const deltaX = currentX - startX
+              // Close if swiped left more than 50px
+              if (deltaX < -50) {
+                setOpenMobile(false)
+              }
+              target.removeEventListener("pointermove", onPointerMove)
+              target.removeEventListener("pointerup", onPointerUp)
+            }
+
+            target.addEventListener("pointermove", onPointerMove)
+            target.addEventListener("pointerup", onPointerUp)
+          }}
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Sidebar</SheetTitle>

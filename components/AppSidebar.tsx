@@ -13,6 +13,7 @@ import {
   Gamepad2,
   Info,
   Settings,
+  X,
 } from "lucide-react";
 
 import {
@@ -96,7 +97,15 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
     <>
       <Sidebar>
         {/* Header - Primary Collection */}
-        <SidebarHeader className="border-b border-sidebar-border">
+        <SidebarHeader className="border-b border-sidebar-border relative">
+          {/* Mobile close button */}
+          <button
+            onClick={() => setOpenMobile(false)}
+            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors md:hidden"
+            aria-label="Close sidebar"
+          >
+            <X className="size-4" />
+          </button>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
