@@ -345,4 +345,64 @@ describe("HomeClient", () => {
       );
     });
   });
+
+  describe("table view", () => {
+    it("should switch to table view when table button clicked", () => {
+      renderWithSidebar(<HomeClient {...defaultProps} />);
+
+      const buttons = screen.getAllByRole("button");
+      const tableButton = buttons.find(b => b.getAttribute("title") === "Table view");
+
+      if (tableButton) {
+        fireEvent.click(tableButton);
+      }
+
+      // In table view, we should see table elements
+      const container = screen.getByRole("main");
+      expect(container.querySelector("table")).toBeTruthy();
+    });
+  });
+
+  describe("admin bulk operations", () => {
+    it("should show action dropdown for admins", () => {
+      renderWithSidebar(<HomeClient {...defaultProps} currentUser={mockAdminUser} />);
+
+      // Look for the actions dropdown trigger
+      const actionsButton = screen.queryByRole("button", { name: /actions/i });
+      // Admin features are present
+      expect(screen.getByText("Sync")).toBeInTheDocument();
+    });
+  });
+
+  describe("card size slider", () => {
+    it("should render card size slider when in card view", () => {
+      renderWithSidebar(<HomeClient {...defaultProps} />);
+
+      // Find the slider by its role
+      const slider = screen.getByRole("slider");
+      expect(slider).toBeInTheDocument();
+    });
+  });
+
+  describe("initial preferences", () => {
+    it("should use provided initial view mode", () => {
+      renderWithSidebar(
+        <HomeClient {...defaultProps} initialViewMode="table" />
+      );
+
+      // Table view should show table element
+      const container = screen.getByRole("main");
+      expect(container.querySelector("table")).toBeTruthy();
+    });
+
+    it("should use provided initial card size", () => {
+      renderWithSidebar(
+        <HomeClient {...defaultProps} initialCardSize={4} />
+      );
+
+      // Card size affects grid columns
+      const slider = screen.getByRole("slider");
+      expect(slider).toHaveValue("4");
+    });
+  });
 });

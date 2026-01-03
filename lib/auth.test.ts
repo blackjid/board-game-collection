@@ -41,6 +41,13 @@ import {
   createSession,
   deleteSession,
   isFirstUser,
+  getSessionFromCookie,
+  getCurrentUser,
+  requireAuth,
+  requireAdmin,
+  setSessionCookie,
+  clearSessionCookie,
+  SESSION_COOKIE_OPTIONS,
 } from "./auth";
 
 describe("lib/auth", () => {
@@ -185,6 +192,214 @@ describe("lib/auth", () => {
       const result = await isFirstUser();
 
       expect(result).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // Session Cookie Functions
+  // ============================================================================
+
+  describe("getSessionFromCookie", () => {
+    it("should return null when no session cookie exists", async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      const result = await getSessionFromCookie();
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null when session not found in database", async () => {
+      mockCookieStore.get.mockReturnValue({ value: "session-123" });
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(null);
+
+      const result = await getSessionFromCookie();
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null and delete expired session", async () => {
+      mockCookieStore.get.mockReturnValue({ value: "session-123" });
+
+      const expiredSession = {
+        id: "session-123",
+        userId: "user-1",
+        expiresAt: new Date("2020-01-01"), // Past date
+        user: { id: "user-1", name: "Test User", email: "test@test.com", role: "admin" },
+      };
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(expiredSession as never);
+      vi.mocked(prisma.session.delete).mockResolvedValue(expiredSession as never);
+
+      const result = await getSessionFromCookie();
+
+      expect(result).toBeNull();
+      expect(prisma.session.delete).toHaveBeenCalledWith({
+        where: { id: "session-123" },
+      });
+    });
+
+    it("should return session when valid", async () => {
+      mockCookieStore.get.mockReturnValue({ value: "session-123" });
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1); // Tomorrow
+
+      const validSession = {
+        id: "session-123",
+        userId: "user-1",
+        expiresAt: futureDate,
+        user: { id: "user-1", name: "Test User", email: "test@test.com", role: "admin" },
+      };
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(validSession as never);
+
+      const result = await getSessionFromCookie();
+
+      expect(result).toEqual(validSession);
+    });
+  });
+
+  describe("getCurrentUser", () => {
+    it("should return null when no session", async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      const result = await getCurrentUser();
+
+      expect(result).toBeNull();
+    });
+
+    it("should return user when session exists", async () => {
+      mockCookieStore.get.mockReturnValue({ value: "session-123" });
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+
+      const user = { id: "user-1", name: "Test User", email: "test@test.com", role: "admin" };
+      const validSession = {
+        id: "session-123",
+        userId: "user-1",
+        expiresAt: futureDate,
+        user,
+      };
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(validSession as never);
+
+      const result = await getCurrentUser();
+
+      expect(result).toEqual(user);
+    });
+  });
+
+  describe("requireAuth", () => {
+    it("should throw when no user is logged in", async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      await expect(requireAuth()).rejects.toThrow("Unauthorized");
+    });
+
+    it("should return user when authenticated", async () => {
+      mockCookieStore.get.mockReturnValue({ value: "session-123" });
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+
+      const user = { id: "user-1", name: "Test User", email: "test@test.com", role: "user" };
+      const validSession = {
+        id: "session-123",
+        userId: "user-1",
+        expiresAt: futureDate,
+        user,
+      };
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(validSession as never);
+
+      const result = await requireAuth();
+
+      expect(result).toEqual(user);
+    });
+  });
+
+  describe("requireAdmin", () => {
+    it("should throw when no user is logged in", async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      await expect(requireAdmin()).rejects.toThrow("Forbidden");
+    });
+
+    it("should throw when user is not admin", async () => {
+      mockCookieStore.get.mockReturnValue({ value: "session-123" });
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+
+      const user = { id: "user-1", name: "Test User", email: "test@test.com", role: "user" };
+      const validSession = {
+        id: "session-123",
+        userId: "user-1",
+        expiresAt: futureDate,
+        user,
+      };
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(validSession as never);
+
+      await expect(requireAdmin()).rejects.toThrow("Forbidden");
+    });
+
+    it("should return user when admin", async () => {
+      mockCookieStore.get.mockReturnValue({ value: "session-123" });
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+
+      const user = { id: "user-1", name: "Admin User", email: "admin@test.com", role: "admin" };
+      const validSession = {
+        id: "session-123",
+        userId: "user-1",
+        expiresAt: futureDate,
+        user,
+      };
+
+      vi.mocked(prisma.session.findUnique).mockResolvedValue(validSession as never);
+
+      const result = await requireAdmin();
+
+      expect(result).toEqual(user);
+    });
+  });
+
+  describe("setSessionCookie", () => {
+    it("should set session cookie with correct options", async () => {
+      await setSessionCookie("session-123");
+
+      expect(mockCookieStore.set).toHaveBeenCalledWith(
+        "session_id",
+        "session-123",
+        expect.objectContaining({
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+        })
+      );
+    });
+  });
+
+  describe("clearSessionCookie", () => {
+    it("should delete session cookie", async () => {
+      await clearSessionCookie();
+
+      expect(mockCookieStore.delete).toHaveBeenCalledWith("session_id");
+    });
+  });
+
+  describe("SESSION_COOKIE_OPTIONS", () => {
+    it("should have correct default options", () => {
+      expect(SESSION_COOKIE_OPTIONS).toEqual({
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      });
     });
   });
 });
