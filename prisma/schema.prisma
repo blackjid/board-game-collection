@@ -43,6 +43,7 @@ model Game {
 
   // Collections this game belongs to
   collections     CollectionGame[]
+  plays           GamePlay[]
 }
 
 model SyncLog {
@@ -67,6 +68,7 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   sessions     Session[]
+  loggedPlays  GamePlay[]
 }
 
 model Session {
@@ -188,4 +190,38 @@ model CollectionGame {
   @@unique([collectionId, gameId])
   @@index([collectionId])
   @@index([gameId])
+}
+
+// Game Play Tracking - records of actual game plays
+model GamePlay {
+  id          String   @id @default(cuid())
+  gameId      String
+  loggedById  String
+  playedAt    DateTime @default(now())
+  location    String?
+  duration    Int?     // minutes
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  game        Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  loggedBy    User     @relation(fields: [loggedById], references: [id], onDelete: Cascade)
+  players     GamePlayPlayer[]
+
+  @@index([gameId])
+  @@index([loggedById])
+  @@index([playedAt])
+}
+
+model GamePlayPlayer {
+  id        String   @id @default(cuid())
+  playId    String
+  name      String
+  isWinner  Boolean  @default(false)
+  isNew     Boolean  @default(false)  // First time playing this game?
+  createdAt DateTime @default(now())
+
+  play      GamePlay @relation(fields: [playId], references: [id], onDelete: Cascade)
+
+  @@index([playId])
 }

@@ -915,6 +915,8 @@ socket.on("session-update", (data) => { ... });
    });
    ```
 
+12. **Don't create documentation files proactively** - Only create documentation (README, API docs, guides, etc.) when explicitly requested by the user
+
 ---
 
 ## Environment Variables
