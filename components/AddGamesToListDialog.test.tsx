@@ -164,7 +164,7 @@ describe("AddGamesToListDialog", () => {
 
       // Game 1 (Wingspan) should be disabled since it's already in list
       const wingspanButton = screen.getByRole("button", { name: /Wingspan/ });
-      expect(wingspanButton).toBeDisabled();
+      expect(wingspanButton).toHaveAttribute("aria-disabled", "true");
     });
 
     it("should show available count", async () => {
@@ -245,4 +245,3 @@ describe("AddGamesToListDialog", () => {
   });
 
 });
-

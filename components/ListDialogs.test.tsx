@@ -244,11 +244,11 @@ describe("ListDialogs", () => {
       const onUpdated = vi.fn();
       const onOpenChange = vi.fn();
       render(
-        <EditListDialog 
-          open={true} 
-          onOpenChange={onOpenChange} 
-          list={mockList} 
-          onUpdated={onUpdated} 
+        <EditListDialog
+          open={true}
+          onOpenChange={onOpenChange}
+          list={mockList}
+          onUpdated={onUpdated}
         />
       );
 
@@ -331,11 +331,11 @@ describe("ListDialogs", () => {
       const onDeleted = vi.fn();
       const onOpenChange = vi.fn();
       render(
-        <DeleteListDialog 
-          open={true} 
-          onOpenChange={onOpenChange} 
-          list={mockList} 
-          onDeleted={onDeleted} 
+        <DeleteListDialog
+          open={true}
+          onOpenChange={onOpenChange}
+          list={mockList}
+          onDeleted={onDeleted}
         />
       );
 
@@ -391,4 +391,3 @@ describe("ListDialogs", () => {
     });
   });
 });
-

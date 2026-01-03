@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Dice6,
   MoreVertical,
@@ -145,6 +146,8 @@ export function GameTable({
   showRemoveFromList = false,
   hasManualLists = false,
 }: GameTableProps) {
+  const router = useRouter();
+
   // Render dropdown menu items
   const renderDropdownItems = (game: GameData) => {
     const isVisible = game.collections && game.collections.length > 0;
@@ -390,6 +393,11 @@ export function GameTable({
                 "cursor-pointer h-10",
                 isSelected && "bg-primary/5"
               )}
+              onClick={(e) => {
+                // If user clicked a button or link inside the row, don't navigate
+                if ((e.target as HTMLElement).closest('button, a')) return;
+                router.push(`/game/${game.id}`);
+              }}
             >
               {isAdmin && onSelectGame && (
                 <TableCell className="pl-4 pr-3 py-1" onClick={(e) => e.stopPropagation()}>
@@ -495,11 +503,7 @@ export function GameTable({
           }
 
           // Wrap with link for non-admin
-          return (
-            <Link key={game.id} href={`/game/${game.id}`} className="contents">
-              {rowContent}
-            </Link>
-          );
+          return rowContent;
         })}
       </TableBody>
     </Table>

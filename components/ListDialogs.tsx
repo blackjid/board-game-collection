@@ -189,6 +189,9 @@ export function EditListDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit List</DialogTitle>
+          <DialogDescription>
+            Update the details of this list.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">

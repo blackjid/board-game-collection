@@ -4,17 +4,17 @@ import { GameTable } from "./GameTable";
 import type { GameData } from "@/lib/games";
 
 // Mock Next.js components
+const mockPush = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
+}));
+
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string }) => (
     <img alt={alt} src={src} data-testid="game-image" />
-  ),
-}));
-
-vi.mock("next/link", () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href} data-testid="game-link">
-      {children}
-    </a>
   ),
 }));
 
@@ -207,13 +207,13 @@ describe("GameTable", () => {
   });
 
   describe("links", () => {
-    it("should render as link when not admin", () => {
+    it("should navigate to game page when row clicked", () => {
       const games = [createMockGame({ id: "123" })];
       render(<GameTable games={games} isAdmin={false} />);
 
-      const link = screen.getByTestId("game-link");
-      expect(link).toHaveAttribute("href", "/game/123");
+      const row = screen.getByText("Test Game").closest("tr");
+      fireEvent.click(row!);
+      expect(mockPush).toHaveBeenCalledWith("/game/123");
     });
   });
 });
-

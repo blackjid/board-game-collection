@@ -297,13 +297,20 @@ export function AddGamesToListDialog({
                       game.selectedThumbnail || game.thumbnail || game.image;
 
                     return (
-                      <button
+                      <div
                         key={game.id}
-                        type="button"
-                        disabled={inList}
+                        role="button"
+                        tabIndex={inList ? -1 : 0}
+                        aria-disabled={inList}
                         onClick={() => !inList && toggleSelection(game.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            if (!inList) toggleSelection(game.id);
+                          }
+                        }}
                         className={cn(
-                          "relative flex flex-col items-center p-2 rounded-lg border transition-colors text-left",
+                          "relative flex flex-col items-center p-2 rounded-lg border transition-colors text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                           inList
                             ? "opacity-50 cursor-not-allowed bg-muted"
                             : selected
@@ -352,7 +359,7 @@ export function AddGamesToListDialog({
                             Exp
                           </Badge>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>

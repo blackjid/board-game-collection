@@ -130,7 +130,7 @@ describe("GameRowItem", () => {
           onSelect={onSelect}
         />
       );
-      
+
       const checkbox = screen.getByRole("checkbox");
       fireEvent.click(checkbox);
       expect(onSelect).toHaveBeenCalledWith("123");
@@ -152,7 +152,7 @@ describe("GameRowItem", () => {
           onSelect={vi.fn()}
         />
       );
-      
+
       const checkbox = screen.getByRole("checkbox");
       expect(checkbox).toBeChecked();
     });
@@ -166,7 +166,7 @@ describe("GameRowItem", () => {
           onSelect={vi.fn()}
         />
       );
-      
+
       const checkbox = screen.getByRole("checkbox");
       expect(checkbox).not.toBeChecked();
     });
@@ -175,7 +175,7 @@ describe("GameRowItem", () => {
   describe("non-admin behavior", () => {
     it("should render as link when not admin", () => {
       render(<GameRowItem game={createMockGame({ id: "123" })} />);
-      
+
       const link = screen.getByTestId("game-link");
       expect(link).toHaveAttribute("href", "/game/123");
     });
@@ -208,11 +208,10 @@ describe("GameRowItem", () => {
   describe("rating colors", () => {
     it("should render rating with color styling", () => {
       render(<GameRowItem game={createMockGame({ rating: 8.0 })} />);
-      
+
       // Rating should be styled with background color
       const ratingBadge = screen.getByText("★ 8.0").closest("span");
       expect(ratingBadge).toHaveStyle({ backgroundColor: expect.any(String) });
     });
   });
 });
-
