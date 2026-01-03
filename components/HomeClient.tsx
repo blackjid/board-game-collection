@@ -329,10 +329,6 @@ export function HomeClient({
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
   const [removingGames, setRemovingGames] = useState(false);
 
-  // Inline edit state
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedName, setEditedName] = useState("");
-  const [savingName, setSavingName] = useState(false);
 
   // Admin game management state
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
@@ -580,40 +576,6 @@ export function HomeClient({
     }
   };
 
-  // Inline title edit handlers
-  const startEditingTitle = () => {
-    if (selectedCollection) {
-      setEditedName(selectedCollection.name);
-      setIsEditingTitle(true);
-    }
-  };
-
-  const saveEditedTitle = async () => {
-    if (!selectedCollection || !editedName.trim()) return;
-    setSavingName(true);
-
-    try {
-      const response = await fetch(`/api/collections/${selectedCollection.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editedName.trim() }),
-      });
-
-      if (response.ok) {
-        setIsEditingTitle(false);
-        router.refresh();
-      }
-    } catch (error) {
-      console.error("Failed to update list name:", error);
-    } finally {
-      setSavingName(false);
-    }
-  };
-
-  const cancelEditingTitle = () => {
-    setIsEditingTitle(false);
-    setEditedName("");
-  };
 
   // Admin game management handlers
   const handleToggleVisibility = async (game: GameData) => {
@@ -835,91 +797,35 @@ export function HomeClient({
         </div>
       )}
 
-      {/* Content Header - Title, meta, search */}
-      <div className="bg-gradient-to-b from-card to-card/95 border-b border-border print:hidden px-4 sm:px-6 py-4 sm:py-5">
+      {/* Content Header - Meta info and search */}
+      <div className="bg-gradient-to-b from-card to-card/95 border-b border-border print:hidden px-4 sm:px-6 py-3 sm:py-4">
         <div className="max-w-7xl mx-auto lg:mx-0 lg:max-w-none">
-          {/* Title and meta */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              {/* Title - editable for admin when viewing a list */}
-              {isEditingTitle && isAdmin && isViewingList ? (
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") saveEditedTitle();
-                      if (e.key === "Escape") cancelEditingTitle();
-                    }}
-                    className="text-xl font-bold h-10 max-w-sm"
-                    autoFocus
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={saveEditedTitle}
-                    disabled={savingName || !editedName.trim()}
-                  >
-                    {savingName ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Check className="size-4" />
-                    )}
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={cancelEditingTitle}>
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">
-                    <span className="text-foreground">{displayTitle}</span>
-                    {!selectedCollection && (
-                      <span className="text-primary/80 font-light ml-2 italic">Collection</span>
-                    )}
-                  </h1>
-                  {isAdmin && isViewingList && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-8 text-muted-foreground hover:text-foreground"
-                      onClick={startEditingTitle}
-                      title="Edit list name"
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  )}
-                </div>
+          {/* Meta info and search on same row */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Meta info */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>
+                {displayGameCount} game{displayGameCount !== 1 ? "s" : ""}
+              </span>
+              {!selectedCollection && lastSyncedAt && isAdmin && (
+                <>
+                  <span className="text-muted-foreground/50">•</span>
+                  <span>Synced {formatRelativeTime(lastSyncedAt)}</span>
+                </>
               )}
-
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-muted-foreground text-sm">
-                  {displayGameCount} game{displayGameCount !== 1 ? "s" : ""}
-                </span>
-                {!selectedCollection && lastSyncedAt && isAdmin && (
-                  <>
-                    <span className="text-muted-foreground/50">•</span>
-                    <span className="text-muted-foreground text-sm">
-                      Synced {formatRelativeTime(lastSyncedAt)}
-                    </span>
-                  </>
-                )}
-                {selectedCollection?.description && (
-                  <>
-                    <span className="text-muted-foreground/50 hidden sm:inline">•</span>
-                    <span className="text-muted-foreground text-sm hidden sm:inline truncate max-w-[200px]">
-                      {selectedCollection.description}
-                    </span>
-                  </>
-                )}
-              </div>
+              {selectedCollection?.description && (
+                <>
+                  <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                  <span className="hidden sm:inline truncate max-w-[200px]">
+                    {selectedCollection.description}
+                  </span>
+                </>
+              )}
             </div>
-          </div>
 
-          {/* Search bar */}
-          {games.length > 0 && (
-            <div className="mt-4">
-              <div className="relative max-w-md">
+            {/* Search bar */}
+            {games.length > 0 && (
+              <div className="relative w-full sm:w-auto sm:min-w-[280px] sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
                   type="text"
@@ -940,8 +846,8 @@ export function HomeClient({
                   </Button>
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
