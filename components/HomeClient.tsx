@@ -66,6 +66,7 @@ import { GameTable, SortField, SortDirection } from "@/components/GameTable";
 import { EditListDialog, DeleteListDialog } from "@/components/ListDialogs";
 import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
 import type { GameData } from "@/lib/games";
+import { getUIPreferences, saveUIPreference } from "@/lib/cookies";
 
 type SortOption = "name" | "year" | "rating";
 type ViewMode = "card" | "list" | "table";
@@ -302,9 +303,21 @@ export function HomeClient({
   selectedCollection,
 }: HomeClientProps) {
   const router = useRouter();
+
+  // UI preferences - start with defaults, then hydrate from cookies
   const [columns, setColumns] = useState(6);
-  const [sortBy, setSortBy] = useState<SortOption>("name");
   const [viewMode, setViewMode] = useState<ViewMode>("card");
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // Load preferences from cookies on mount (client-side only)
+  useEffect(() => {
+    const prefs = getUIPreferences();
+    setColumns(prefs.cardSize);
+    setViewMode(prefs.viewMode);
+    setPrefsLoaded(true);
+  }, []);
+
+  const [sortBy, setSortBy] = useState<SortOption>("name");
   const [searchQuery, setSearchQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
 
@@ -411,6 +424,19 @@ export function HomeClient({
     const interval = setInterval(fetchQueueStatus, 2000);
     return () => clearInterval(interval);
   }, [isAdmin, queueStatus?.isProcessing, queueStatus?.pendingCount, fetchQueueStatus]);
+
+  // Persist UI preferences to cookies (only after initial load)
+  useEffect(() => {
+    if (prefsLoaded) {
+      saveUIPreference("viewMode", viewMode);
+    }
+  }, [viewMode, prefsLoaded]);
+
+  useEffect(() => {
+    if (prefsLoaded) {
+      saveUIPreference("cardSize", columns);
+    }
+  }, [columns, prefsLoaded]);
 
   const filteredAndSortedGames = useMemo(() => {
     let result = [...games];
