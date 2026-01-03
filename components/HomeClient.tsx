@@ -66,7 +66,7 @@ import { GameTable, SortField, SortDirection } from "@/components/GameTable";
 import { EditListDialog, DeleteListDialog } from "@/components/ListDialogs";
 import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
 import type { GameData } from "@/lib/games";
-import { getUIPreferences, saveUIPreference } from "@/lib/cookies";
+import { saveUIPreference } from "@/lib/cookies";
 
 type SortOption = "name" | "year" | "rating";
 type ViewMode = "card" | "list" | "table";
@@ -122,6 +122,8 @@ interface HomeClientProps {
   lastSyncedAt: string | null;
   currentUser: CurrentUser | null;
   selectedCollection: SelectedCollection | null;
+  initialViewMode?: "card" | "list" | "table";
+  initialCardSize?: number;
 }
 
 function formatRelativeTime(dateString: string | null): string {
@@ -301,21 +303,14 @@ export function HomeClient({
   lastSyncedAt,
   currentUser,
   selectedCollection,
+  initialViewMode = "card",
+  initialCardSize = 6,
 }: HomeClientProps) {
   const router = useRouter();
 
-  // UI preferences - start with defaults, then hydrate from cookies
-  const [columns, setColumns] = useState(6);
-  const [viewMode, setViewMode] = useState<ViewMode>("card");
-  const [prefsLoaded, setPrefsLoaded] = useState(false);
-
-  // Load preferences from cookies on mount (client-side only)
-  useEffect(() => {
-    const prefs = getUIPreferences();
-    setColumns(prefs.cardSize);
-    setViewMode(prefs.viewMode);
-    setPrefsLoaded(true);
-  }, []);
+  // UI preferences - initialize from server-provided values (no flash!)
+  const [columns, setColumns] = useState(initialCardSize);
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
 
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [searchQuery, setSearchQuery] = useState("");
@@ -425,18 +420,14 @@ export function HomeClient({
     return () => clearInterval(interval);
   }, [isAdmin, queueStatus?.isProcessing, queueStatus?.pendingCount, fetchQueueStatus]);
 
-  // Persist UI preferences to cookies (only after initial load)
+  // Persist UI preferences to cookies when they change
   useEffect(() => {
-    if (prefsLoaded) {
-      saveUIPreference("viewMode", viewMode);
-    }
-  }, [viewMode, prefsLoaded]);
+    saveUIPreference("viewMode", viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
-    if (prefsLoaded) {
-      saveUIPreference("cardSize", columns);
-    }
-  }, [columns, prefsLoaded]);
+    saveUIPreference("cardSize", columns);
+  }, [columns]);
 
   const filteredAndSortedGames = useMemo(() => {
     let result = [...games];

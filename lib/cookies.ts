@@ -1,8 +1,8 @@
 /**
- * Cookie utilities for persisting UI preferences
+ * Cookie utilities for persisting UI preferences (client-side)
  */
 
-const COOKIE_PREFIX = "bgc_"; // Board Game Collection prefix
+export const COOKIE_PREFIX = "bgc_"; // Board Game Collection prefix
 const DEFAULT_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
 export interface UIPreferences {
@@ -10,19 +10,19 @@ export interface UIPreferences {
   cardSize: number;
 }
 
-const DEFAULTS: UIPreferences = {
+export const UI_DEFAULTS: UIPreferences = {
   viewMode: "card",
   cardSize: 6,
 };
 
 /**
- * Get a cookie value by name
+ * Get a cookie value by name (client-side)
  */
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
 
-  const cookies = document.cookie.split(";");
-  for (const cookie of cookies) {
+  const cookieList = document.cookie.split(";");
+  for (const cookie of cookieList) {
     const [key, value] = cookie.trim().split("=");
     if (key === name) {
       return decodeURIComponent(value);
@@ -32,7 +32,7 @@ function getCookie(name: string): string | null {
 }
 
 /**
- * Set a cookie with optional max age
+ * Set a cookie with optional max age (client-side)
  */
 function setCookie(name: string, value: string, maxAge = DEFAULT_MAX_AGE): void {
   if (typeof document === "undefined") return;
@@ -41,20 +41,20 @@ function setCookie(name: string, value: string, maxAge = DEFAULT_MAX_AGE): void 
 }
 
 /**
- * Get UI preferences from cookies
+ * Get UI preferences from cookies (client-side)
  */
 export function getUIPreferences(): UIPreferences {
   const viewMode = getCookie(`${COOKIE_PREFIX}viewMode`);
   const cardSize = getCookie(`${COOKIE_PREFIX}cardSize`);
 
   return {
-    viewMode: (viewMode as UIPreferences["viewMode"]) || DEFAULTS.viewMode,
-    cardSize: cardSize ? parseInt(cardSize, 10) : DEFAULTS.cardSize,
+    viewMode: (viewMode as UIPreferences["viewMode"]) || UI_DEFAULTS.viewMode,
+    cardSize: cardSize ? parseInt(cardSize, 10) : UI_DEFAULTS.cardSize,
   };
 }
 
 /**
- * Save a single UI preference to cookie
+ * Save a single UI preference to cookie (client-side)
  */
 export function saveUIPreference<K extends keyof UIPreferences>(
   key: K,
@@ -62,4 +62,3 @@ export function saveUIPreference<K extends keyof UIPreferences>(
 ): void {
   setCookie(`${COOKIE_PREFIX}${key}`, String(value));
 }
-

@@ -6,6 +6,7 @@ import {
   getCollectionWithGames,
 } from "@/lib/games";
 import { getCurrentUser } from "@/lib/auth";
+import { getServerUIPreferences } from "@/lib/cookies.server";
 import { HomeClient } from "@/components/HomeClient";
 
 export const dynamic = "force-dynamic";
@@ -19,11 +20,12 @@ export default async function Home({ searchParams }: PageProps) {
   const selectedCollectionId = params.collection || null;
 
   // Fetch base data in parallel
-  const [counts, settings, lastSync, currentUser] = await Promise.all([
+  const [counts, settings, lastSync, currentUser, uiPrefs] = await Promise.all([
     getGameCount(),
     getCollectionSettings(),
     getLastSyncInfo(),
     getCurrentUser(),
+    getServerUIPreferences(),
   ]);
 
   // Fetch games based on whether a collection is selected
@@ -65,6 +67,8 @@ export default async function Home({ searchParams }: PageProps) {
         role: currentUser.role,
       } : null}
       selectedCollection={selectedCollection}
+      initialViewMode={uiPrefs.viewMode}
+      initialCardSize={uiPrefs.cardSize}
     />
   );
 }
