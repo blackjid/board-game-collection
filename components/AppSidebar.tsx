@@ -14,6 +14,7 @@ import {
   Info,
   Settings,
   X,
+  History,
 } from "lucide-react";
 
 import {
@@ -86,6 +87,7 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
 
   // Determine active states
   const isHomeActive = pathname === "/" && !selectedCollectionId;
+  const isPlaysActive = pathname === "/plays";
   const isSettingsActive = pathname.startsWith("/settings");
   const currentSettingsSection = searchParams.get("section") || "general";
 
@@ -130,6 +132,28 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
         </SidebarHeader>
 
         <SidebarContent>
+          {/* Play History - visible to logged in users */}
+          {user && (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isPlaysActive}
+                      tooltip="Play History"
+                    >
+                      <Link href="/plays" onClick={handleItemClick}>
+                        <History className="size-4" />
+                        <span>Play History</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+
           {/* Lists Group */}
           <SidebarGroup>
             <SidebarGroupLabel>Lists</SidebarGroupLabel>

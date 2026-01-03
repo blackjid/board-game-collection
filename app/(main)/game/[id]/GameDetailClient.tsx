@@ -13,8 +13,13 @@ import {
   Check,
   Plus,
   Loader2,
+  Trophy,
+  Pencil,
+  Trash2,
+  Sparkles,
 } from "lucide-react";
 import type { GameData, ManualListSummary } from "@/lib/games";
+import type { GamePlayData } from "@/types/play";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +33,18 @@ import {
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CreateListDialog } from "@/components/ListDialogs";
+import { LogPlayDialog } from "@/components/LogPlayDialog";
+import { EditPlayDialog } from "@/components/EditPlayDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Calculate rating color: red (4) -> yellow (6) -> green (8+)
 function getRatingColor(rating: number): string {
@@ -62,12 +79,18 @@ interface GameDetailClientProps {
   game: GameData;
   currentUser: CurrentUser | null;
   lists: ManualListSummary[];
+  plays: GamePlayData[];
 }
 
-export function GameDetailClient({ game, currentUser, lists }: GameDetailClientProps) {
+export function GameDetailClient({ game, currentUser, lists, plays: initialPlays }: GameDetailClientProps) {
   const router = useRouter();
+  const [plays, setPlays] = useState(initialPlays);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showCreateListDialog, setShowCreateListDialog] = useState(false);
+  const [showLogPlayDialog, setShowLogPlayDialog] = useState(false);
+  const [editingPlay, setEditingPlay] = useState<GamePlayData | null>(null);
+  const [deletingPlay, setDeletingPlay] = useState<GamePlayData | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [togglingListId, setTogglingListId] = useState<string | null>(null);
   const [localListMembership, setLocalListMembership] = useState<Map<string, boolean>>(() => {
     // Initialize with current membership from lists prop
@@ -79,6 +102,7 @@ export function GameDetailClient({ game, currentUser, lists }: GameDetailClientP
   });
 
   const isAdmin = currentUser?.role === "admin";
+  const isLoggedIn = !!currentUser;
 
   // Use selectedThumbnail if available, otherwise fall back to image/thumbnail
   const mainImage = game.selectedThumbnail || game.image || game.thumbnail || null;
@@ -151,6 +175,35 @@ export function GameDetailClient({ game, currentUser, lists }: GameDetailClientP
       setTogglingListId(null);
     }
   };
+
+  // Handle deleting a play
+  const handleDeletePlay = async () => {
+    if (!deletingPlay) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/plays/${deletingPlay.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setPlays(plays.filter((p) => p.id !== deletingPlay.id));
+        setDeletingPlay(null);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to delete play");
+      }
+    } catch (error) {
+      console.error("Failed to delete play:", error);
+      alert("Failed to delete play");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Check if user can modify a play
+  const canModifyPlay = (play: GamePlayData) =>
+    currentUser && (currentUser.id === play.loggedById || currentUser.role === "admin");
 
   // Handle creating a new list and adding the game to it
   const handleListCreated = async (newList: { id: string; name: string }) => {
@@ -231,17 +284,28 @@ export function GameDetailClient({ game, currentUser, lists }: GameDetailClientP
         </DropdownMenu>
       )}
 
-      {/* Let's Play Button */}
-      <Button
-        onClick={() => {
-          alert(`Tonight you're playing ${game.name}! 🎲`);
-        }}
-        className="rounded-full font-bold gap-2 shadow-lg shadow-primary/20"
-        size="sm"
-      >
-        <span className="hidden sm:inline">Let&apos;s Play!</span>
-        <Dice6 className="size-5" />
-      </Button>
+      {/* Log Play / Let's Play Button */}
+      {isLoggedIn ? (
+        <Button
+          onClick={() => setShowLogPlayDialog(true)}
+          className="rounded-full font-bold gap-2 shadow-lg shadow-primary/20"
+          size="sm"
+        >
+          <span className="hidden sm:inline">Log Play</span>
+          <Dice6 className="size-5" />
+        </Button>
+      ) : (
+        <Button
+          onClick={() => {
+            alert(`Tonight you're playing ${game.name}! 🎲`);
+          }}
+          className="rounded-full font-bold gap-2 shadow-lg shadow-primary/20"
+          size="sm"
+        >
+          <span className="hidden sm:inline">Let&apos;s Play!</span>
+          <Dice6 className="size-5" />
+        </Button>
+      )}
     </div>
   );
 
@@ -441,6 +505,100 @@ export function GameDetailClient({ game, currentUser, lists }: GameDetailClientP
                 </div>
               )}
 
+              {/* Play History */}
+              {plays.length > 0 && (
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3">
+                    Play History ({plays.length} {plays.length === 1 ? "play" : "plays"})
+                  </h2>
+                  <div className="space-y-3">
+                    {plays.map((play) => {
+                      const playDate = new Date(play.playedAt);
+                      const dateStr = playDate.toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      });
+                      const winners = play.players.filter((p) => p.isWinner);
+
+                      return (
+                        <div
+                          key={play.id}
+                          className="p-3 sm:p-4 rounded-lg border border-border bg-muted/30 group"
+                        >
+                          {/* Header: Date, Location, Duration + Actions */}
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <span className="font-medium">{dateStr}</span>
+                              {play.location && (
+                                <>
+                                  <span>•</span>
+                                  <span>{play.location}</span>
+                                </>
+                              )}
+                              {play.duration && (
+                                <>
+                                  <span>•</span>
+                                  <span>{play.duration} min</span>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Edit/Delete Actions */}
+                            {canModifyPlay(play) && (
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setEditingPlay(play)}
+                                  className="h-7 w-7 p-0"
+                                >
+                                  <Pencil className="size-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setDeletingPlay(play)}
+                                  className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Players with inline badges */}
+                          <div className="flex flex-wrap gap-1.5">
+                            {play.players.map((player, idx) => (
+                              <span
+                                key={idx}
+                                className={cn(
+                                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs",
+                                  player.isWinner
+                                    ? "bg-amber-600/20 text-amber-500"
+                                    : "bg-muted text-muted-foreground"
+                                )}
+                              >
+                                {player.isWinner && <Trophy className="size-3" />}
+                                {player.isNew && <Sparkles className="size-3 text-emerald-500" />}
+                                {player.name}
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* Notes */}
+                          {play.notes && (
+                            <div className="mt-2 text-sm text-foreground italic">
+                              &ldquo;{play.notes}&rdquo;
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* External Link */}
               <div className="pt-4 sm:pt-6 border-t border-border flex items-center gap-4">
                 <a
@@ -470,6 +628,55 @@ export function GameDetailClient({ game, currentUser, lists }: GameDetailClientP
         onOpenChange={setShowCreateListDialog}
         onCreated={handleListCreated}
       />
+
+      {/* Log Play Dialog */}
+      <LogPlayDialog
+        open={showLogPlayDialog}
+        onOpenChange={setShowLogPlayDialog}
+        gameId={game.id}
+        gameName={game.name}
+        onPlayLogged={() => {
+          router.refresh();
+        }}
+      />
+
+      {/* Edit Play Dialog */}
+      {editingPlay && (
+        <EditPlayDialog
+          open={!!editingPlay}
+          onOpenChange={(open) => !open && setEditingPlay(null)}
+          play={editingPlay}
+          onPlayUpdated={() => {
+            router.refresh();
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deletingPlay}
+        onOpenChange={(open) => !open && setDeletingPlay(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Play?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this play log. This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePlay}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
