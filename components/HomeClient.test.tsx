@@ -367,8 +367,6 @@ describe("HomeClient", () => {
     it("should show action dropdown for admins", () => {
       renderWithSidebar(<HomeClient {...defaultProps} currentUser={mockAdminUser} />);
 
-      // Look for the actions dropdown trigger
-      const actionsButton = screen.queryByRole("button", { name: /actions/i });
       // Admin features are present
       expect(screen.getByText("Sync")).toBeInTheDocument();
     });

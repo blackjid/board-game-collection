@@ -282,10 +282,10 @@ describe("lib/sync", () => {
       // Mock DB: Game exists with different name
       vi.mocked(prisma.game.findUnique).mockResolvedValue({
         id: "1", name: "Game 1", yearPublished: 2020, isExpansion: false
-      } as any);
+      } as Awaited<ReturnType<typeof prisma.game.findUnique>>);
 
       // Link exists
-      vi.mocked(prisma.collectionGame.findUnique).mockResolvedValue({} as any);
+      vi.mocked(prisma.collectionGame.findUnique).mockResolvedValue({} as Awaited<ReturnType<typeof prisma.collectionGame.findUnique>>);
 
       const result = await syncCollection();
 
@@ -323,7 +323,7 @@ describe("lib/sync", () => {
     it("should scrape game details and update DB", async () => {
       vi.mocked(prisma.game.findUnique).mockResolvedValue({
         id: "123", name: "Test Game", isExpansion: false
-      } as any);
+      } as Awaited<ReturnType<typeof prisma.game.findUnique>>);
 
       // Mock playwright for main image
       mocks.page.evaluate.mockResolvedValueOnce("http://example.com/image.jpg"); // First call for image
@@ -352,10 +352,10 @@ describe("lib/sync", () => {
         images: [{ imageurl_lg: "http://example.com/gallery.jpg" }]
       };
 
-      (global.fetch as any)
-        .mockResolvedValueOnce({ json: () => Promise.resolve(mockGeekItem) })
-        .mockResolvedValueOnce({ json: () => Promise.resolve(mockDynamicInfo) })
-        .mockResolvedValueOnce({ json: () => Promise.resolve(mockGallery) });
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce({ json: () => Promise.resolve(mockGeekItem) } as Response)
+        .mockResolvedValueOnce({ json: () => Promise.resolve(mockDynamicInfo) } as Response)
+        .mockResolvedValueOnce({ json: () => Promise.resolve(mockGallery) } as Response);
 
       const success = await scrapeGame("123");
 
@@ -396,7 +396,7 @@ describe("lib/sync", () => {
       // Game is new
       vi.mocked(prisma.game.findUnique).mockResolvedValue(null);
       vi.mocked(prisma.game.findMany).mockResolvedValue([
-        { id: "1", name: "Game 1" } as any
+        { id: "1", name: "Game 1" } as Awaited<ReturnType<typeof prisma.game.findMany>>[0]
       ]);
 
       const result = await performSyncWithAutoScrape();

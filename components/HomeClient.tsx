@@ -20,7 +20,6 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-  Check,
   Loader2,
   FolderPlus,
   ChevronDown,
