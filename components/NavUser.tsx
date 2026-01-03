@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronsUpDown, LogOut, User } from "lucide-react";
+import { ChevronsUpDown, LogIn, LogOut, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -33,8 +34,26 @@ export function NavUser({ user }: NavUserProps) {
   const router = useRouter();
   const { isMobile, setOpenMobile } = useSidebar();
 
+  // Show login button when not authenticated
   if (!user) {
-    return null;
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            asChild
+            size="lg"
+            className="bg-primary/10 hover:bg-primary/20 border border-primary/20"
+          >
+            <Link href="/login" onClick={() => isMobile && setOpenMobile(false)}>
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary/20">
+                <LogIn className="size-4 text-primary" />
+              </div>
+              <span className="font-medium">Sign In</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
   }
 
   const displayName = user.name || user.email.split("@")[0];
