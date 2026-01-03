@@ -304,62 +304,63 @@ export function GameTable({
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="hover:bg-transparent h-8">
-          {isAdmin && onSelectGame && (
-            <TableHead className="w-10 pl-4 pr-3"></TableHead>
-          )}
-          <TableHead className={cn("w-10", isAdmin ? "px-2" : "pl-4 pr-2")}></TableHead>
-          <TableHead className="px-2">
-            <SortableHeader
-              label="Name"
-              field="name"
-              currentField={sortField}
-              direction={sortDirection}
-              onSort={onSort}
-            />
-          </TableHead>
-          <TableHead className="w-16 px-2 hidden sm:table-cell">
-            <SortableHeader
-              label="Year"
-              field="year"
-              currentField={sortField}
-              direction={sortDirection}
-              onSort={onSort}
-            />
-          </TableHead>
-          <TableHead className="w-14 px-2">
-            <SortableHeader
-              label="★"
-              field="rating"
-              currentField={sortField}
-              direction={sortDirection}
-              onSort={onSort}
-            />
-          </TableHead>
-          <TableHead className="w-16 px-2 hidden md:table-cell">
-            <SortableHeader
-              label="Players"
-              field="players"
-              currentField={sortField}
-              direction={sortDirection}
-              onSort={onSort}
-            />
-          </TableHead>
-          <TableHead className="w-16 px-2 hidden md:table-cell">
-            <SortableHeader
-              label="Time"
-              field="playtime"
-              currentField={sortField}
-              direction={sortDirection}
-              onSort={onSort}
-            />
-          </TableHead>
-          {isAdmin && <TableHead className="w-16 px-2 hidden sm:table-cell">Status</TableHead>}
-          {isAdmin && <TableHead className="w-8 px-1"></TableHead>}
-        </TableRow>
-      </TableHeader>
+    <div className="overflow-x-auto">
+      <Table className="min-w-[600px]">
+        <TableHeader>
+          <TableRow className="hover:bg-transparent h-8">
+            {isAdmin && onSelectGame && (
+              <TableHead className="w-10 pl-4 pr-3"></TableHead>
+            )}
+            <TableHead className={cn("w-10", isAdmin ? "px-2" : "pl-4 pr-2")}></TableHead>
+            <TableHead className="px-2">
+              <SortableHeader
+                label="Name"
+                field="name"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+              />
+            </TableHead>
+            <TableHead className="w-16 px-2">
+              <SortableHeader
+                label="Year"
+                field="year"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+              />
+            </TableHead>
+            <TableHead className="w-14 px-2">
+              <SortableHeader
+                label="★"
+                field="rating"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+              />
+            </TableHead>
+            <TableHead className="w-20 px-2">
+              <SortableHeader
+                label="Players"
+                field="players"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+              />
+            </TableHead>
+            <TableHead className="w-16 px-2">
+              <SortableHeader
+                label="Time"
+                field="playtime"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+              />
+            </TableHead>
+            {isAdmin && <TableHead className="w-16 px-2">Status</TableHead>}
+            {isAdmin && <TableHead className="w-8 px-1"></TableHead>}
+          </TableRow>
+        </TableHeader>
       <TableBody>
         {games.map((game) => {
           const imageUrl = game.selectedThumbnail || game.thumbnail || game.image || null;
@@ -428,7 +429,7 @@ export function GameTable({
                   )}
                 </div>
               </TableCell>
-              <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden sm:table-cell">
+              <TableCell className="px-2 py-1 text-xs text-muted-foreground">
                 {game.yearPublished || "-"}
               </TableCell>
               <TableCell className="px-2 py-1">
@@ -443,14 +444,14 @@ export function GameTable({
                   <span className="text-xs text-muted-foreground">-</span>
                 )}
               </TableCell>
-              <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden md:table-cell">
+              <TableCell className="px-2 py-1 text-xs text-muted-foreground">
                 {playerCount || "-"}
               </TableCell>
-              <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden md:table-cell">
+              <TableCell className="px-2 py-1 text-xs text-muted-foreground">
                 {playtime ? `${playtime}m` : "-"}
               </TableCell>
               {isAdmin && (
-                <TableCell className="px-2 py-1 hidden sm:table-cell">
+                <TableCell className="px-2 py-1">
                   <span
                     className={cn(
                       "text-[10px] font-medium px-1.5 py-0.5 rounded",
@@ -502,5 +503,6 @@ export function GameTable({
         })}
       </TableBody>
     </Table>
+    </div>
   );
 }
