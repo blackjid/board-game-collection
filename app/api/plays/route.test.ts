@@ -75,7 +75,6 @@ describe("app/api/plays/route", () => {
         "http://localhost:3000/api/plays?gameId=game1"
       );
       const response = await GET(request);
-      const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(listGamePlays).toHaveBeenCalledWith({

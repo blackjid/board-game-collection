@@ -83,8 +83,6 @@ function PlayCard({
   onDelete: () => void;
 }) {
   const canModify = currentUser.id === play.loggedById || currentUser.role === "admin";
-  const winners = play.players.filter((p) => p.isWinner);
-  const newPlayers = play.players.filter((p) => p.isNew);
 
   return (
     <div className="flex gap-4 p-4 rounded-lg border border-border bg-card hover:bg-card/80 transition-colors">

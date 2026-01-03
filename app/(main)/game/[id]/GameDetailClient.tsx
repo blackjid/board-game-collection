@@ -519,7 +519,6 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                         month: "short",
                         day: "numeric",
                       });
-                      const winners = play.players.filter((p) => p.isWinner);
 
                       return (
                         <div

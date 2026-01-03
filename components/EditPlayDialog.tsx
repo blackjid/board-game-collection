@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { GamePlayData, GamePlayPlayer } from "@/types/play";
+import type { GamePlayData } from "@/types/play";
 
 // ============================================================================
 // Types

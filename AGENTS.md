@@ -856,6 +856,48 @@ socket.on("session-update", (data) => { ... });
 
 ---
 
+## Quality Checks (Always Do)
+
+AI agents **MUST** perform these checks after making code changes:
+
+### 1. Run the Linter
+
+After creating or modifying code files, **always run the linter** to catch issues:
+
+```bash
+npm run lint
+```
+
+Fix any errors before committing. Warnings are acceptable but should be minimized.
+
+### 2. Run Tests
+
+After making changes, run tests to ensure nothing is broken:
+
+```bash
+npm run test:run      # Single run
+# or for specific files:
+npm run test:run -- path/to/file.test.ts
+```
+
+### 3. Check for TypeScript Errors
+
+If the linter doesn't catch type issues, run a type check:
+
+```bash
+npx tsc --noEmit
+```
+
+### Workflow Summary
+
+Before committing any code changes:
+1. ✅ Run `npm run lint` - fix all errors
+2. ✅ Run `npm run test:run` - ensure all tests pass
+3. ✅ Fix any linter warnings if reasonable
+4. ✅ Commit with a descriptive message
+
+---
+
 ## Don't Do (Anti-Patterns)
 
 ### Avoid These Patterns

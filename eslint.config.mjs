@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Allow `any` in test files for mocking flexibility
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+  // Ignore coverage folder
+  globalIgnores(["coverage/**"]),
 ]);
 
 export default eslintConfig;

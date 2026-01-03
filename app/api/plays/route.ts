@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, getCurrentUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { createGamePlay, listGamePlays } from "@/lib/plays";
 import type { CreateGamePlayInput } from "@/types/play";
 

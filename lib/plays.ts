@@ -1,10 +1,19 @@
 import prisma from "./prisma";
 import type { GamePlayData, CreateGamePlayInput, UpdateGamePlayInput } from "@/types/play";
+import type { GamePlay, GamePlayPlayer, Game, User } from "@prisma/client";
+
+type PrismaGamePlay = GamePlay & {
+  players?: GamePlayPlayer[];
+  game?: Pick<Game, "id" | "name" | "thumbnail"> | null;
+  loggedBy?: Pick<User, "id" | "name" | "email"> | null;
+};
+
+type PrismaPlayer = Pick<GamePlayPlayer, "id" | "name" | "isWinner" | "isNew">;
 
 /**
  * Transform Prisma GamePlay to external GamePlayData interface
  */
-function transformGamePlay(play: any): GamePlayData {
+function transformGamePlay(play: PrismaGamePlay): GamePlayData {
   return {
     id: play.id,
     gameId: play.gameId,
@@ -13,7 +22,7 @@ function transformGamePlay(play: any): GamePlayData {
     location: play.location,
     duration: play.duration,
     notes: play.notes,
-    players: play.players?.map((p: any) => ({
+    players: play.players?.map((p: PrismaPlayer) => ({
       id: p.id,
       name: p.name,
       isWinner: p.isWinner,
