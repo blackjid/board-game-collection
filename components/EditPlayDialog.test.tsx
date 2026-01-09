@@ -8,6 +8,31 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 
+// Mock PlayerInput component to simplify testing
+vi.mock("./PlayerInput", () => ({
+  PlayerInput: ({
+    value,
+    onChange,
+    placeholder,
+    className,
+  }: {
+    value: string;
+    playerId?: string | null;
+    onChange: (name: string, playerId?: string | null) => void;
+    placeholder?: string;
+    className?: string;
+  }) => (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value, null)}
+      placeholder={placeholder}
+      className={className}
+      data-testid="player-input"
+    />
+  ),
+}));
+
 // Mock fetch
 global.fetch = vi.fn();
 
@@ -152,6 +177,17 @@ describe("EditPlayDialog", () => {
 
   it("should submit updated play with valid data", async () => {
     const mockFetch = vi.mocked(global.fetch);
+    // First call: create player Alice (no playerId)
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ player: { id: "player1", displayName: "Alice" } }),
+    } as Response);
+    // Second call: create player Bob (no playerId)
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ player: { id: "player2", displayName: "Bob" } }),
+    } as Response);
+    // Third call: update play
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ play: { id: "play1" } }),
@@ -242,6 +278,17 @@ describe("EditPlayDialog", () => {
 
   it("should handle API errors gracefully", async () => {
     const mockFetch = vi.mocked(global.fetch);
+    // First call: create player Alice
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ player: { id: "player1", displayName: "Alice" } }),
+    } as Response);
+    // Second call: create player Bob
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ player: { id: "player2", displayName: "Bob" } }),
+    } as Response);
+    // Third call: update play fails
     mockFetch.mockResolvedValueOnce({
       ok: false,
       json: async () => ({ error: "Update failed" }),
