@@ -97,6 +97,57 @@ export function LogPlayDialog({
 
     setSaving(true);
     try {
+      // Auto-create players that don't have a playerId yet
+      const playersWithIds = await Promise.all(
+        validPlayers.map(async (player) => {
+          // If player already has an ID, keep it
+          if (player.playerId) {
+            return {
+              name: player.name.trim(),
+              playerId: player.playerId,
+              isWinner: player.isWinner,
+              isNew: player.isNew,
+            };
+          }
+
+          // Otherwise, create a new player
+          try {
+            const response = await fetch("/api/players", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ displayName: player.name.trim() }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              return {
+                name: data.player.displayName,
+                playerId: data.player.id,
+                isWinner: player.isWinner,
+                isNew: player.isNew,
+              };
+            } else {
+              // If creation fails, send without playerId
+              return {
+                name: player.name.trim(),
+                playerId: undefined,
+                isWinner: player.isWinner,
+                isNew: player.isNew,
+              };
+            }
+          } catch (error) {
+            console.error("Failed to create player:", error);
+            // If creation fails, send without playerId
+            return {
+              name: player.name.trim(),
+              playerId: undefined,
+              isWinner: player.isWinner,
+              isNew: player.isNew,
+            };
+          }
+        })
+      );
+
       const response = await fetch("/api/plays", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -106,12 +157,7 @@ export function LogPlayDialog({
           location: location.trim() || undefined,
           duration: duration ? parseInt(duration, 10) : undefined,
           notes: notes.trim() || undefined,
-          players: validPlayers.map((p) => ({
-            name: p.name.trim(),
-            playerId: p.playerId,
-            isWinner: p.isWinner,
-            isNew: p.isNew,
-          })),
+          players: playersWithIds,
         }),
       });
 
