@@ -16,22 +16,14 @@ import {
   Users,
   Calendar,
   Plus,
-  Search,
   Dice6,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SiteHeader } from "@/components/SiteHeader";
 import { EditPlayDialog } from "@/components/EditPlayDialog";
 import { LogPlayDialog } from "@/components/LogPlayDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { GameSelectorDialog, type SelectedGame } from "@/components/GameSelectorDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -205,20 +197,21 @@ export function PlaysClient({ plays: initialPlays, games, currentUser }: PlaysCl
 
   // Game selector state
   const [showGameSelector, setShowGameSelector] = useState(false);
-  const [gameSearch, setGameSearch] = useState("");
-  const [selectedGame, setSelectedGame] = useState<GameOption | null>(null);
+  const [selectedGame, setSelectedGame] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [showLogPlayDialog, setShowLogPlayDialog] = useState(false);
 
-  // Filter games by search
-  const filteredGames = games.filter((game) =>
-    game.name.toLowerCase().includes(gameSearch.toLowerCase())
-  );
-
-  const handleSelectGame = (game: GameOption) => {
-    setSelectedGame(game);
-    setShowGameSelector(false);
-    setGameSearch("");
-    setShowLogPlayDialog(true);
+  const handleGameSelect = (selectedGames: SelectedGame[]) => {
+    if (selectedGames.length > 0) {
+      const game = selectedGames[0];
+      setSelectedGame({
+        id: game.id,
+        name: game.name,
+      });
+      setShowLogPlayDialog(true);
+    }
   };
 
   const handlePlayLogged = () => {
@@ -346,66 +339,15 @@ export function PlaysClient({ plays: initialPlays, games, currentUser }: PlaysCl
       </AlertDialog>
 
       {/* Game Selector Dialog */}
-      <Dialog open={showGameSelector} onOpenChange={setShowGameSelector}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Dice6 className="size-5" />
-              Log a Play
-            </DialogTitle>
-            <DialogDescription>
-              Choose a game to log a play session
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              value={gameSearch}
-              onChange={(e) => setGameSearch(e.target.value)}
-              placeholder="Search games..."
-              className="pl-9"
-              autoFocus
-            />
-          </div>
-
-          {/* Game List */}
-          <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
-            {filteredGames.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground">
-                {gameSearch ? "No games found" : "No games in collection"}
-              </div>
-            ) : (
-              <div className="space-y-1 pb-4">
-                {filteredGames.map((game) => (
-                  <button
-                    key={game.id}
-                    onClick={() => handleSelectGame(game)}
-                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors text-left"
-                  >
-                    <div className="relative w-10 h-10 rounded-md overflow-hidden bg-muted shrink-0">
-                      {game.thumbnail ? (
-                        <Image
-                          src={game.thumbnail}
-                          alt={game.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                          <Dice6 className="size-4" />
-                        </div>
-                      )}
-                    </div>
-                    <span className="font-medium truncate">{game.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <GameSelectorDialog
+        open={showGameSelector}
+        onOpenChange={setShowGameSelector}
+        mode="single"
+        title="Log a Play"
+        description="Choose a game to log a play session"
+        collectionGames={games}
+        onSelect={handleGameSelect}
+      />
 
       {/* Log Play Dialog */}
       {selectedGame && (
