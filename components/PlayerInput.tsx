@@ -89,7 +89,6 @@ export function PlayerInput({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   // Handle selecting an existing player
