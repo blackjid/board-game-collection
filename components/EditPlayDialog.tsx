@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PlayerInput } from "@/components/PlayerInput";
 import type { GamePlayData } from "@/types/play";
 
 // ============================================================================
@@ -24,6 +25,7 @@ import type { GamePlayData } from "@/types/play";
 interface Player {
   id: string;
   name: string;
+  playerId?: string | null;
   isWinner: boolean;
   isNew: boolean;
 }
@@ -59,10 +61,11 @@ export function EditPlayDialog({
       const playPlayers: Player[] = play.players.map((p, index) => ({
         id: p.id || String(index),
         name: p.name,
+        playerId: p.playerId,
         isWinner: p.isWinner,
         isNew: p.isNew,
       }));
-      setPlayers(playPlayers.length > 0 ? playPlayers : [{ id: "1", name: "", isWinner: false, isNew: false }]);
+      setPlayers(playPlayers.length > 0 ? playPlayers : [{ id: "1", name: "", playerId: null, isWinner: false, isNew: false }]);
 
       // Format date for input
       const date = new Date(play.playedAt);
@@ -76,7 +79,7 @@ export function EditPlayDialog({
 
   const addPlayer = () => {
     const newId = String(Date.now());
-    setPlayers([...players, { id: newId, name: "", isWinner: false, isNew: false }]);
+    setPlayers([...players, { id: newId, name: "", playerId: null, isWinner: false, isNew: false }]);
   };
 
   const removePlayer = (id: string) => {
@@ -109,6 +112,7 @@ export function EditPlayDialog({
           notes: notes.trim() || null,
           players: validPlayers.map((p) => ({
             name: p.name.trim(),
+            playerId: p.playerId,
             isWinner: p.isWinner,
             isNew: p.isNew,
           })),
@@ -155,9 +159,10 @@ export function EditPlayDialog({
                   key={player.id}
                   className="flex items-center gap-2 p-3 rounded-lg border border-border bg-muted/30"
                 >
-                  <Input
+                  <PlayerInput
                     value={player.name}
-                    onChange={(e) => updatePlayer(player.id, { name: e.target.value })}
+                    playerId={player.playerId}
+                    onChange={(name, playerId) => updatePlayer(player.id, { name, playerId })}
                     placeholder={`Player ${index + 1} name`}
                     className="flex-1"
                   />

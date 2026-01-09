@@ -192,6 +192,20 @@ model CollectionGame {
   @@index([gameId])
 }
 
+// Player - tracks game participants with additional details
+model Player {
+  id          String   @id @default(cuid())
+  displayName String   // Primary name shown (required)
+  firstName   String?  // Optional additional info
+  lastName    String?  // Optional additional info
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  gamePlays   GamePlayPlayer[]
+
+  @@index([displayName])
+}
+
 // Game Play Tracking - records of actual game plays
 model GamePlay {
   id          String   @id @default(cuid())
@@ -217,11 +231,14 @@ model GamePlayPlayer {
   id        String   @id @default(cuid())
   playId    String
   name      String
+  playerId  String?  // Optional link to Player entity
   isWinner  Boolean  @default(false)
   isNew     Boolean  @default(false)  // First time playing this game?
   createdAt DateTime @default(now())
 
   play      GamePlay @relation(fields: [playId], references: [id], onDelete: Cascade)
+  player    Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
 
   @@index([playId])
+  @@index([playerId])
 }

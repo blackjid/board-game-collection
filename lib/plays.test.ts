@@ -98,8 +98,8 @@ describe("lib/plays", () => {
           notes: "Great game",
           players: {
             create: [
-              { name: "Alice", isWinner: true, isNew: false },
-              { name: "Bob", isWinner: false, isNew: true },
+              { name: "Alice", playerId: null, isWinner: true, isNew: false },
+              { name: "Bob", playerId: null, isWinner: false, isNew: true },
             ],
           },
         },

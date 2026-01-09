@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PlayerInput } from "@/components/PlayerInput";
 
 // ============================================================================
 // Types
@@ -22,6 +23,7 @@ import {
 interface Player {
   id: string;
   name: string;
+  playerId?: string | null;
   isWinner: boolean;
   isNew: boolean;
 }
@@ -46,7 +48,7 @@ export function LogPlayDialog({
   onPlayLogged,
 }: LogPlayDialogProps) {
   const [players, setPlayers] = useState<Player[]>([
-    { id: "1", name: "", isWinner: false, isNew: false },
+    { id: "1", name: "", playerId: null, isWinner: false, isNew: false },
   ]);
   const [playedAt, setPlayedAt] = useState("");
   const [location, setLocation] = useState("");
@@ -57,7 +59,7 @@ export function LogPlayDialog({
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      setPlayers([{ id: "1", name: "", isWinner: false, isNew: false }]);
+      setPlayers([{ id: "1", name: "", playerId: null, isWinner: false, isNew: false }]);
       // Set default date to today in local timezone
       const today = new Date();
       const year = today.getFullYear();
@@ -72,7 +74,7 @@ export function LogPlayDialog({
 
   const addPlayer = () => {
     const newId = String(Date.now());
-    setPlayers([...players, { id: newId, name: "", isWinner: false, isNew: false }]);
+    setPlayers([...players, { id: newId, name: "", playerId: null, isWinner: false, isNew: false }]);
   };
 
   const removePlayer = (id: string) => {
@@ -106,6 +108,7 @@ export function LogPlayDialog({
           notes: notes.trim() || undefined,
           players: validPlayers.map((p) => ({
             name: p.name.trim(),
+            playerId: p.playerId,
             isWinner: p.isWinner,
             isNew: p.isNew,
           })),
@@ -152,9 +155,10 @@ export function LogPlayDialog({
                   key={player.id}
                   className="flex items-center gap-2 p-3 rounded-lg border border-border bg-muted/30"
                 >
-                  <Input
+                  <PlayerInput
                     value={player.name}
-                    onChange={(e) => updatePlayer(player.id, { name: e.target.value })}
+                    playerId={player.playerId}
+                    onChange={(name, playerId) => updatePlayer(player.id, { name, playerId })}
                     placeholder={`Player ${index + 1} name`}
                     className="flex-1"
                   />

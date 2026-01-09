@@ -15,6 +15,7 @@ import {
   Settings,
   X,
   History,
+  UsersRound,
 } from "lucide-react";
 
 import {
@@ -63,6 +64,7 @@ const ADMIN_SECTIONS = [
   { id: "collection", label: "Collection Sync", Icon: RefreshCw, href: "/settings?section=collection" },
   { id: "sessions", label: "Sessions", Icon: Gamepad2, href: "/settings?section=sessions" },
   { id: "users", label: "Users", Icon: Users, href: "/settings?section=users" },
+  { id: "players", label: "Players", Icon: UsersRound, href: "/settings?section=players" },
   { id: "about", label: "About", Icon: Info, href: "/settings?section=about" },
 ] as const;
 
