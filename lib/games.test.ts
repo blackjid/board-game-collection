@@ -84,7 +84,7 @@ describe("lib/games", () => {
   // ============================================================================
 
   describe("getActiveGames", () => {
-    it("should return games from collections", async () => {
+    it("should return games from primary collection only", async () => {
       const mockCollectionGame = {
         id: "cg-1",
         collectionId: "col-1",
@@ -94,10 +94,33 @@ describe("lib/games", () => {
         game: mockDbGame,
         collection: { id: "col-1", name: "Primary", type: "bgg_sync" },
       };
+
+      // Mock primary collection lookup
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        id: "col-1",
+        name: "Primary Collection",
+        description: null,
+        type: "bgg_sync",
+        isPrimary: true,
+        bggUsername: "testuser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastSyncedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([mockCollectionGame]);
 
       const result = await getActiveGames();
 
+      // Should query for primary collection first
+      expect(prisma.collection.findFirst).toHaveBeenCalledWith({
+        where: { isPrimary: true },
+        select: { id: true },
+      });
+
+      // Should query games only from primary collection
       expect(prisma.collectionGame.findMany).toHaveBeenCalledWith({
         include: {
           game: true,
@@ -106,6 +129,7 @@ describe("lib/games", () => {
           },
         },
         where: {
+          collectionId: "col-1",
           game: {
             lastScraped: { not: null },
           },
@@ -113,6 +137,16 @@ describe("lib/games", () => {
       });
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe("Wingspan");
+    });
+
+    it("should return empty array when no primary collection exists", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
+
+      const result = await getActiveGames();
+
+      expect(result).toEqual([]);
+      // Should not query collectionGame if no primary collection
+      expect(prisma.collectionGame.findMany).not.toHaveBeenCalled();
     });
 
     it("should parse JSON fields correctly", async () => {
@@ -125,6 +159,21 @@ describe("lib/games", () => {
         game: mockDbGame,
         collection: { id: "col-1", name: "Primary", type: "bgg_sync" },
       };
+
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        id: "col-1",
+        name: "Primary Collection",
+        description: null,
+        type: "bgg_sync",
+        isPrimary: true,
+        bggUsername: "testuser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastSyncedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([mockCollectionGame]);
 
       const result = await getActiveGames();
@@ -152,6 +201,21 @@ describe("lib/games", () => {
         game: gameWithNulls,
         collection: { id: "col-1", name: "Primary", type: "bgg_sync" },
       };
+
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        id: "col-1",
+        name: "Primary Collection",
+        description: null,
+        type: "bgg_sync",
+        isPrimary: true,
+        bggUsername: "testuser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastSyncedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([mockCollectionGame]);
 
       const result = await getActiveGames();
@@ -162,36 +226,58 @@ describe("lib/games", () => {
       expect(result[0].componentImages).toEqual([]);
     });
 
-    it("should deduplicate games in multiple collections", async () => {
-      const mockCollectionGames = [
-        {
-          id: "cg-1",
-          collectionId: "col-1",
-          gameId: "123",
-          addedBy: "sync",
-          addedAt: new Date(),
-          game: mockDbGame,
-          collection: { id: "col-1", name: "Primary", type: "bgg_sync" },
-        },
-        {
-          id: "cg-2",
-          collectionId: "col-2",
-          gameId: "123",
-          addedBy: "manual",
-          addedAt: new Date(),
-          game: mockDbGame,
-          collection: { id: "col-2", name: "Favorites", type: "manual" },
-        },
-      ];
-      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue(mockCollectionGames);
+    it("should include collections array for each game", async () => {
+      // Note: Even though getActiveGames only returns games from primary collection,
+      // a game could theoretically be in multiple collections (primary + lists).
+      // The collections array shows ALL collections the game is in.
+      const mockCollectionGame = {
+        id: "cg-1",
+        collectionId: "col-1",
+        gameId: "123",
+        addedBy: "sync",
+        addedAt: new Date(),
+        game: mockDbGame,
+        collection: { id: "col-1", name: "Primary", type: "bgg_sync" },
+      };
+
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        id: "col-1",
+        name: "Primary Collection",
+        description: null,
+        type: "bgg_sync",
+        isPrimary: true,
+        bggUsername: "testuser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastSyncedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([mockCollectionGame]);
 
       const result = await getActiveGames();
 
       expect(result).toHaveLength(1);
-      expect(result[0].collections).toHaveLength(2);
+      expect(result[0].collections).toHaveLength(1);
+      expect(result[0].collections?.[0].name).toBe("Primary");
     });
 
-    it("should return empty array when no games", async () => {
+    it("should return empty array when no games in primary collection", async () => {
+      vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+        id: "col-1",
+        name: "Primary Collection",
+        description: null,
+        type: "bgg_sync",
+        isPrimary: true,
+        bggUsername: "testuser",
+        syncSchedule: "manual",
+        autoScrapeNewGames: false,
+        lastSyncedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([]);
 
       const result = await getActiveGames();

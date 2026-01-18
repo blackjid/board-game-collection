@@ -90,11 +90,21 @@ function transformGame(game: Awaited<ReturnType<typeof prisma.game.findFirst>>):
 // ============================================================================
 
 /**
- * Get all games that belong to at least one collection (union of all collections)
+ * Get games from the primary collection (default view)
  * This replaces the old `isVisible: true` query
  */
 export async function getActiveGames(): Promise<GameData[]> {
-  // Get all games that are in at least one collection and have been scraped
+  // Get the primary collection
+  const primaryCollection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
+    select: { id: true },
+  });
+
+  if (!primaryCollection) {
+    return [];
+  }
+
+  // Get all games in the primary collection that have been scraped
   const collectionGames = await prisma.collectionGame.findMany({
     include: {
       game: true,
@@ -103,6 +113,7 @@ export async function getActiveGames(): Promise<GameData[]> {
       },
     },
     where: {
+      collectionId: primaryCollection.id,
       game: {
         lastScraped: { not: null },
       },
