@@ -18,6 +18,7 @@ import {
   UsersRound,
   Pencil,
   Trash2,
+  Globe,
 } from "lucide-react";
 
 import {
@@ -234,6 +235,11 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                               >
                                 <FolderHeart className="size-4" />
                                 <span>{collection.name}</span>
+                                {collection.isPublic && (
+                                  <span title="Public list">
+                                    <Globe className="size-3 text-muted-foreground" />
+                                  </span>
+                                )}
                                 <SidebarMenuBadge>{collection.gameCount}</SidebarMenuBadge>
                               </Link>
                             </SidebarMenuButton>
@@ -269,6 +275,11 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                           >
                             <FolderHeart className="size-4" />
                             <span>{collection.name}</span>
+                            {collection.isPublic && (
+                              <span title="Public list">
+                                <Globe className="size-3 text-muted-foreground" />
+                              </span>
+                            )}
                             <SidebarMenuBadge>{collection.gameCount}</SidebarMenuBadge>
                           </Link>
                         </SidebarMenuButton>

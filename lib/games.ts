@@ -211,6 +211,7 @@ export interface CollectionSummary {
   description: string | null;
   type: string; // "bgg_sync" | "manual"
   isPrimary: boolean;
+  isPublic: boolean;
   bggUsername: string | null;
   lastSyncedAt: Date | null;
   syncSchedule: string;
@@ -302,6 +303,7 @@ export async function getPrimaryCollection(): Promise<CollectionSummary | null> 
     description: collection.description,
     type: collection.type,
     isPrimary: collection.isPrimary,
+    isPublic: collection.isPublic,
     bggUsername: collection.bggUsername,
     lastSyncedAt: collection.lastSyncedAt,
     syncSchedule: collection.syncSchedule,
@@ -348,6 +350,7 @@ export async function getCollections(): Promise<CollectionSummary[]> {
     description: collection.description,
     type: collection.type,
     isPrimary: collection.isPrimary,
+    isPublic: collection.isPublic,
     bggUsername: collection.bggUsername,
     lastSyncedAt: collection.lastSyncedAt,
     syncSchedule: collection.syncSchedule,
@@ -423,6 +426,7 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
     description: collection.description,
     type: collection.type,
     isPrimary: collection.isPrimary,
+    isPublic: collection.isPublic,
     bggUsername: collection.bggUsername,
     lastSyncedAt: collection.lastSyncedAt,
     syncSchedule: collection.syncSchedule,

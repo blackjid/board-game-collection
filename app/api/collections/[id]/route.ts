@@ -70,6 +70,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         id: collection.id,
         name: collection.name,
         description: collection.description,
+        isPublic: collection.isPublic,
         createdAt: collection.createdAt,
         updatedAt: collection.updatedAt,
         gameCount: games.length,
@@ -94,10 +95,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   try {
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, isPublic } = body;
 
     // Validate that at least one field is being updated
-    if (name === undefined && description === undefined) {
+    if (name === undefined && description === undefined && isPublic === undefined) {
       return NextResponse.json(
         { error: "No fields to update" },
         { status: 400 }
@@ -114,7 +115,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Build update data
-    const updateData: { name?: string; description?: string | null } = {};
+    const updateData: { name?: string; description?: string | null; isPublic?: boolean } = {};
     if (name !== undefined) {
       if (typeof name !== "string" || name.trim().length === 0) {
         return NextResponse.json(
@@ -126,6 +127,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
     if (description !== undefined) {
       updateData.description = description?.trim() || null;
+    }
+    if (isPublic !== undefined) {
+      updateData.isPublic = isPublic === true;
     }
 
     const collection = await prisma.collection.update({
@@ -141,6 +145,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         id: collection.id,
         name: collection.name,
         description: collection.description,
+        isPublic: collection.isPublic,
         gameCount: collection._count.games,
         createdAt: collection.createdAt,
         updatedAt: collection.updatedAt,

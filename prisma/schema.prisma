@@ -160,6 +160,7 @@ model Collection {
   // Collection type and designation
   type        String   @default("manual")  // "bgg_sync" | "manual"
   isPrimary   Boolean  @default(false)     // The main/default collection
+  isPublic    Boolean  @default(false)     // Whether the collection is public (viewable without auth)
 
   // BGG sync settings (only used when type = "bgg_sync")
   bggUsername        String?
@@ -175,6 +176,7 @@ model Collection {
   @@index([name])
   @@index([type])
   @@index([isPrimary])
+  @@index([isPublic])
 }
 
 model CollectionGame {

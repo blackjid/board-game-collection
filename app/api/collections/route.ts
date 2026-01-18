@@ -38,6 +38,7 @@ export async function GET() {
       description: collection.description,
       type: collection.type,
       isPrimary: collection.isPrimary,
+      isPublic: collection.isPublic,
       gameCount: collection._count.games,
       createdAt: collection.createdAt,
       updatedAt: collection.updatedAt,
@@ -65,7 +66,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, isPublic } = body;
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json(
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: name.trim(),
         description: description?.trim() || null,
+        isPublic: isPublic === true,
       },
     });
 
@@ -86,6 +88,7 @@ export async function POST(request: NextRequest) {
         id: collection.id,
         name: collection.name,
         description: collection.description,
+        isPublic: collection.isPublic,
         gameCount: 0,
         createdAt: collection.createdAt,
         updatedAt: collection.updatedAt,

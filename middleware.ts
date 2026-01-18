@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 // Pages that require admin access (will redirect to login)
 const ADMIN_PAGES = ["/settings"];
@@ -23,13 +24,37 @@ export async function middleware(request: NextRequest) {
     PROTECTED_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) &&
     ["POST", "PATCH", "DELETE"].includes(method);
 
+  // Check if viewing a specific collection (GET /api/collections/[id])
+  const collectionMatch = pathname.match(/^\/api\/collections\/([^/]+)$/);
+  const isViewingCollection = collectionMatch && method === "GET";
+
   // If not a protected route, allow through
-  if (!isAdminPage && !isProtectedApi) {
+  if (!isAdminPage && !isProtectedApi && !isViewingCollection) {
     return NextResponse.next();
   }
 
   // Get session cookie
   const sessionId = request.cookies.get("session_id")?.value;
+
+  // For viewing a specific collection, check if it's public
+  if (isViewingCollection && !sessionId) {
+    const collectionId = collectionMatch[1];
+    try {
+      const collection = await prisma.collection.findUnique({
+        where: { id: collectionId },
+        select: { isPublic: true },
+      });
+
+      // If collection is public, allow access
+      if (collection?.isPublic) {
+        return NextResponse.next();
+      }
+    } catch (error) {
+      console.error("Error checking collection public status:", error);
+    }
+    // If collection not found or not public, return 401
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   if (!sessionId) {
     if (isAdminPage) {
@@ -51,6 +76,7 @@ export const config = {
     "/settings/:path*",
     "/api/games/:path*",
     "/api/collection/:path*",
+    "/api/collections/:path*",
     "/api/settings/:path*",
   ],
 };
