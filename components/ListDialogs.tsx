@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ export interface ListData {
   id: string;
   name: string;
   description: string | null;
+  isPublic?: boolean;
 }
 
 // ============================================================================
@@ -44,6 +46,7 @@ export function CreateListDialog({
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Reset form when dialog opens
@@ -51,6 +54,7 @@ export function CreateListDialog({
     if (open) {
       setName("");
       setDescription("");
+      setIsPublic(false);
     }
   }, [open]);
 
@@ -64,6 +68,7 @@ export function CreateListDialog({
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || null,
+          isPublic,
         }),
       });
       if (response.ok) {
@@ -113,6 +118,19 @@ export function CreateListDialog({
               placeholder="What is this list for?"
             />
           </div>
+          <div className="flex items-center justify-between space-x-2">
+            <div className="space-y-0.5">
+              <Label htmlFor="create-public">Public</Label>
+              <p className="text-xs text-muted-foreground">
+                Allow anyone with the link to view this list
+              </p>
+            </div>
+            <Switch
+              id="create-public"
+              checked={isPublic}
+              onCheckedChange={setIsPublic}
+            />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
@@ -147,6 +165,7 @@ export function EditListDialog({
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Populate form when list changes
@@ -154,6 +173,7 @@ export function EditListDialog({
     if (list) {
       setName(list.name);
       setDescription(list.description || "");
+      setIsPublic(list.isPublic || false);
     }
   }, [list]);
 
@@ -167,6 +187,7 @@ export function EditListDialog({
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || null,
+          isPublic,
         }),
       });
       if (response.ok) {
@@ -209,6 +230,19 @@ export function EditListDialog({
               id="edit-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center justify-between space-x-2">
+            <div className="space-y-0.5">
+              <Label htmlFor="edit-public">Public</Label>
+              <p className="text-xs text-muted-foreground">
+                Allow anyone with the link to view this list
+              </p>
+            </div>
+            <Switch
+              id="edit-public"
+              checked={isPublic}
+              onCheckedChange={setIsPublic}
             />
           </div>
         </div>
