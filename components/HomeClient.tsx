@@ -62,7 +62,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { GameCard } from "@/components/GameCard";
 import { GameRowItem } from "@/components/GameRowItem";
 import { GameTable, SortField, SortDirection } from "@/components/GameTable";
-import { EditListDialog, DeleteListDialog } from "@/components/ListDialogs";
+import { EditListDialog, DeleteListDialog, DuplicateListDialog } from "@/components/ListDialogs";
 import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
 import type { GameData } from "@/lib/games";
 import { saveUIPreference } from "@/lib/cookies";
@@ -322,6 +322,7 @@ export function HomeClient({
   // Admin list management state
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [showAddGamesDialog, setShowAddGamesDialog] = useState(false);
 
   // Bulk selection state
@@ -721,6 +722,10 @@ export function HomeClient({
             <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
               <Pencil className="size-4" />
               Edit List
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowDuplicateDialog(true)}>
+              <FolderPlus className="size-4" />
+              Duplicate List
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -1246,6 +1251,15 @@ export function HomeClient({
           <EditListDialog
             open={showEditDialog}
             onOpenChange={setShowEditDialog}
+            list={{
+              id: selectedCollection.id,
+              name: selectedCollection.name,
+              description: selectedCollection.description,
+            }}
+          />
+          <DuplicateListDialog
+            open={showDuplicateDialog}
+            onOpenChange={setShowDuplicateDialog}
             list={{
               id: selectedCollection.id,
               name: selectedCollection.name,

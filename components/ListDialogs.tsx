@@ -291,3 +291,98 @@ export function DeleteListDialog({
     </Dialog>
   );
 }
+
+// ============================================================================
+// Duplicate List Dialog
+// ============================================================================
+
+interface DuplicateListDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  list: ListData | null;
+  onDuplicated?: (list: ListData) => void;
+}
+
+export function DuplicateListDialog({
+  open,
+  onOpenChange,
+  list,
+  onDuplicated,
+}: DuplicateListDialogProps) {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [duplicating, setDuplicating] = useState(false);
+
+  // Populate default name when list changes
+  useEffect(() => {
+    if (list) {
+      setName(`${list.name} (Copy)`);
+    }
+  }, [list]);
+
+  const handleDuplicate = async () => {
+    if (!list || !name.trim()) return;
+    setDuplicating(true);
+    try {
+      const response = await fetch(`/api/collections/${list.id}/duplicate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        onOpenChange(false);
+        if (onDuplicated) {
+          onDuplicated(data.collection);
+        } else {
+          // Default behavior: navigate to the new list
+          router.push(`/?collection=${data.collection.id}`);
+          router.refresh();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to duplicate list:", error);
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Duplicate List</DialogTitle>
+          <DialogDescription>
+            Create a copy of &quot;{list?.name}&quot; with only games from your main collection.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="duplicate-name">New List Name</Label>
+            <Input
+              id="duplicate-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Name for the duplicated list"
+              onKeyDown={(e) => e.key === "Enter" && name.trim() && handleDuplicate()}
+            />
+          </div>
+          <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+            <p>
+              Only games that are currently in your main collection will be copied.
+              Games added ad-hoc to this list will not be included.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleDuplicate} disabled={!name.trim() || duplicating}>
+            {duplicating ? <Loader2 className="size-4 animate-spin" /> : "Duplicate"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

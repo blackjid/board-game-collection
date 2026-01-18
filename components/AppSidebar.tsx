@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import {
   Library,
   FolderHeart,
@@ -16,6 +16,8 @@ import {
   X,
   History,
   UsersRound,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 
 import {
@@ -34,8 +36,20 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { NavUser } from "@/components/NavUser";
-import { CreateListDialog } from "@/components/ListDialogs";
+import {
+  CreateListDialog,
+  EditListDialog,
+  DeleteListDialog,
+  DuplicateListDialog,
+} from "@/components/ListDialogs";
 import type { CollectionSummary } from "@/lib/games";
 
 // ============================================================================
@@ -75,8 +89,13 @@ const ADMIN_SECTIONS = [
 export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { setOpenMobile } = useSidebar();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [selectedList, setSelectedList] = useState<CollectionSummary | null>(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -95,6 +114,30 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
 
   const handleItemClick = () => {
     setOpenMobile(false);
+  };
+
+  const handleEdit = (collection: CollectionSummary) => {
+    setSelectedList(collection);
+    setShowEditDialog(true);
+  };
+
+  const handleDuplicate = (collection: CollectionSummary) => {
+    setSelectedList(collection);
+    setShowDuplicateDialog(true);
+  };
+
+  const handleDelete = (collection: CollectionSummary) => {
+    setSelectedList(collection);
+    setShowDeleteDialog(true);
+  };
+
+  const handleListUpdated = () => {
+    router.refresh();
+  };
+
+  const handleListDeleted = () => {
+    router.push("/");
+    router.refresh();
   };
 
   return (
@@ -177,20 +220,59 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                 ) : (
                   manualLists.map((collection) => (
                     <SidebarMenuItem key={collection.id}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={selectedCollectionId === collection.id}
-                        tooltip={collection.name}
-                      >
-                        <Link
-                          href={`/?collection=${collection.id}`}
-                          onClick={handleItemClick}
+                      {isAdmin ? (
+                        <ContextMenu>
+                          <ContextMenuTrigger asChild>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={selectedCollectionId === collection.id}
+                              tooltip={collection.name}
+                            >
+                              <Link
+                                href={`/?collection=${collection.id}`}
+                                onClick={handleItemClick}
+                              >
+                                <FolderHeart className="size-4" />
+                                <span>{collection.name}</span>
+                                <SidebarMenuBadge>{collection.gameCount}</SidebarMenuBadge>
+                              </Link>
+                            </SidebarMenuButton>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent>
+                            <ContextMenuItem onClick={() => handleEdit(collection)}>
+                              <Pencil className="size-4" />
+                              Edit List
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => handleDuplicate(collection)}>
+                              <FolderHeart className="size-4" />
+                              Duplicate List
+                            </ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem
+                              onClick={() => handleDelete(collection)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="size-4" />
+                              Delete List
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      ) : (
+                        <SidebarMenuButton
+                          asChild
+                          isActive={selectedCollectionId === collection.id}
+                          tooltip={collection.name}
                         >
-                          <FolderHeart className="size-4" />
-                          <span>{collection.name}</span>
-                          <SidebarMenuBadge>{collection.gameCount}</SidebarMenuBadge>
-                        </Link>
-                      </SidebarMenuButton>
+                          <Link
+                            href={`/?collection=${collection.id}`}
+                            onClick={handleItemClick}
+                          >
+                            <FolderHeart className="size-4" />
+                            <span>{collection.name}</span>
+                            <SidebarMenuBadge>{collection.gameCount}</SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuButton>
+                      )}
                     </SidebarMenuItem>
                   ))
                 )}
@@ -241,11 +323,44 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
         </SidebarFooter>
       </Sidebar>
 
-      {/* Create List Dialog */}
+      {/* Dialogs */}
       <CreateListDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
       />
+      {selectedList && (
+        <>
+          <EditListDialog
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+            list={{
+              id: selectedList.id,
+              name: selectedList.name,
+              description: null,
+            }}
+            onUpdated={handleListUpdated}
+          />
+          <DuplicateListDialog
+            open={showDuplicateDialog}
+            onOpenChange={setShowDuplicateDialog}
+            list={{
+              id: selectedList.id,
+              name: selectedList.name,
+              description: null,
+            }}
+          />
+          <DeleteListDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            list={{
+              id: selectedList.id,
+              name: selectedList.name,
+              description: null,
+            }}
+            onDeleted={handleListDeleted}
+          />
+        </>
+      )}
     </>
   );
 }
