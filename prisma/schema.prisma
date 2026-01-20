@@ -162,6 +162,9 @@ model Collection {
   isPrimary   Boolean  @default(false)     // The main/default collection
   isPublic    Boolean  @default(false)     // Whether the collection is public (viewable without auth)
 
+  // Share token for "anyone with link" access
+  shareToken  String?  @unique             // Random token for sharing private collections
+
   // BGG sync settings (only used when type = "bgg_sync")
   bggUsername        String?
   syncSchedule       String   @default("manual")  // "manual" | "daily" | "weekly"
@@ -177,6 +180,7 @@ model Collection {
   @@index([type])
   @@index([isPrimary])
   @@index([isPublic])
+  @@index([shareToken])
 }
 
 model CollectionGame {

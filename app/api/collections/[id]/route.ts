@@ -17,9 +17,12 @@ function parseJsonArray(json: string | null): string[] {
 /**
  * GET /api/collections/[id]
  * Get a single collection with all its games
+ * Public collections can be viewed without authentication
+ * Private collections can be accessed via share token (?shareToken=xxx)
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  const shareToken = request.nextUrl.searchParams.get("shareToken");
 
   try {
     const collection = await prisma.collection.findUnique({
@@ -38,6 +41,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         { error: "Collection not found" },
         { status: 404 }
+      );
+    }
+
+    // Check if user is authenticated
+    const sessionId = request.cookies.get("session_id")?.value;
+
+    // Allow access if:
+    // 1. Collection is public, OR
+    // 2. User is authenticated, OR
+    // 3. Valid share token is provided
+    const hasAccess =
+      collection.isPublic ||
+      sessionId ||
+      (shareToken && collection.shareToken === shareToken);
+
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
 
@@ -71,6 +93,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         name: collection.name,
         description: collection.description,
         isPublic: collection.isPublic,
+        shareToken: sessionId ? collection.shareToken : undefined, // Only expose token to authenticated users
         createdAt: collection.createdAt,
         updatedAt: collection.updatedAt,
         gameCount: games.length,

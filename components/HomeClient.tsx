@@ -27,6 +27,7 @@ import {
   CheckCircle,
   XCircle,
   Square,
+  Share2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { GameCard } from "@/components/GameCard";
 import { GameRowItem } from "@/components/GameRowItem";
 import { GameTable, SortField, SortDirection } from "@/components/GameTable";
-import { EditListDialog, DeleteListDialog, DuplicateListDialog } from "@/components/ListDialogs";
+import { EditListDialog, DeleteListDialog, DuplicateListDialog, ShareListDialog } from "@/components/ListDialogs";
 import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
 import type { GameData } from "@/lib/games";
 import { saveUIPreference } from "@/lib/cookies";
@@ -83,6 +84,8 @@ interface SelectedCollection {
   description: string | null;
   type: string;
   isPrimary: boolean;
+  isPublic?: boolean;
+  shareToken?: string | null;
   bggUsername: string | null;
   gameCount: number;
 }
@@ -123,6 +126,7 @@ interface HomeClientProps {
   selectedCollection: SelectedCollection | null;
   initialViewMode?: "card" | "list" | "table";
   initialCardSize?: number;
+  isSharedView?: boolean;
 }
 
 function formatRelativeTime(dateString: string | null): string {
@@ -304,6 +308,7 @@ export function HomeClient({
   selectedCollection,
   initialViewMode = "card",
   initialCardSize = 6,
+  isSharedView = false,
 }: HomeClientProps) {
   const router = useRouter();
 
@@ -323,6 +328,7 @@ export function HomeClient({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [showAddGamesDialog, setShowAddGamesDialog] = useState(false);
 
   // Bulk selection state
@@ -672,7 +678,17 @@ export function HomeClient({
   const someSelected = selectedGameIds.size > 0;
 
   // Header actions
-  const headerActions = (
+  const headerActions = isSharedView ? (
+    // Shared view: only show login button
+    <div className="flex items-center gap-2">
+      <Button asChild variant="outline" size="sm" className="gap-2">
+        <Link href="/login">
+          <LogIn className="size-4" />
+          <span className="hidden sm:inline">Sign In</span>
+        </Link>
+      </Button>
+    </div>
+  ) : (
     <div className="flex items-center gap-2">
       {/* Add Games Button - Admin only when viewing a list */}
       {isAdmin && isViewingList && (
@@ -723,6 +739,10 @@ export function HomeClient({
               <Pencil className="size-4" />
               Edit List
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowShareDialog(true)}>
+              <Share2 className="size-4" />
+              Share List
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowDuplicateDialog(true)}>
               <FolderPlus className="size-4" />
               Duplicate List
@@ -744,7 +764,11 @@ export function HomeClient({
   return (
     <div className="flex-1 min-w-0 min-h-screen bg-background print:bg-white">
       {/* Site Header with breadcrumbs */}
-      <SiteHeader breadcrumbs={breadcrumbs} actions={headerActions} />
+      <SiteHeader
+        breadcrumbs={breadcrumbs}
+        actions={headerActions}
+        showSidebarTrigger={!isSharedView}
+      />
 
       {/* Scrape Queue Status Banner */}
       {isAdmin && queueStatus && (queueStatus.isProcessing || queueStatus.pendingCount > 0) && (
@@ -1265,6 +1289,18 @@ export function HomeClient({
               name: selectedCollection.name,
               description: selectedCollection.description,
             }}
+          />
+          <ShareListDialog
+            open={showShareDialog}
+            onOpenChange={setShowShareDialog}
+            list={{
+              id: selectedCollection.id,
+              name: selectedCollection.name,
+              description: selectedCollection.description,
+              isPublic: selectedCollection.isPublic,
+              shareToken: selectedCollection.shareToken,
+            }}
+            onUpdated={() => router.refresh()}
           />
           <DeleteListDialog
             open={showDeleteDialog}

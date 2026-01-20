@@ -66,6 +66,8 @@ describe("POST /api/collections/[id]/duplicate", () => {
       description: "Description",
       type: "manual",
       isPrimary: false,
+      isPublic: false,
+      shareToken: null,
       bggUsername: null,
       syncSchedule: "manual",
       autoScrapeNewGames: false,
@@ -73,7 +75,7 @@ describe("POST /api/collections/[id]/duplicate", () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       games: [],
-    });
+    } as any);
 
     vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
 
@@ -150,7 +152,7 @@ describe("POST /api/collections/[id]/duplicate", () => {
 
     vi.mocked(prisma.collection.findUnique).mockResolvedValue(sourceCollection as any);
     vi.mocked(prisma.collection.findFirst).mockResolvedValue(primaryCollection as any);
-    vi.mocked(prisma.collection.create).mockResolvedValue(newCollection);
+    vi.mocked(prisma.collection.create).mockResolvedValue(newCollection as any);
     vi.mocked(prisma.collectionGame.createMany).mockResolvedValue({ count: 2 });
 
     const request = new NextRequest("http://localhost/api/collections/123/duplicate", {
@@ -237,7 +239,7 @@ describe("POST /api/collections/[id]/duplicate", () => {
 
     vi.mocked(prisma.collection.findUnique).mockResolvedValue(sourceCollection as any);
     vi.mocked(prisma.collection.findFirst).mockResolvedValue(primaryCollection as any);
-    vi.mocked(prisma.collection.create).mockResolvedValue(newCollection);
+    vi.mocked(prisma.collection.create).mockResolvedValue(newCollection as any);
 
     const request = new NextRequest("http://localhost/api/collections/123/duplicate", {
       method: "POST",
@@ -305,7 +307,7 @@ describe("POST /api/collections/[id]/duplicate", () => {
 
     vi.mocked(prisma.collection.findUnique).mockResolvedValue(sourceCollection as any);
     vi.mocked(prisma.collection.findFirst).mockResolvedValue(primaryCollection as any);
-    vi.mocked(prisma.collection.create).mockResolvedValue(newCollection);
+    vi.mocked(prisma.collection.create).mockResolvedValue(newCollection as any);
 
     const request = new NextRequest("http://localhost/api/collections/123/duplicate", {
       method: "POST",
