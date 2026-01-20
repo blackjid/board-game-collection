@@ -63,8 +63,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
-# Compile custom server (TypeScript to JavaScript)
-RUN npx tsc server.ts lib/socket-events.ts --outDir dist --esModuleInterop --module NodeNext --moduleResolution NodeNext --target ES2022 --skipLibCheck
+# Compile custom server using esbuild (much faster than tsc)
+# esbuild is already available via Next.js dependencies
+RUN npx esbuild server.ts --bundle --platform=node --target=node22 --outfile=dist/server.js \
+    --external:next --external:socket.io --external:@prisma/client --external:prisma
 
 # Prune dev dependencies to get production-only node_modules
 # This eliminates the need for a separate prod-deps stage
