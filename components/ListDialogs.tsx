@@ -16,6 +16,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // ============================================================================
 // Types
@@ -166,7 +173,6 @@ export function EditListDialog({
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Populate form when list changes
@@ -174,7 +180,6 @@ export function EditListDialog({
     if (list) {
       setName(list.name);
       setDescription(list.description || "");
-      setIsPublic(list.isPublic || false);
     }
   }, [list]);
 
@@ -188,7 +193,6 @@ export function EditListDialog({
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || null,
-          isPublic,
         }),
       });
       if (response.ok) {
@@ -231,19 +235,6 @@ export function EditListDialog({
               id="edit-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center justify-between space-x-2">
-            <div className="space-y-0.5">
-              <Label htmlFor="edit-public">Public</Label>
-              <p className="text-xs text-muted-foreground">
-                Allow anyone with the link to view this list
-              </p>
-            </div>
-            <Switch
-              id="edit-public"
-              checked={isPublic}
-              onCheckedChange={setIsPublic}
             />
           </div>
         </div>
@@ -443,6 +434,7 @@ export function ShareListDialog({
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [generatingToken, setGeneratingToken] = useState(false);
+  const [updatingVisibility, setUpdatingVisibility] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Sync state when list changes or dialog opens
@@ -454,6 +446,29 @@ export function ShareListDialog({
     }
   }, [list, open]);
 
+  const updateVisibility = async (newIsPublic: boolean) => {
+    if (!list) return;
+    setUpdatingVisibility(true);
+    try {
+      const response = await fetch(`/api/collections/${list.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: newIsPublic }),
+      });
+      if (response.ok) {
+        setIsPublic(newIsPublic);
+        // Note: Don't refresh here - it will refresh when dialog closes
+        // This prevents flickering as the useEffect would reset state with stale data
+      } else {
+        console.error("Failed to update visibility:", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to update visibility:", error);
+    } finally {
+      setUpdatingVisibility(false);
+    }
+  };
+
   const generateShareToken = async () => {
     if (!list) return;
     setGeneratingToken(true);
@@ -464,9 +479,6 @@ export function ShareListDialog({
       if (response.ok) {
         const data = await response.json();
         setShareToken(data.shareToken);
-        // Note: Don't call router.refresh() here - it causes a race condition
-        // where the useEffect resets state before the new data arrives.
-        // The refresh will happen when the dialog closes via handleClose.
       } else {
         console.error("Failed to generate share token:", response.status);
       }
@@ -484,7 +496,6 @@ export function ShareListDialog({
         method: "DELETE",
       });
       setShareToken(null);
-      // Note: Don't call router.refresh() here - handleOpenChange will do it on close.
     } catch (error) {
       console.error("Failed to remove share token:", error);
     }
@@ -514,165 +525,168 @@ export function ShareListDialog({
     onOpenChange(newOpen);
   };
 
-  // Public lists don't need share tokens - they're already accessible
-  if (isPublic) {
-    return (
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="size-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <Globe className="size-5 text-emerald-500" />
-              </div>
-              Share Public List
-            </DialogTitle>
-            <DialogDescription>
-              Share &quot;{list?.name}&quot; with anyone
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="bg-emerald-500/10 rounded-lg p-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <Globe className="size-4 text-emerald-500" />
-                <span className="text-sm font-medium">Public List</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                This list is public and visible to everyone. Just share the link below.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <Label>Public Link</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={publicUrl}
-                  readOnly
-                  className="font-mono text-sm"
-                />
-                <Button variant="outline" onClick={() => copyLink(publicUrl)}>
-                  {copied ? (
-                    <>
-                      <Check className="size-4" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="size-4" />
-                      Copy
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button onClick={() => handleOpenChange(false)}>
-              Done
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Private list - need share token
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div className="size-10 rounded-full bg-primary/20 flex items-center justify-center">
               <Share2 className="size-5 text-primary" />
             </div>
-            Share Private List
+            Sharing Settings
           </DialogTitle>
           <DialogDescription>
-            Generate a secret link to share &quot;{list?.name}&quot;
+            Manage access to &quot;{list?.name}&quot;
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="bg-amber-500/10 rounded-lg p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Lock className="size-4 text-amber-500" />
-              <span className="text-sm font-medium">Private List</span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              This list is private. Generate a secret link to share it with specific people.
-            </p>
+          {/* Visibility Toggle */}
+          <div className="space-y-2">
+            <Label htmlFor="visibility">List Visibility</Label>
+            <Select
+              value={isPublic ? "public" : "private"}
+              onValueChange={(value) => updateVisibility(value === "public")}
+              disabled={updatingVisibility}
+            >
+              <SelectTrigger id="visibility">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="private">
+                  <div className="flex items-center gap-2">
+                    <Lock className="size-4" />
+                    <span>Private - Only you and people with the link</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="public">
+                  <div className="flex items-center gap-2">
+                    <Globe className="size-4" />
+                    <span>Public - Anyone can view</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {shareToken ? (
-            <div className="space-y-3">
-              <Label>Secret Share Link</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={shareUrl}
-                  readOnly
-                  className="font-mono text-sm"
-                />
-                <Button variant="outline" onClick={() => copyLink(shareUrl)}>
-                  {copied ? (
-                    <>
-                      <Check className="size-4" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="size-4" />
-                      Copy
-                    </>
-                  )}
-                </Button>
+          {/* Public Mode */}
+          {isPublic ? (
+            <div className="space-y-4">
+              <div className="bg-emerald-500/10 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Globe className="size-4 text-emerald-500" />
+                  <span className="text-sm font-medium">Public List</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This list is visible to everyone. Anyone can access it without logging in.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Anyone with this link can view the list without logging in
-              </p>
+
+              <div className="space-y-3">
+                <Label>Public Link</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={publicUrl}
+                    readOnly
+                    className="font-mono text-sm"
+                  />
+                  <Button variant="outline" onClick={() => copyLink(publicUrl)}>
+                    {copied ? (
+                      <>
+                        <Check className="size-4" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="size-4" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="text-center py-6">
-              <p className="text-muted-foreground text-sm mb-4">
-                No share link generated yet
-              </p>
-              <Button
-                onClick={generateShareToken}
-                disabled={generatingToken}
-                className="gap-2"
-              >
-                {generatingToken ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <LinkIcon className="size-4" />
-                    Generate Share Link
-                  </>
-                )}
-              </Button>
+            /* Private Mode */
+            <div className="space-y-4">
+              <div className="bg-amber-500/10 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Lock className="size-4 text-amber-500" />
+                  <span className="text-sm font-medium">Private List</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This list is private. Generate a secret link to share it with specific people.
+                </p>
+              </div>
+
+              {shareToken ? (
+                <div className="space-y-3">
+                  <Label>Secret Share Link</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={shareUrl}
+                      readOnly
+                      className="font-mono text-sm"
+                    />
+                    <Button variant="outline" onClick={() => copyLink(shareUrl)}>
+                      {copied ? (
+                        <>
+                          <Check className="size-4" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="size-4" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Anyone with this link can view the list without logging in
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground text-sm mb-4">
+                    No share link generated yet
+                  </p>
+                  <Button
+                    onClick={generateShareToken}
+                    disabled={generatingToken}
+                    className="gap-2"
+                  >
+                    {generatingToken ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <LinkIcon className="size-4" />
+                        Generate Share Link
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          {shareToken && (
+          {!isPublic && shareToken && (
             <Button
               variant="outline"
               onClick={removeShareToken}
               className="gap-2"
             >
               <Trash2 className="size-4" />
-              Disable Sharing
+              Disable Share Link
             </Button>
           )}
-          <Button
-            variant={shareToken ? "default" : "ghost"}
-            onClick={() => handleOpenChange(false)}
-          >
-            {shareToken ? "Done" : "Close"}
+          <Button onClick={() => handleOpenChange(false)}>
+            Done
           </Button>
         </DialogFooter>
       </DialogContent>
