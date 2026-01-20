@@ -76,6 +76,8 @@ describe("/api/collections/[id]/games", () => {
         description: null,
         type: "manual",
         isPrimary: false, // This is a list, NOT the primary collection
+        isPublic: false,
+        shareToken: null,
         bggUsername: null,
         syncSchedule: "manual",
         autoScrapeNewGames: false,
@@ -117,7 +119,7 @@ describe("/api/collections/[id]/games", () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      });
+      } as any);
 
       vi.mocked(prisma.collection.update).mockResolvedValue({
         id: listId,
@@ -125,6 +127,8 @@ describe("/api/collections/[id]/games", () => {
         description: null,
         type: "manual",
         isPrimary: false,
+        isPublic: false,
+        shareToken: null,
         bggUsername: null,
         syncSchedule: "manual",
         autoScrapeNewGames: false,
@@ -187,6 +191,8 @@ describe("/api/collections/[id]/games", () => {
         description: null,
         type: "manual",
         isPrimary: false,
+        isPublic: false,
+        shareToken: null,
         bggUsername: null,
         syncSchedule: "manual",
         autoScrapeNewGames: false,
@@ -253,7 +259,7 @@ describe("/api/collections/[id]/games", () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      });
+      } as any);
 
       vi.mocked(prisma.collection.update).mockResolvedValue({
         id: listId,
@@ -261,6 +267,8 @@ describe("/api/collections/[id]/games", () => {
         description: null,
         type: "manual",
         isPrimary: false,
+        isPublic: false,
+        shareToken: null,
         bggUsername: null,
         syncSchedule: "manual",
         autoScrapeNewGames: false,
@@ -321,6 +329,8 @@ describe("/api/collections/[id]/games", () => {
         description: null,
         type: "manual",
         isPrimary: false,
+        isPublic: false,
+        shareToken: null,
         bggUsername: null,
         syncSchedule: "manual",
         autoScrapeNewGames: false,
@@ -366,6 +376,8 @@ describe("/api/collections/[id]/games", () => {
         description: null,
         type: "manual",
         isPrimary: false,
+        isPublic: false,
+        shareToken: null,
         bggUsername: null,
         syncSchedule: "manual",
         autoScrapeNewGames: false,
@@ -395,6 +407,8 @@ describe("/api/collections/[id]/games", () => {
         description: null,
         type: "manual",
         isPrimary: false,
+        isPublic: false,
+        shareToken: null,
         bggUsername: null,
         syncSchedule: "manual",
         autoScrapeNewGames: false,

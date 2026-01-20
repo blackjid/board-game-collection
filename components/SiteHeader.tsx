@@ -33,19 +33,27 @@ export interface SiteHeaderProps {
    * Optional actions to show on the right side of the header
    */
   actions?: React.ReactNode;
+  /**
+   * Whether to show the sidebar trigger (hamburger menu). Set to false for standalone pages.
+   * Defaults to true.
+   */
+  showSidebarTrigger?: boolean;
 }
 
 // ============================================================================
 // SiteHeader Component
 // ============================================================================
 
-export function SiteHeader({ breadcrumbs = [], actions }: SiteHeaderProps) {
+export function SiteHeader({ breadcrumbs = [], actions, showSidebarTrigger = true }: SiteHeaderProps) {
   return (
     <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border sticky top-0 z-30 h-14 flex items-center px-4 gap-4">
-      {/* Sidebar Trigger (hamburger on mobile) */}
-      <SidebarTrigger className="-ml-1" />
-
-      <Separator orientation="vertical" className="h-4" />
+      {/* Sidebar Trigger (hamburger on mobile) - only shown when inside SidebarProvider */}
+      {showSidebarTrigger && (
+        <>
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="h-4" />
+        </>
+      )}
 
       {/* Breadcrumbs */}
       <Breadcrumb className="flex-1">

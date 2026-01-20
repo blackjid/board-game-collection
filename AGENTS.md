@@ -959,6 +959,29 @@ Before committing any code changes:
 
 12. **Don't create documentation files proactively** - Only create documentation (README, API docs, guides, etc.) when explicitly requested by the user
 
+13. **Don't use Prisma in middleware** - Middleware runs in Edge Runtime which doesn't support Prisma
+   ```tsx
+   // Bad - middleware.ts
+   import prisma from "@/lib/prisma";
+   
+   export async function middleware(request: NextRequest) {
+     const data = await prisma.collection.findUnique(...); // ❌ Won't work in Edge Runtime
+   }
+   
+   // Good - move database logic to API routes
+   // middleware.ts - only handle routing/cookies
+   export async function middleware(request: NextRequest) {
+     const sessionId = request.cookies.get("session_id")?.value;
+     // Simple checks only, no database queries
+   }
+   
+   // route.ts - handle database queries
+   export async function GET(request: NextRequest) {
+     const collection = await prisma.collection.findUnique(...); // ✅ Works in Node.js runtime
+     // Check permissions here
+   }
+   ```
+
 ---
 
 ## Environment Variables

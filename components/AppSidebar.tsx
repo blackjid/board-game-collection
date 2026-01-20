@@ -19,6 +19,8 @@ import {
   Pencil,
   Trash2,
   Globe,
+  Share2,
+  Link as LinkIcon,
 } from "lucide-react";
 
 import {
@@ -50,6 +52,7 @@ import {
   EditListDialog,
   DeleteListDialog,
   DuplicateListDialog,
+  ShareListDialog,
 } from "@/components/ListDialogs";
 import type { CollectionSummary } from "@/lib/games";
 
@@ -96,6 +99,7 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [selectedList, setSelectedList] = useState<CollectionSummary | null>(null);
 
   const isAdmin = user?.role === "admin";
@@ -125,6 +129,11 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
   const handleDuplicate = (collection: CollectionSummary) => {
     setSelectedList(collection);
     setShowDuplicateDialog(true);
+  };
+
+  const handleShare = (collection: CollectionSummary) => {
+    setSelectedList(collection);
+    setShowShareDialog(true);
   };
 
   const handleDelete = (collection: CollectionSummary) => {
@@ -249,6 +258,13 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                               <Pencil className="size-4" />
                               Edit List
                             </ContextMenuItem>
+                            <ContextMenuItem onClick={() => handleShare(collection)}>
+                              <Share2 className="size-4" />
+                              Share List
+                              {collection.shareToken && (
+                                <LinkIcon className="size-3 ml-auto text-muted-foreground" />
+                              )}
+                            </ContextMenuItem>
                             <ContextMenuItem onClick={() => handleDuplicate(collection)}>
                               <FolderHeart className="size-4" />
                               Duplicate List
@@ -369,6 +385,18 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
               description: null,
             }}
             onDeleted={handleListDeleted}
+          />
+          <ShareListDialog
+            open={showShareDialog}
+            onOpenChange={setShowShareDialog}
+            list={{
+              id: selectedList.id,
+              name: selectedList.name,
+              description: selectedList.description,
+              isPublic: selectedList.isPublic,
+              shareToken: selectedList.shareToken,
+            }}
+            onUpdated={handleListUpdated}
           />
         </>
       )}

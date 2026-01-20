@@ -42,6 +42,8 @@ export default async function Home({ searchParams }: PageProps) {
         description: collectionData.description,
         type: collectionData.type,
         isPrimary: collectionData.isPrimary,
+        isPublic: collectionData.isPublic,
+        shareToken: collectionData.shareToken,
         bggUsername: collectionData.bggUsername,
         gameCount: collectionData.gameCount,
       };

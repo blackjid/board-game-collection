@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 
 // Pages that require admin access (will redirect to login)
 const ADMIN_PAGES = ["/settings"];
 
 // API routes where mutating methods (POST, PATCH, DELETE) require admin
-// GET requests are public for these routes (for collection viewing)
+// GET requests are public for collection viewing - public check done in API route
 const PROTECTED_API_PREFIXES = [
   "/api/games",
   "/api/collection",
+  "/api/collections",
   "/api/settings",
 ];
 
@@ -25,36 +25,22 @@ export async function middleware(request: NextRequest) {
     ["POST", "PATCH", "DELETE"].includes(method);
 
   // Check if viewing a specific collection (GET /api/collections/[id])
+  // Allow all GET requests to /api/collections/[id] - public check done in API route
   const collectionMatch = pathname.match(/^\/api\/collections\/([^/]+)$/);
   const isViewingCollection = collectionMatch && method === "GET";
 
+  // Allow GET requests to collection API - public check is done in the API route itself
+  if (isViewingCollection) {
+    return NextResponse.next();
+  }
+
   // If not a protected route, allow through
-  if (!isAdminPage && !isProtectedApi && !isViewingCollection) {
+  if (!isAdminPage && !isProtectedApi) {
     return NextResponse.next();
   }
 
   // Get session cookie
   const sessionId = request.cookies.get("session_id")?.value;
-
-  // For viewing a specific collection, check if it's public
-  if (isViewingCollection && !sessionId) {
-    const collectionId = collectionMatch[1];
-    try {
-      const collection = await prisma.collection.findUnique({
-        where: { id: collectionId },
-        select: { isPublic: true },
-      });
-
-      // If collection is public, allow access
-      if (collection?.isPublic) {
-        return NextResponse.next();
-      }
-    } catch (error) {
-      console.error("Error checking collection public status:", error);
-    }
-    // If collection not found or not public, return 401
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   if (!sessionId) {
     if (isAdminPage) {
