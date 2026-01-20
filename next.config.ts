@@ -21,11 +21,6 @@ const nextConfig: NextConfig = {
     "@prisma/adapter-libsql",
   ],
 
-  // Skip ESLint during build (run separately in CI)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
   // Skip TypeScript errors during build (run tsc separately in CI)
   typescript: {
     ignoreBuildErrors: true,
