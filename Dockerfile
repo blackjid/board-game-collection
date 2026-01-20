@@ -58,9 +58,10 @@ ENV NEXT_PUBLIC_APP_VERSION=${APP_VERSION}
 ARG APP_COMMIT_SHA=""
 ENV NEXT_PUBLIC_APP_COMMIT_SHA=${APP_COMMIT_SHA}
 
-# Build Next.js application
+# Build Next.js application with build cache mount for faster rebuilds
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 # Compile custom server (TypeScript to JavaScript)
 RUN npx tsc server.ts lib/socket-events.ts --outDir dist --esModuleInterop --module NodeNext --moduleResolution NodeNext --target ES2022 --skipLibCheck

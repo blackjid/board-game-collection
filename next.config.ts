@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  // Exclude heavy server-only packages from bundling
+  // This significantly speeds up compilation by not processing these large packages
+  serverExternalPackages: ["playwright", "prisma", "@prisma/client"],
+
   // Instrumentation is enabled by default in Next.js 15+
 };
 
