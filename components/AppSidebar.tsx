@@ -244,11 +244,15 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                               >
                                 <FolderHeart className="size-4" />
                                 <span>{collection.name}</span>
-                                {collection.isPublic && (
+                                {collection.isPublic ? (
                                   <span title="Public list">
-                                    <Globe className="size-3 text-muted-foreground" />
+                                    <Globe className="size-3 text-emerald-500" />
                                   </span>
-                                )}
+                                ) : collection.shareToken ? (
+                                  <span title="Share link enabled">
+                                    <LinkIcon className="size-3 text-muted-foreground" />
+                                  </span>
+                                ) : null}
                                 <SidebarMenuBadge>{collection.gameCount}</SidebarMenuBadge>
                               </Link>
                             </SidebarMenuButton>
@@ -291,11 +295,15 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                           >
                             <FolderHeart className="size-4" />
                             <span>{collection.name}</span>
-                            {collection.isPublic && (
+                            {collection.isPublic ? (
                               <span title="Public list">
-                                <Globe className="size-3 text-muted-foreground" />
+                                <Globe className="size-3 text-emerald-500" />
                               </span>
-                            )}
+                            ) : collection.shareToken ? (
+                              <span title="Share link enabled">
+                                <LinkIcon className="size-3 text-muted-foreground" />
+                              </span>
+                            ) : null}
                             <SidebarMenuBadge>{collection.gameCount}</SidebarMenuBadge>
                           </Link>
                         </SidebarMenuButton>

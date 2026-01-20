@@ -16,9 +16,15 @@ export default async function MainLayout({
     getCurrentUser(),
   ]);
 
+  // Filter collections based on authentication status
+  // Unauthenticated users can only see public collections and the primary collection
+  const visibleCollections = currentUser
+    ? collections
+    : collections.filter((c) => c.isPublic || c.isPrimary);
+
   return (
     <MainLayoutClient
-      collections={collections}
+      collections={visibleCollections}
       allGamesCount={counts.active}
       user={
         currentUser
@@ -35,4 +41,3 @@ export default async function MainLayout({
     </MainLayoutClient>
   );
 }
-
