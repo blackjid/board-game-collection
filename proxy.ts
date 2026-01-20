@@ -12,7 +12,7 @@ const PROTECTED_API_PREFIXES = [
   "/api/settings",
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
 
