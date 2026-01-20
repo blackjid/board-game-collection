@@ -107,11 +107,10 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # Build arm64 image (only on push to main, uses native arm64 runner)
+  # Build arm64 image (uses native arm64 runner)
   build-arm64:
     name: Build (arm64)
     needs: test
-    if: github.event_name == 'push'
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
@@ -149,15 +148,18 @@ jobs:
             APP_COMMIT_SHA=${{ github.sha }}
           cache-from: type=gha,scope=arm64
           cache-to: type=gha,mode=max,scope=arm64
-          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          # PR: build only, Push: push by digest for later merge
+          outputs: ${{ github.event_name == 'push' && format('type=image,name={0}/{1},push-by-digest=true,name-canonical=true,push=true', env.REGISTRY, env.IMAGE_NAME) || 'type=cacheonly' }}
 
       - name: Export digest
+        if: github.event_name == 'push'
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: digests-arm64
