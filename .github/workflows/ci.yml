@@ -73,6 +73,8 @@ jobs:
             type=sha,prefix=
 
       - name: Set up QEMU
+        # Only needed for multi-arch builds (push to main)
+        if: github.event_name == 'push'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -83,7 +85,8 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name == 'push' }}
-          platforms: linux/amd64,linux/arm64
+          # PR builds: amd64 only (fast ~12s), Push to main: both architectures
+          platforms: ${{ github.event_name == 'push' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
