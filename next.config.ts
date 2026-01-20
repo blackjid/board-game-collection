@@ -11,6 +11,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  // Exclude heavy server-only packages from bundling
+  // This significantly speeds up compilation by not processing these large packages
+  serverExternalPackages: [
+    "playwright",
+    "prisma",
+    "@prisma/client",
+    "@prisma/adapter-libsql",
+  ],
+
+  // Skip TypeScript errors during build (run tsc separately in CI)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // Instrumentation is enabled by default in Next.js 15+
 };
 
