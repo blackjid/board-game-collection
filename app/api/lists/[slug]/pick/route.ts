@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 interface RouteParams {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 interface GameData {
@@ -36,15 +36,15 @@ function parseJsonField(value: string | null): string[] {
 }
 
 /**
- * GET /api/collections/[id]/pick
- * Get collection data formatted for the picker (same format as /api/pick)
+ * GET /api/lists/[slug]/pick
+ * Get collection data formatted for the picker, accessed by slug
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { id } = await params;
+  const { slug } = await params;
 
   try {
     const collection = await prisma.collection.findUnique({
-      where: { id },
+      where: { slug },
       include: {
         games: {
           include: {
@@ -92,6 +92,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       collectionId: collection.id,
+      collectionSlug: collection.slug,
       collectionName: collection.name,
       games,
     });

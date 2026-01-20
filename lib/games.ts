@@ -208,6 +208,7 @@ export function getDisplayImage(game: GameData): string | null {
 export interface CollectionSummary {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   type: string; // "bgg_sync" | "manual"
   isPrimary: boolean;
@@ -301,6 +302,7 @@ export async function getPrimaryCollection(): Promise<CollectionSummary | null> 
   return {
     id: collection.id,
     name: collection.name,
+    slug: collection.slug,
     description: collection.description,
     type: collection.type,
     isPrimary: collection.isPrimary,
@@ -349,6 +351,7 @@ export async function getCollections(): Promise<CollectionSummary[]> {
   return collections.map((collection: CollectionWithGamesAndCount) => ({
     id: collection.id,
     name: collection.name,
+    slug: collection.slug,
     description: collection.description,
     type: collection.type,
     isPrimary: collection.isPrimary,
@@ -426,6 +429,58 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
   return {
     id: collection.id,
     name: collection.name,
+    slug: collection.slug,
+    description: collection.description,
+    type: collection.type,
+    isPrimary: collection.isPrimary,
+    isPublic: collection.isPublic,
+    shareToken: collection.shareToken,
+    bggUsername: collection.bggUsername,
+    lastSyncedAt: collection.lastSyncedAt,
+    syncSchedule: collection.syncSchedule,
+    autoScrapeNewGames: collection.autoScrapeNewGames,
+    gameCount: collection._count.games,
+    previewImages: collection.games
+      .slice(0, 4)
+      .map((cg: CollectionGameWithGame) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
+      .filter((img: string | null): img is string => img !== null),
+    games,
+  };
+}
+
+/**
+ * Get a specific collection by its slug with all its games
+ */
+export async function getCollectionBySlug(
+  slug: string
+): Promise<CollectionWithGames | null> {
+  const collection = await prisma.collection.findUnique({
+    where: { slug },
+    include: {
+      games: {
+        include: {
+          game: true,
+        },
+        orderBy: { addedAt: "desc" },
+      },
+      _count: {
+        select: { games: true },
+      },
+    },
+  });
+
+  if (!collection) return null;
+
+  // Filter to only include games that have been scraped (have full data)
+  const games = collection.games
+    .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null)
+    .map((cg: CollectionGameWithGame) => transformGame(cg.game))
+    .filter((g: GameData | null): g is GameData => g !== null);
+
+  return {
+    id: collection.id,
+    name: collection.name,
+    slug: collection.slug,
     description: collection.description,
     type: collection.type,
     isPrimary: collection.isPrimary,

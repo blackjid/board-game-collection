@@ -155,6 +155,7 @@ model PickSessionVote {
 model Collection {
   id          String   @id @default(cuid())
   name        String
+  slug        String?  @unique              // URL-friendly identifier (e.g., "party-games")
   description String?
 
   // Collection type and designation

@@ -529,15 +529,16 @@ function TimeIcon({ time }: { time: "quick" | "medium" | "long" | "epic" }) {
 // ============================================================================
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
-export default function CollectionPickerPage({ params }: PageProps) {
-  const { id: collectionId } = use(params);
+export default function ListPickerPage({ params }: PageProps) {
+  const { slug } = use(params);
   const router = useRouter();
   const [games, setGames] = useState<GameData[]>([]);
   const [loading, setLoading] = useState(true);
   const [collectionName, setCollectionName] = useState("List");
+  const [collectionId, setCollectionId] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isCollaborative, setIsCollaborative] = useState(false);
   const [hostName, setHostName] = useState("");
@@ -572,8 +573,9 @@ export default function CollectionPickerPage({ params }: PageProps) {
       .map(([cat]) => cat);
   }, [games]);
 
+  // Fetch collection data by slug
   useEffect(() => {
-    fetch(`/api/collections/${collectionId}/pick`)
+    fetch(`/api/lists/${slug}/pick`)
       .then((res) => {
         if (!res.ok) {
           setNotFound(true);
@@ -586,6 +588,7 @@ export default function CollectionPickerPage({ params }: PageProps) {
         if (data) {
           setGames(data.games || []);
           setCollectionName(data.collectionName || "List");
+          setCollectionId(data.collectionId || null);
         }
         setLoading(false);
       })
@@ -593,7 +596,7 @@ export default function CollectionPickerPage({ params }: PageProps) {
         setNotFound(true);
         setLoading(false);
       });
-  }, [collectionId]);
+  }, [slug]);
 
   // Lock body scroll
   useEffect(() => {
@@ -669,6 +672,7 @@ export default function CollectionPickerPage({ params }: PageProps) {
 
   // Persist a solo session to the database (fire-and-forget)
   const persistSoloSession = useCallback(async (winnerGame: GameData, sessionFilters: Filters, allGameIds: string[]) => {
+    if (!collectionId) return;
     try {
       await fetch("/api/pick/sessions", {
         method: "POST",
@@ -683,7 +687,6 @@ export default function CollectionPickerPage({ params }: PageProps) {
         }),
       });
     } catch (error) {
-      // Silent failure - don't disrupt the user experience
       console.error("Failed to persist solo session:", error);
     }
   }, [collectionId]);
@@ -692,8 +695,7 @@ export default function CollectionPickerPage({ params }: PageProps) {
     const newFilters = { ...filters, includeExpansions: include };
     setFilters((f) => ({ ...f, includeExpansions: include }));
 
-    if (isCollaborative) {
-      // Create collaborative session
+    if (isCollaborative && collectionId) {
       setCreatingSession(true);
       try {
         const filteredGameIds = filterGames(games, newFilters).map(g => g.id);
@@ -712,13 +714,11 @@ export default function CollectionPickerPage({ params }: PageProps) {
 
         if (response.ok) {
           const data = await response.json();
-          // Store player info
           sessionStorage.setItem(`player_${data.session.code}`, JSON.stringify({
             playerId: data.playerId,
             playerName: hostName,
             isHost: true,
           }));
-          // Navigate to session
           router.push(`/pick/session/${data.session.code}`);
         } else {
           console.error("Failed to create session");
@@ -750,7 +750,6 @@ export default function CollectionPickerPage({ params }: PageProps) {
     if (game) {
       setPickedGame(game);
       goToStep("picked");
-      // Persist the solo session in the background
       persistSoloSession(game, filters, games.map(g => g.id));
     }
   }, [swipeGames, currentIndex, goToStep, persistSoloSession, filters, games]);
@@ -770,6 +769,9 @@ export default function CollectionPickerPage({ params }: PageProps) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [step, handleSwipeLeft, handleSwipeRight, handleSwipeUp]);
+
+  // Back link - go back to the list page
+  const backHref = `/lists/${slug}`;
 
   if (loading || creatingSession) {
     return (
@@ -791,10 +793,10 @@ export default function CollectionPickerPage({ params }: PageProps) {
           <h1 className="text-4xl font-black text-white mb-4">List Not Found</h1>
           <p className="text-stone-400 mb-8">This list doesn&apos;t exist or has been deleted.</p>
           <Link
-            href="/settings?section=collections"
+            href="/"
             className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-full font-bold transition-colors"
           >
-            Go to Lists
+            Go Home
           </Link>
         </div>
       </div>
@@ -810,10 +812,10 @@ export default function CollectionPickerPage({ params }: PageProps) {
             Add games to this list and make sure they&apos;re scraped first!
           </p>
           <Link
-            href="/settings?section=collections"
+            href={backHref}
             className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-full font-bold transition-colors"
           >
-            Go to Lists
+            Go Back
           </Link>
         </div>
       </div>
@@ -839,7 +841,7 @@ export default function CollectionPickerPage({ params }: PageProps) {
       {/* Back button */}
       {step === "welcome" ? (
         <Link
-          href="/settings?section=collections"
+          href={backHref}
           className="absolute top-4 left-4 z-50 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-all flex items-center gap-2"
           style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
         >
@@ -874,15 +876,15 @@ export default function CollectionPickerPage({ params }: PageProps) {
 
       {/* Exit button */}
       <Link
-        href="/settings?section=collections"
+        href={backHref}
         className="absolute top-4 right-4 z-50 bg-white/10 backdrop-blur-md w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all"
         style={{ top: "calc(1rem + env(safe-area-inset-top))" }}
-        title="Exit to lists"
+        title="Exit to list"
       >
         <span className="w-5 h-5 text-stone-400 hover:text-white">{Icons.x}</span>
       </Link>
 
-      {/* Main content */}
+      {/* Main content - wizard steps (abbreviated for brevity - same as original) */}
       <div className="relative z-10 h-full">
         {/* WELCOME */}
         {step === "welcome" && (
@@ -890,7 +892,6 @@ export default function CollectionPickerPage({ params }: PageProps) {
             title={`Pick from ${collectionName}`}
             subtitle={`${games.length} games ready to choose from`}
           >
-            {/* Name input for collaborative mode */}
             {showNameInput ? (
               <div className="max-w-sm mx-auto mb-8">
                 <p className="text-stone-400 text-sm mb-3">Enter your name to start</p>
@@ -928,7 +929,6 @@ export default function CollectionPickerPage({ params }: PageProps) {
               </div>
             ) : (
               <>
-                {/* Solo mode button */}
                 <button
                   onClick={() => {
                     setIsCollaborative(false);
@@ -939,7 +939,6 @@ export default function CollectionPickerPage({ params }: PageProps) {
                   Let&apos;s Find Out <span className="text-amber-900 w-8 h-8">{Icons.dice}</span>
                 </button>
 
-                {/* Collaborative mode button */}
                 <div className="mt-4">
                   <button
                     onClick={() => {
@@ -955,7 +954,6 @@ export default function CollectionPickerPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                {/* Lucky button */}
                 <div className="mt-6">
                   <button
                     onClick={() => {
@@ -963,7 +961,6 @@ export default function CollectionPickerPage({ params }: PageProps) {
                       setPickedGame(randomGame);
                       setPickedViaLucky(true);
                       goToStep("picked");
-                      // Persist the lucky pick session
                       persistSoloSession(randomGame, filters, games.map(g => g.id));
                     }}
                     className="text-stone-500 hover:text-amber-400 transition-colors text-sm flex items-center gap-2 mx-auto"
@@ -973,7 +970,6 @@ export default function CollectionPickerPage({ params }: PageProps) {
                   </button>
                 </div>
 
-                {/* Join session link */}
                 <div className="mt-4">
                   <Link
                     href="/pick/join"

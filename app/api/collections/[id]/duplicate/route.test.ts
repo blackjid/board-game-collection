@@ -167,14 +167,15 @@ describe("POST /api/collections/[id]/duplicate", () => {
     expect(response.status).toBe(200);
     const data = await response.json();
 
-    // Verify new collection was created
+    // Verify new collection was created (with slug)
     expect(prisma.collection.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         name: "Vacation Games (Copy)",
         description: "Games for vacation",
         type: "manual",
         isPrimary: false,
-      },
+        slug: expect.any(String),
+      }),
     });
 
     // Verify only games from primary collection were added
@@ -320,14 +321,15 @@ describe("POST /api/collections/[id]/duplicate", () => {
 
     expect(response.status).toBe(200);
 
-    // Verify description was copied
+    // Verify description was copied (with slug)
     expect(prisma.collection.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         name: "Copy",
         description: "Original description",
         type: "manual",
         isPrimary: false,
-      },
+        slug: expect.any(String),
+      }),
     });
   });
 });

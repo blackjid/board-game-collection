@@ -104,15 +104,13 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
 
   const isAdmin = user?.role === "admin";
 
-  // Get current collection ID from URL
-  const selectedCollectionId = searchParams.get("collection");
-
   // Separate primary collection from manual lists
   const primaryCollection = collections.find((c) => c.isPrimary);
   const manualLists = collections.filter((c) => !c.isPrimary && c.type === "manual");
 
-  // Determine active states
-  const isHomeActive = pathname === "/" && !selectedCollectionId;
+  // Determine active states - check if we're viewing a list by slug
+  const isHomeActive = pathname === "/";
+  const currentListSlug = pathname.startsWith("/lists/") ? pathname.split("/")[2] : null;
   const isPlaysActive = pathname === "/plays";
   const isSettingsActive = pathname.startsWith("/settings");
   const currentSettingsSection = searchParams.get("section") || "general";
@@ -228,18 +226,22 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                     No lists yet
                   </div>
                 ) : (
-                  manualLists.map((collection) => (
+                  manualLists.filter((collection) => collection.slug).map((collection) => {
+                    const listHref = `/lists/${collection.slug}`;
+                    const isActive = currentListSlug === collection.slug;
+
+                    return (
                     <SidebarMenuItem key={collection.id}>
                       {isAdmin ? (
                         <ContextMenu>
                           <ContextMenuTrigger asChild>
                             <SidebarMenuButton
                               asChild
-                              isActive={selectedCollectionId === collection.id}
+                              isActive={isActive}
                               tooltip={collection.name}
                             >
                               <Link
-                                href={`/?collection=${collection.id}`}
+                                href={listHref}
                                 onClick={handleItemClick}
                               >
                                 <FolderHeart className="size-4" />
@@ -286,11 +288,11 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                       ) : (
                         <SidebarMenuButton
                           asChild
-                          isActive={selectedCollectionId === collection.id}
+                          isActive={isActive}
                           tooltip={collection.name}
                         >
                           <Link
-                            href={`/?collection=${collection.id}`}
+                            href={listHref}
                             onClick={handleItemClick}
                           >
                             <FolderHeart className="size-4" />
@@ -309,7 +311,7 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                         </SidebarMenuButton>
                       )}
                     </SidebarMenuItem>
-                  ))
+                  );})
                 )}
               </SidebarMenu>
             </SidebarGroupContent>
@@ -371,6 +373,7 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
             list={{
               id: selectedList.id,
               name: selectedList.name,
+              slug: selectedList.slug,
               description: null,
             }}
             onUpdated={handleListUpdated}
@@ -381,6 +384,7 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
             list={{
               id: selectedList.id,
               name: selectedList.name,
+              slug: selectedList.slug,
               description: null,
             }}
           />
@@ -390,6 +394,7 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
             list={{
               id: selectedList.id,
               name: selectedList.name,
+              slug: selectedList.slug,
               description: null,
             }}
             onDeleted={handleListDeleted}
@@ -400,6 +405,7 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
             list={{
               id: selectedList.id,
               name: selectedList.name,
+              slug: selectedList.slug,
               description: selectedList.description,
               isPublic: selectedList.isPublic,
               shareToken: selectedList.shareToken,

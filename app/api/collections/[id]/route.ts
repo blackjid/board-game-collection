@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { generateUniqueSlug } from "@/lib/slug";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -138,7 +139,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Build update data
-    const updateData: { name?: string; description?: string | null; isPublic?: boolean } = {};
+    const updateData: { name?: string; slug?: string; description?: string | null; isPublic?: boolean } = {};
     if (name !== undefined) {
       if (typeof name !== "string" || name.trim().length === 0) {
         return NextResponse.json(
@@ -147,6 +148,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         );
       }
       updateData.name = name.trim();
+      // Regenerate slug when name changes
+      updateData.slug = await generateUniqueSlug(name.trim(), id);
     }
     if (description !== undefined) {
       updateData.description = description?.trim() || null;
@@ -167,6 +170,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       collection: {
         id: collection.id,
         name: collection.name,
+        slug: collection.slug,
         description: collection.description,
         isPublic: collection.isPublic,
         gameCount: collection._count.games,
