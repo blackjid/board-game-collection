@@ -1,11 +1,13 @@
+# syntax=docker/dockerfile:1.4
+
 # Stage 1: Dependencies (for building)
 FROM node:22-slim AS deps
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    && rm -rf /var/lib/apt/lists/*
+# Install build dependencies with apt cache mount
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends openssl
 
 # Copy package files
 COPY package.json package-lock.json ./
@@ -15,8 +17,9 @@ COPY prisma.config.ts ./
 # Skip Playwright browser download - we'll use system Chromium in runner
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-# Install all dependencies (including dev for building)
-RUN npm ci
+# Install all dependencies with npm cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # Set DATA_PATH and DATABASE_URL for prisma generate (config needs it)
 ENV DATA_PATH="/data"
@@ -62,72 +65,34 @@ RUN npm run build
 # Compile custom server (TypeScript to JavaScript)
 RUN npx tsc server.ts lib/socket-events.ts --outDir dist --esModuleInterop --module NodeNext --moduleResolution NodeNext --target ES2022 --skipLibCheck
 
-# Stage 3: Production dependencies only
-FROM node:22-slim AS prod-deps
-WORKDIR /app
+# Prune dev dependencies to get production-only node_modules
+# This eliminates the need for a separate prod-deps stage
+RUN --mount=type=cache,target=/root/.npm \
+    npm prune --omit=dev
 
-# Install build dependencies for native modules
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy package files
-COPY package.json package-lock.json ./
-COPY prisma ./prisma/
-COPY prisma.config.ts ./
-
-# Skip Playwright browser download
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-
-# Install production dependencies only (prisma is now in dependencies)
-RUN npm ci --omit=dev
-
-# Set DATA_PATH and DATABASE_URL for prisma generate
-ENV DATA_PATH="/data"
-ENV DATABASE_URL="file:/data/games.db"
-
-# Generate Prisma client for production
+# Regenerate Prisma client after pruning (since @prisma/client was kept)
 RUN npx prisma generate
 
-# Stage 4: Runner
-FROM node:22-slim AS runner
+# Stage 3: Runner (using Playwright base image with pre-installed Chromium)
+FROM mcr.microsoft.com/playwright:v1.57.0-noble AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install runtime dependencies including Chromium for Playwright
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    chromium \
-    fonts-liberation \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Tell Playwright to use system chromium
+# Tell Playwright to use the pre-installed browsers
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
-
-# Use existing node user (uid 1000) from base image - no need to create new user
+# Playwright image stores browsers in /ms-playwright - Playwright will find them automatically
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Copy public assets
 COPY --from=builder /app/public ./public
 
 # Copy Next.js build output (not standalone - we use custom server)
-COPY --from=builder --chown=node:node /app/.next ./.next
+COPY --from=builder --chown=pwuser:pwuser /app/.next ./.next
 
 # Copy compiled custom server
-COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --from=builder --chown=pwuser:pwuser /app/dist ./dist
 
 # Copy Prisma schema and migrations
 COPY --from=builder /app/prisma ./prisma
@@ -135,8 +100,8 @@ COPY --from=builder /app/prisma ./prisma
 # Copy production Prisma config (JavaScript version for runtime)
 COPY prisma.config.prod.js ./prisma.config.js
 
-# Copy production node_modules (includes prisma CLI, socket.io, etc.)
-COPY --from=prod-deps /app/node_modules ./node_modules
+# Copy production node_modules (already pruned in builder stage)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy package.json for next to find config
 COPY --from=builder /app/package.json ./package.json
@@ -149,9 +114,10 @@ COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
 # Create data directory for SQLite database
-RUN mkdir -p /data && chown -R node:node /data
+# Playwright image uses pwuser (uid 1000)
+RUN mkdir -p /data && chown -R pwuser:pwuser /data
 
-USER node
+USER pwuser
 
 EXPOSE 3000
 
