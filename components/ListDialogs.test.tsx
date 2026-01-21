@@ -143,7 +143,7 @@ describe("ListDialogs", () => {
     it("should navigate when no onCreated callback", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ collection: { id: "123", name: "New List" } }),
+        json: async () => ({ collection: { id: "123", name: "New List", slug: "new-list" } }),
       });
 
       render(
@@ -157,7 +157,7 @@ describe("ListDialogs", () => {
       fireEvent.click(createButton);
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith("/?collection=123");
+        expect(mockPush).toHaveBeenCalledWith("/lists/new-list");
         expect(mockRefresh).toHaveBeenCalled();
       });
     });

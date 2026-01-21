@@ -81,6 +81,7 @@ interface CurrentUser {
 interface SelectedCollection {
   id: string;
   name: string;
+  slug?: string | null;
   description: string | null;
   type: string;
   isPrimary: boolean;
@@ -361,9 +362,9 @@ export function HomeClient({
 
   const displayGameCount = selectedCollection ? games.length : totalGames;
 
-  // Get the link for "Pick a Game" - include collection if one is selected
-  const pickGameHref = selectedCollection
-    ? `/pick/collection/${selectedCollection.id}`
+  // Get the link for "Pick a Game" - use slug-based URL for lists
+  const pickGameHref = selectedCollection?.slug
+    ? `/pick/lists/${selectedCollection.slug}`
     : "/pick";
 
   // Set of existing game IDs in this list (for AddGamesToListDialog)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { generateUniqueSlug } from "@/lib/slug";
 
 /**
  * GET /api/collections
@@ -35,6 +36,7 @@ export async function GET() {
     const result = collections.map((collection) => ({
       id: collection.id,
       name: collection.name,
+      slug: collection.slug,
       description: collection.description,
       type: collection.type,
       isPrimary: collection.isPrimary,
@@ -76,9 +78,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate a unique slug from the name
+    const slug = await generateUniqueSlug(name.trim());
+
     const collection = await prisma.collection.create({
       data: {
         name: name.trim(),
+        slug,
         description: description?.trim() || null,
         isPublic: isPublic === true,
       },
@@ -88,6 +94,7 @@ export async function POST(request: NextRequest) {
       collection: {
         id: collection.id,
         name: collection.name,
+        slug: collection.slug,
         description: collection.description,
         isPublic: collection.isPublic,
         shareToken: collection.shareToken,

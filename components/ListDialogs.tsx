@@ -31,6 +31,7 @@ import {
 export interface ListData {
   id: string;
   name: string;
+  slug?: string | null;
   description: string | null;
   isPublic?: boolean;
   shareToken?: string | null;
@@ -85,8 +86,8 @@ export function CreateListDialog({
         if (onCreated) {
           onCreated(data.collection);
         } else {
-          // Default behavior: navigate to the new list
-          router.push(`/?collection=${data.collection.id}`);
+          // Default behavior: navigate to the new list using slug
+          router.push(`/lists/${data.collection.slug}`);
           router.refresh();
         }
       }
@@ -200,6 +201,10 @@ export function EditListDialog({
         onOpenChange(false);
         if (onUpdated) {
           onUpdated(data.collection);
+        }
+        // If the slug changed and we're on the list page, redirect to the new URL
+        if (data.collection.slug && data.collection.slug !== list.slug) {
+          router.push(`/lists/${data.collection.slug}`);
         }
         router.refresh();
       }
@@ -361,8 +366,8 @@ export function DuplicateListDialog({
         if (onDuplicated) {
           onDuplicated(data.collection);
         } else {
-          // Default behavior: navigate to the new list
-          router.push(`/?collection=${data.collection.id}`);
+          // Default behavior: navigate to the new list using slug
+          router.push(`/lists/${data.collection.slug}`);
           router.refresh();
         }
       }
@@ -507,12 +512,16 @@ export function ShareListDialog({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // For public lists, use direct collection URL; for private, use share token URL
-  const publicUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/?collection=${list?.id}`
-    : "";
-  const shareUrl = shareToken
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/shared/${shareToken}`
+  // For both public and private lists with share token, use slug-based URLs
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const listSlug = list?.slug;
+  
+  // Public URL uses the slug
+  const publicUrl = listSlug ? `${baseUrl}/lists/${listSlug}` : "";
+  
+  // Share URL adds the token as a query param
+  const shareUrl = shareToken && listSlug
+    ? `${baseUrl}/lists/${listSlug}?token=${shareToken}`
     : "";
 
   // Wrapper for onOpenChange to trigger refresh when closing

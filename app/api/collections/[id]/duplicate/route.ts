@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { generateUniqueSlug } from "@/lib/slug";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -72,10 +73,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       primaryGameIds.has(cg.gameId)
     );
 
+    // Generate a unique slug for the new collection
+    const slug = await generateUniqueSlug(name.trim());
+
     // Create new collection
     const newCollection = await prisma.collection.create({
       data: {
         name: name.trim(),
+        slug,
         description: sourceCollection.description,
         type: "manual",
         isPrimary: false,
@@ -97,6 +102,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       collection: {
         id: newCollection.id,
         name: newCollection.name,
+        slug: newCollection.slug,
         description: newCollection.description,
         gameCount: gamesToCopy.length,
         createdAt: newCollection.createdAt,
