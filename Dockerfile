@@ -58,14 +58,15 @@ ENV NEXT_PUBLIC_APP_VERSION=${APP_VERSION}
 ARG APP_COMMIT_SHA=""
 ENV NEXT_PUBLIC_APP_COMMIT_SHA=${APP_COMMIT_SHA}
 
-# Build Next.js application with build cache mount
+# Build Next.js application with build cache mount for faster rebuilds
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
 # Compile custom server using esbuild (much faster than tsc)
+# esbuild is already available via Next.js dependencies
 RUN npx esbuild server.ts --bundle --platform=node --target=node22 --outfile=dist/server.js \
-    --external:next --external:socket.io
+    --external:next --external:socket.io --external:@prisma/client --external:prisma
 
 # Prune dev dependencies to get production-only node_modules
 # This eliminates the need for a separate prod-deps stage
