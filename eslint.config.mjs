@@ -20,8 +20,8 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-explicit-any": "off",
     },
   },
-  // Ignore coverage folder
-  globalIgnores(["coverage/**"]),
+  // Ignore generated folders
+  globalIgnores(["coverage/**", "dist/**"]),
 ]);
 
 export default eslintConfig;
