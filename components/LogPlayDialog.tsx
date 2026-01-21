@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Trophy, X, Plus, Sparkles } from "lucide-react";
+import { Loader2, Trophy, X, Plus, Sparkles, UserX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ interface Player {
   id: string;
   name: string;
   playerId?: string | null;
+  isGuest: boolean;
   isWinner: boolean;
   isNew: boolean;
 }
@@ -48,7 +49,7 @@ export function LogPlayDialog({
   onPlayLogged,
 }: LogPlayDialogProps) {
   const [players, setPlayers] = useState<Player[]>([
-    { id: "1", name: "", playerId: null, isWinner: false, isNew: false },
+    { id: "1", name: "", playerId: null, isGuest: false, isWinner: false, isNew: false },
   ]);
   const [playedAt, setPlayedAt] = useState("");
   const [location, setLocation] = useState("");
@@ -59,7 +60,7 @@ export function LogPlayDialog({
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      setPlayers([{ id: "1", name: "", playerId: null, isWinner: false, isNew: false }]);
+      setPlayers([{ id: "1", name: "", playerId: null, isGuest: false, isWinner: false, isNew: false }]);
       // Set default date to today in local timezone
       const today = new Date();
       const year = today.getFullYear();
@@ -74,7 +75,7 @@ export function LogPlayDialog({
 
   const addPlayer = () => {
     const newId = String(Date.now());
-    setPlayers([...players, { id: newId, name: "", playerId: null, isWinner: false, isNew: false }]);
+    setPlayers([...players, { id: newId, name: "", playerId: null, isGuest: false, isWinner: false, isNew: false }]);
   };
 
   const removePlayer = (id: string) => {
@@ -97,10 +98,10 @@ export function LogPlayDialog({
 
     setSaving(true);
     try {
-      // Auto-create players that don't have a playerId yet
+      // Process players - only create Player entities for non-guests without playerId
       const playersWithIds = await Promise.all(
         validPlayers.map(async (player) => {
-          // If player already has an ID, keep it
+          // If player already has an ID (linked to existing player), keep it
           if (player.playerId) {
             return {
               name: player.name.trim(),
@@ -110,7 +111,17 @@ export function LogPlayDialog({
             };
           }
 
-          // Otherwise, create a new player
+          // If player is a guest, don't create a Player entity
+          if (player.isGuest) {
+            return {
+              name: player.name.trim(),
+              playerId: undefined,
+              isWinner: player.isWinner,
+              isNew: player.isNew,
+            };
+          }
+
+          // Otherwise, create a new tracked player
           try {
             const response = await fetch("/api/players", {
               method: "POST",
@@ -204,7 +215,8 @@ export function LogPlayDialog({
                   <PlayerInput
                     value={player.name}
                     playerId={player.playerId}
-                    onChange={(name, playerId) => updatePlayer(player.id, { name, playerId })}
+                    isGuest={player.isGuest}
+                    onChange={(name, playerId, isGuest) => updatePlayer(player.id, { name, playerId, isGuest })}
                     placeholder={`Player ${index + 1} name`}
                     className="flex-1"
                   />
@@ -236,6 +248,22 @@ export function LogPlayDialog({
                   >
                     <Sparkles className="size-4" />
                   </button>
+
+                  {/* Guest toggle - only show for players without a linked Player entity */}
+                  {!player.playerId && (
+                    <button
+                      type="button"
+                      onClick={() => updatePlayer(player.id, { isGuest: !player.isGuest })}
+                      className={`p-2 rounded-md transition-colors ${
+                        player.isGuest
+                          ? "bg-stone-600 text-white"
+                          : "bg-background hover:bg-accent"
+                      }`}
+                      title={player.isGuest ? "Guest (not tracked)" : "Mark as guest"}
+                    >
+                      <UserX className="size-4" />
+                    </button>
+                  )}
 
                   {/* Remove button */}
                   <button

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, UserX } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,8 @@ import type { PlayerSearchResult } from "@/types/player";
 interface PlayerInputProps {
   value: string;
   playerId?: string | null;
-  onChange: (name: string, playerId?: string | null) => void;
+  isGuest?: boolean;
+  onChange: (name: string, playerId?: string | null, isGuest?: boolean) => void;
   placeholder?: string;
   className?: string;
 }
@@ -40,6 +41,7 @@ interface PlayerInputProps {
 export function PlayerInput({
   value,
   playerId,
+  isGuest = false,
   onChange,
   placeholder = "Player name",
   className,
@@ -93,7 +95,7 @@ export function PlayerInput({
 
   // Handle selecting an existing player
   const handleSelectPlayer = (player: PlayerSearchResult) => {
-    onChange(player.displayName, player.id);
+    onChange(player.displayName, player.id, false);
     setOpen(false);
   };
 
@@ -110,12 +112,19 @@ export function PlayerInput({
 
       if (response.ok) {
         const data = await response.json();
-        onChange(data.player.displayName, data.player.id);
+        onChange(data.player.displayName, data.player.id, false);
         setOpen(false);
       }
     } catch (error) {
       console.error("Failed to create player:", error);
     }
+  };
+
+  // Handle adding as guest (no player entity)
+  const handleAddAsGuest = () => {
+    if (!value.trim()) return;
+    onChange(value.trim(), null, true);
+    setOpen(false);
   };
 
   // Format player display name with details
@@ -125,6 +134,15 @@ export function PlayerInput({
     }
     return player.displayName;
   };
+
+  // Get display label based on player type
+  const getTypeLabel = () => {
+    if (playerId) return null; // Linked to existing player - no label needed
+    if (isGuest) return "Guest";
+    return null;
+  };
+
+  const typeLabel = getTypeLabel();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -139,8 +157,13 @@ export function PlayerInput({
             className
           )}
         >
-          <span className={cn(!value && "text-muted-foreground")}>
+          <span className={cn("flex items-center gap-2", !value && "text-muted-foreground")}>
             {value || placeholder}
+            {typeLabel && (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                {typeLabel}
+              </span>
+            )}
           </span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -150,7 +173,7 @@ export function PlayerInput({
           <CommandInput
             placeholder="Search players..."
             value={value}
-            onValueChange={(newValue) => onChange(newValue, null)}
+            onValueChange={(newValue) => onChange(newValue, null, false)}
           />
           <CommandList>
             {loading && (
@@ -183,10 +206,14 @@ export function PlayerInput({
             {value.trim() && (
               <>
                 {players.length > 0 && <CommandSeparator />}
-                <CommandGroup>
+                <CommandGroup heading="Add Player">
                   <CommandItem onSelect={handleCreateNew}>
                     <Plus className="mr-2 size-4" />
-                    Create &quot;{value}&quot; as new player
+                    Create &quot;{value}&quot; as tracked player
+                  </CommandItem>
+                  <CommandItem onSelect={handleAddAsGuest}>
+                    <UserX className="mr-2 size-4" />
+                    Add &quot;{value}&quot; as guest
                   </CommandItem>
                 </CommandGroup>
               </>

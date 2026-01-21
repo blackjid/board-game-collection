@@ -17,14 +17,15 @@ vi.mock("./PlayerInput", () => ({
   }: {
     value: string;
     playerId?: string | null;
-    onChange: (name: string, playerId?: string | null) => void;
+    isGuest?: boolean;
+    onChange: (name: string, playerId?: string | null, isGuest?: boolean) => void;
     placeholder?: string;
     className?: string;
   }) => (
     <input
       type="text"
       value={value}
-      onChange={(e) => onChange(e.target.value, null)}
+      onChange={(e) => onChange(e.target.value, null, false)}
       placeholder={placeholder}
       className={className}
       data-testid="player-input"

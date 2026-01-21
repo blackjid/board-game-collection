@@ -18,14 +18,15 @@ vi.mock("./PlayerInput", () => ({
   }: {
     value: string;
     playerId?: string | null;
-    onChange: (name: string, playerId?: string | null) => void;
+    isGuest?: boolean;
+    onChange: (name: string, playerId?: string | null, isGuest?: boolean) => void;
     placeholder?: string;
     className?: string;
   }) => (
     <input
       type="text"
       value={value}
-      onChange={(e) => onChange(e.target.value, null)}
+      onChange={(e) => onChange(e.target.value, null, false)}
       placeholder={placeholder}
       className={className}
       data-testid="player-input"
@@ -177,17 +178,8 @@ describe("EditPlayDialog", () => {
 
   it("should submit updated play with valid data", async () => {
     const mockFetch = vi.mocked(global.fetch);
-    // First call: create player Alice (no playerId)
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ player: { id: "player1", displayName: "Alice" } }),
-    } as Response);
-    // Second call: create player Bob (no playerId)
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ player: { id: "player2", displayName: "Bob" } }),
-    } as Response);
-    // Third call: update play
+    // Players from existing plays without playerId are treated as guests,
+    // so no player creation calls are made. Only the update play call happens.
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ play: { id: "play1" } }),
@@ -278,17 +270,8 @@ describe("EditPlayDialog", () => {
 
   it("should handle API errors gracefully", async () => {
     const mockFetch = vi.mocked(global.fetch);
-    // First call: create player Alice
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ player: { id: "player1", displayName: "Alice" } }),
-    } as Response);
-    // Second call: create player Bob
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ player: { id: "player2", displayName: "Bob" } }),
-    } as Response);
-    // Third call: update play fails
+    // Players from existing plays without playerId are treated as guests,
+    // so no player creation calls are made. Only the update play call happens.
     mockFetch.mockResolvedValueOnce({
       ok: false,
       json: async () => ({ error: "Update failed" }),
