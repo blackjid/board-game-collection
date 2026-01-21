@@ -15,9 +15,11 @@ export async function getServerUIPreferences(): Promise<UIPreferences> {
   const viewMode = cookieStore.get(`${COOKIE_PREFIX}viewMode`)?.value;
   const cardSize = cookieStore.get(`${COOKIE_PREFIX}cardSize`)?.value;
 
+  const parsedCardSize = cardSize ? parseInt(cardSize, 10) : NaN;
+
   return {
     viewMode: (viewMode as UIPreferences["viewMode"]) || UI_DEFAULTS.viewMode,
-    cardSize: cardSize ? parseInt(cardSize, 10) : UI_DEFAULTS.cardSize,
+    cardSize: Number.isNaN(parsedCardSize) ? UI_DEFAULTS.cardSize : parsedCardSize,
   };
 }
 

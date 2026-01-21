@@ -68,11 +68,16 @@ describe("lib/games", () => {
   const mockCollection = {
     id: "col-1",
     name: "Primary Collection",
+    slug: "primary-collection",
     type: "bgg_sync",
     isPrimary: true,
+    isPublic: false,
+    shareToken: null,
     bggUsername: "testuser",
     syncSchedule: "daily",
     autoScrapeNewGames: true,
+    autoRuleType: null,
+    autoRuleConfig: null,
     lastSyncedAt: null,
     description: null,
     createdAt: new Date(),
@@ -99,12 +104,17 @@ describe("lib/games", () => {
       vi.mocked(prisma.collection.findFirst).mockResolvedValue({
         id: "col-1",
         name: "Primary Collection",
+        slug: "primary-collection",
         description: null,
         type: "bgg_sync",
         isPrimary: true,
+        isPublic: false,
+        shareToken: null,
         bggUsername: "testuser",
         syncSchedule: "manual",
         autoScrapeNewGames: false,
+        autoRuleType: null,
+        autoRuleConfig: null,
         lastSyncedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -163,12 +173,17 @@ describe("lib/games", () => {
       vi.mocked(prisma.collection.findFirst).mockResolvedValue({
         id: "col-1",
         name: "Primary Collection",
+        slug: "primary-collection",
         description: null,
         type: "bgg_sync",
         isPrimary: true,
+        isPublic: false,
+        shareToken: null,
         bggUsername: "testuser",
         syncSchedule: "manual",
         autoScrapeNewGames: false,
+        autoRuleType: null,
+        autoRuleConfig: null,
         lastSyncedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -205,12 +220,17 @@ describe("lib/games", () => {
       vi.mocked(prisma.collection.findFirst).mockResolvedValue({
         id: "col-1",
         name: "Primary Collection",
+        slug: "primary-collection",
         description: null,
         type: "bgg_sync",
         isPrimary: true,
+        isPublic: false,
+        shareToken: null,
         bggUsername: "testuser",
         syncSchedule: "manual",
         autoScrapeNewGames: false,
+        autoRuleType: null,
+        autoRuleConfig: null,
         lastSyncedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -243,12 +263,17 @@ describe("lib/games", () => {
       vi.mocked(prisma.collection.findFirst).mockResolvedValue({
         id: "col-1",
         name: "Primary Collection",
+        slug: "primary-collection",
         description: null,
         type: "bgg_sync",
         isPrimary: true,
+        isPublic: false,
+        shareToken: null,
         bggUsername: "testuser",
         syncSchedule: "manual",
         autoScrapeNewGames: false,
+        autoRuleType: null,
+        autoRuleConfig: null,
         lastSyncedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -267,12 +292,17 @@ describe("lib/games", () => {
       vi.mocked(prisma.collection.findFirst).mockResolvedValue({
         id: "col-1",
         name: "Primary Collection",
+        slug: "primary-collection",
         description: null,
         type: "bgg_sync",
         isPrimary: true,
+        isPublic: false,
+        shareToken: null,
         bggUsername: "testuser",
         syncSchedule: "manual",
         autoScrapeNewGames: false,
+        autoRuleType: null,
+        autoRuleConfig: null,
         lastSyncedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -381,6 +411,7 @@ describe("lib/games", () => {
         isExpansion: false,
         availableImages: [],
         componentImages: [],
+        lastScraped: null,
       };
 
       expect(getDisplayImage(game)).toBe("selected.jpg");
@@ -406,6 +437,7 @@ describe("lib/games", () => {
         isExpansion: false,
         availableImages: [],
         componentImages: [],
+        lastScraped: null,
       };
 
       expect(getDisplayImage(game)).toBe("image.jpg");
@@ -431,6 +463,7 @@ describe("lib/games", () => {
         isExpansion: false,
         availableImages: [],
         componentImages: [],
+        lastScraped: null,
       };
 
       expect(getDisplayImage(game)).toBe("thumb.jpg");
@@ -456,6 +489,7 @@ describe("lib/games", () => {
         isExpansion: false,
         availableImages: [],
         componentImages: [],
+        lastScraped: null,
       };
 
       expect(getDisplayImage(game)).toBeNull();
@@ -500,12 +534,10 @@ describe("lib/games", () => {
       const syncDate = new Date("2024-01-15T12:00:00Z");
       vi.mocked(prisma.syncLog.findFirst).mockResolvedValue({
         id: "sync-1",
+        username: "testuser",
         syncedAt: syncDate,
         gamesFound: 42,
-        gamesAdded: 5,
         status: "success",
-        bggUsername: "testuser",
-        error: null,
       });
 
       const result = await getLastSyncInfo();

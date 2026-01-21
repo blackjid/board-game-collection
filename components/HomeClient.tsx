@@ -68,7 +68,7 @@ import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
 import type { GameData } from "@/lib/games";
 import { saveUIPreference } from "@/lib/cookies";
 
-type SortOption = "name" | "year" | "rating";
+type SortOption = "default" | "name" | "year" | "rating";
 type ViewMode = "card" | "list" | "table";
 
 interface CurrentUser {
@@ -317,8 +317,17 @@ export function HomeClient({
   const [columns, setColumns] = useState(initialCardSize);
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
 
+  // For automatic lists, default to "default" to preserve server-provided order (e.g., play count)
+  const isAutomaticList = selectedCollection?.type === "automatic";
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Set default sort for automatic lists on mount
+  useEffect(() => {
+    if (isAutomaticList) {
+      setSortBy("default");
+    }
+  }, [isAutomaticList]);
   const [syncing, setSyncing] = useState(false);
 
   // Table sorting state
@@ -473,6 +482,11 @@ export function HomeClient({
     }
 
     // Standard sort for card/list views
+    // "default" preserves the original order from the server (important for automatic lists)
+    if (sortBy === "default") {
+      return result;
+    }
+
     return result.sort((a, b) => {
       switch (sortBy) {
         case "name":
@@ -994,8 +1008,8 @@ export function HomeClient({
                 </Button>
               </div>
 
-              {/* Sort Dropdown - only for card/list views */}
-              {viewMode !== "table" && (
+              {/* Sort Dropdown - only for card/list views, hidden for automatic lists */}
+              {viewMode !== "table" && !isAutomaticList && (
                 <div className="flex items-center gap-1.5">
                   <span className="text-muted-foreground text-xs hidden sm:inline">Sort:</span>
                   <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
