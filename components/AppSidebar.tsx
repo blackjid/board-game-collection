@@ -21,6 +21,8 @@ import {
   Globe,
   Share2,
   Link as LinkIcon,
+  TrendingUp,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -104,9 +106,10 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
 
   const isAdmin = user?.role === "admin";
 
-  // Separate primary collection from manual lists
+  // Separate primary collection from different list types
   const primaryCollection = collections.find((c) => c.isPrimary);
   const manualLists = collections.filter((c) => !c.isPrimary && c.type === "manual");
+  const automaticLists = collections.filter((c) => c.type === "automatic");
 
   // Determine active states - check if we're viewing a list by slug
   const isHomeActive = pathname === "/";
@@ -202,6 +205,43 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+
+          {/* Smart Lists - Automatic/dynamic lists */}
+          {automaticLists.length > 0 && (
+            <SidebarGroup>
+              <SidebarGroupLabel>
+                <Sparkles className="size-3 mr-1" />
+                Smart Lists
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {automaticLists.filter((collection) => collection.slug).map((collection) => {
+                    const listHref = `/lists/${collection.slug}`;
+                    const isActive = currentListSlug === collection.slug;
+
+                    // Choose icon based on rule type
+                    const IconComponent = collection.autoRuleType === "top_played" ? TrendingUp : Sparkles;
+
+                    return (
+                      <SidebarMenuItem key={collection.id}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          tooltip={collection.name}
+                        >
+                          <Link href={listHref} onClick={handleItemClick}>
+                            <IconComponent className="size-4" />
+                            <span>{collection.name}</span>
+                            <SidebarMenuBadge>{collection.gameCount}</SidebarMenuBadge>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

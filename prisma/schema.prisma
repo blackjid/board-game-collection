@@ -159,7 +159,7 @@ model Collection {
   description String?
 
   // Collection type and designation
-  type        String   @default("manual")  // "bgg_sync" | "manual"
+  type        String   @default("manual")  // "bgg_sync" | "manual" | "automatic"
   isPrimary   Boolean  @default(false)     // The main/default collection
   isPublic    Boolean  @default(false)     // Whether the collection is public (viewable without auth)
 
@@ -172,6 +172,10 @@ model Collection {
   autoScrapeNewGames Boolean  @default(false)
   lastSyncedAt       DateTime?
 
+  // Automatic list configuration (only used when type = "automatic")
+  autoRuleType    String?   // "top_played" | "recently_played" | "highest_rated" etc.
+  autoRuleConfig  String?   // JSON: { limit: 10, ... } - rule-specific settings
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -182,6 +186,7 @@ model Collection {
   @@index([isPrimary])
   @@index([isPublic])
   @@index([shareToken])
+  @@index([autoRuleType])
 }
 
 model CollectionGame {

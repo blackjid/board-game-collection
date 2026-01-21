@@ -17,10 +17,6 @@ type CollectionGameWithGamePreview = CollectionGame & {
   game: Pick<Game, "selectedThumbnail" | "thumbnail" | "image">;
 };
 
-type CollectionWithGamesAndCount = Collection & {
-  games: CollectionGameWithGamePreview[];
-  _count: { games: number };
-};
 
 // ============================================================================
 // Game Data Types
@@ -202,6 +198,119 @@ export function getDisplayImage(game: GameData): string | null {
 }
 
 // ============================================================================
+// Automatic Collection Rule Engine
+// ============================================================================
+
+interface AutoRuleConfig {
+  limit?: number;
+}
+
+function parseAutoRuleConfig(config: string | null): AutoRuleConfig {
+  if (!config) return {};
+  try {
+    return JSON.parse(config);
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Get games for an automatic collection based on its rule type
+ * Automatic collections compute their games dynamically rather than storing them
+ */
+export async function getAutomaticCollectionGames(
+  autoRuleType: string,
+  autoRuleConfig: string | null
+): Promise<GameData[]> {
+  const config = parseAutoRuleConfig(autoRuleConfig);
+
+  switch (autoRuleType) {
+    case "top_played":
+      return getTopPlayedGames(config.limit ?? 10);
+    default:
+      console.warn(`Unknown automatic rule type: ${autoRuleType}`);
+      return [];
+  }
+}
+
+/**
+ * Get count of games for an automatic collection (for preview without loading all games)
+ */
+export async function getAutomaticCollectionGameCount(
+  autoRuleType: string,
+  autoRuleConfig: string | null
+): Promise<number> {
+  const config = parseAutoRuleConfig(autoRuleConfig);
+
+  switch (autoRuleType) {
+    case "top_played": {
+      // Count distinct games that have at least one play
+      const count = await prisma.gamePlay.groupBy({
+        by: ["gameId"],
+        _count: { gameId: true },
+      });
+      // Return the lesser of actual games with plays or the configured limit
+      return Math.min(count.length, config.limit ?? 10);
+    }
+    default:
+      return 0;
+  }
+}
+
+/**
+ * Get preview images for an automatic collection
+ */
+export async function getAutomaticCollectionPreviewImages(
+  autoRuleType: string,
+  autoRuleConfig: string | null
+): Promise<string[]> {
+  // Get first 4 games for preview
+  const games = await getAutomaticCollectionGames(autoRuleType, autoRuleConfig);
+  return games
+    .slice(0, 4)
+    .map((g) => g.selectedThumbnail || g.thumbnail || g.image)
+    .filter((img): img is string => img !== null);
+}
+
+/**
+ * Rule: top_played
+ * Returns the most played games based on GamePlay count
+ */
+async function getTopPlayedGames(limit: number): Promise<GameData[]> {
+  // Group plays by gameId and count, ordered by count descending
+  const topPlayed = await prisma.gamePlay.groupBy({
+    by: ["gameId"],
+    _count: { gameId: true },
+    orderBy: { _count: { gameId: "desc" } },
+    take: limit,
+  });
+
+  if (topPlayed.length === 0) {
+    return [];
+  }
+
+  // Get the full game data for these games
+  const gameIds = topPlayed.map((p) => p.gameId);
+  const games = await prisma.game.findMany({
+    where: {
+      id: { in: gameIds },
+      lastScraped: { not: null }, // Only include scraped games
+    },
+  });
+
+  // Create a map for quick lookup and maintain play count order
+  const gameMap = new Map(games.map((g) => [g.id, g]));
+
+  // Return games in order of play count (most played first)
+  return topPlayed
+    .map((p) => {
+      const game = gameMap.get(p.gameId);
+      return game ? transformGame(game) : null;
+    })
+    .filter((g): g is GameData => g !== null);
+}
+
+// ============================================================================
 // Collection Types
 // ============================================================================
 
@@ -210,7 +319,7 @@ export interface CollectionSummary {
   name: string;
   slug: string | null;
   description: string | null;
-  type: string; // "bgg_sync" | "manual"
+  type: string; // "bgg_sync" | "manual" | "automatic"
   isPrimary: boolean;
   isPublic: boolean;
   shareToken: string | null;
@@ -218,6 +327,7 @@ export interface CollectionSummary {
   lastSyncedAt: Date | null;
   syncSchedule: string;
   autoScrapeNewGames: boolean;
+  autoRuleType?: string | null; // For automatic collections: "top_played", etc.
   gameCount: number;
   previewImages: string[];
 }
@@ -312,6 +422,7 @@ export async function getPrimaryCollection(): Promise<CollectionSummary | null> 
     lastSyncedAt: collection.lastSyncedAt,
     syncSchedule: collection.syncSchedule,
     autoScrapeNewGames: collection.autoScrapeNewGames,
+    autoRuleType: collection.autoRuleType,
     gameCount: collection._count.games,
     previewImages: collection.games
       .map((cg: CollectionGameWithGamePreview) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
@@ -344,28 +455,64 @@ export async function getCollections(): Promise<CollectionSummary[]> {
     },
     orderBy: [
       { isPrimary: "desc" }, // Primary collection first
+      { type: "asc" }, // Group by type (automatic lists together)
       { updatedAt: "desc" },
     ],
   });
 
-  return collections.map((collection: CollectionWithGamesAndCount) => ({
-    id: collection.id,
-    name: collection.name,
-    slug: collection.slug,
-    description: collection.description,
-    type: collection.type,
-    isPrimary: collection.isPrimary,
-    isPublic: collection.isPublic,
-    shareToken: collection.shareToken,
-    bggUsername: collection.bggUsername,
-    lastSyncedAt: collection.lastSyncedAt,
-    syncSchedule: collection.syncSchedule,
-    autoScrapeNewGames: collection.autoScrapeNewGames,
-    gameCount: collection._count.games,
-    previewImages: collection.games
-      .map((cg: CollectionGameWithGamePreview) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
-      .filter((img: string | null): img is string => img !== null),
-  }));
+  // Process collections, handling automatic ones specially
+  const results: CollectionSummary[] = [];
+
+  for (const collection of collections) {
+    // Handle automatic collections - compute game count and previews dynamically
+    if (collection.type === "automatic" && collection.autoRuleType) {
+      const [gameCount, previewImages] = await Promise.all([
+        getAutomaticCollectionGameCount(collection.autoRuleType, collection.autoRuleConfig),
+        getAutomaticCollectionPreviewImages(collection.autoRuleType, collection.autoRuleConfig),
+      ]);
+
+      results.push({
+        id: collection.id,
+        name: collection.name,
+        slug: collection.slug,
+        description: collection.description,
+        type: collection.type,
+        isPrimary: collection.isPrimary,
+        isPublic: collection.isPublic,
+        shareToken: collection.shareToken,
+        bggUsername: collection.bggUsername,
+        lastSyncedAt: collection.lastSyncedAt,
+        syncSchedule: collection.syncSchedule,
+        autoScrapeNewGames: collection.autoScrapeNewGames,
+        autoRuleType: collection.autoRuleType,
+        gameCount,
+        previewImages,
+      });
+    } else {
+      // Regular collections (bgg_sync, manual)
+      results.push({
+        id: collection.id,
+        name: collection.name,
+        slug: collection.slug,
+        description: collection.description,
+        type: collection.type,
+        isPrimary: collection.isPrimary,
+        isPublic: collection.isPublic,
+        shareToken: collection.shareToken,
+        bggUsername: collection.bggUsername,
+        lastSyncedAt: collection.lastSyncedAt,
+        syncSchedule: collection.syncSchedule,
+        autoScrapeNewGames: collection.autoScrapeNewGames,
+        autoRuleType: collection.autoRuleType,
+        gameCount: collection._count.games,
+        previewImages: collection.games
+          .map((cg: CollectionGameWithGamePreview) => cg.game.selectedThumbnail || cg.game.thumbnail || cg.game.image)
+          .filter((img: string | null): img is string => img !== null),
+      });
+    }
+  }
+
+  return results;
 }
 
 /**
@@ -420,6 +567,36 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
 
   if (!collection) return null;
 
+  // Handle automatic collections - compute games dynamically
+  if (collection.type === "automatic" && collection.autoRuleType) {
+    const games = await getAutomaticCollectionGames(
+      collection.autoRuleType,
+      collection.autoRuleConfig
+    );
+
+    return {
+      id: collection.id,
+      name: collection.name,
+      slug: collection.slug,
+      description: collection.description,
+      type: collection.type,
+      isPrimary: collection.isPrimary,
+      isPublic: collection.isPublic,
+      shareToken: collection.shareToken,
+      bggUsername: collection.bggUsername,
+      lastSyncedAt: collection.lastSyncedAt,
+      syncSchedule: collection.syncSchedule,
+      autoScrapeNewGames: collection.autoScrapeNewGames,
+      autoRuleType: collection.autoRuleType,
+      gameCount: games.length,
+      previewImages: games
+        .slice(0, 4)
+        .map((g) => g.selectedThumbnail || g.thumbnail || g.image)
+        .filter((img): img is string => img !== null),
+      games,
+    };
+  }
+
   // Filter to only include games that have been scraped (have full data)
   const games = collection.games
     .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null)
@@ -439,6 +616,7 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
     lastSyncedAt: collection.lastSyncedAt,
     syncSchedule: collection.syncSchedule,
     autoScrapeNewGames: collection.autoScrapeNewGames,
+    autoRuleType: collection.autoRuleType,
     gameCount: collection._count.games,
     previewImages: collection.games
       .slice(0, 4)
@@ -471,6 +649,36 @@ export async function getCollectionBySlug(
 
   if (!collection) return null;
 
+  // Handle automatic collections - compute games dynamically
+  if (collection.type === "automatic" && collection.autoRuleType) {
+    const games = await getAutomaticCollectionGames(
+      collection.autoRuleType,
+      collection.autoRuleConfig
+    );
+
+    return {
+      id: collection.id,
+      name: collection.name,
+      slug: collection.slug,
+      description: collection.description,
+      type: collection.type,
+      isPrimary: collection.isPrimary,
+      isPublic: collection.isPublic,
+      shareToken: collection.shareToken,
+      bggUsername: collection.bggUsername,
+      lastSyncedAt: collection.lastSyncedAt,
+      syncSchedule: collection.syncSchedule,
+      autoScrapeNewGames: collection.autoScrapeNewGames,
+      autoRuleType: collection.autoRuleType,
+      gameCount: games.length,
+      previewImages: games
+        .slice(0, 4)
+        .map((g) => g.selectedThumbnail || g.thumbnail || g.image)
+        .filter((img): img is string => img !== null),
+      games,
+    };
+  }
+
   // Filter to only include games that have been scraped (have full data)
   const games = collection.games
     .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null)
@@ -490,6 +698,7 @@ export async function getCollectionBySlug(
     lastSyncedAt: collection.lastSyncedAt,
     syncSchedule: collection.syncSchedule,
     autoScrapeNewGames: collection.autoScrapeNewGames,
+    autoRuleType: collection.autoRuleType,
     gameCount: collection._count.games,
     previewImages: collection.games
       .slice(0, 4)
