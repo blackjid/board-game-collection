@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Trophy, X, Plus, Sparkles, UserX } from "lucide-react";
+import { Loader2, Trophy, X, Plus, UserX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,6 @@ interface Player {
   playerId?: string | null;
   isGuest: boolean;
   isWinner: boolean;
-  isNew: boolean;
 }
 
 interface LogPlayDialogProps {
@@ -49,7 +48,7 @@ export function LogPlayDialog({
   onPlayLogged,
 }: LogPlayDialogProps) {
   const [players, setPlayers] = useState<Player[]>([
-    { id: "1", name: "", playerId: null, isGuest: false, isWinner: false, isNew: false },
+    { id: "1", name: "", playerId: null, isGuest: false, isWinner: false },
   ]);
   const [playedAt, setPlayedAt] = useState("");
   const [location, setLocation] = useState("");
@@ -60,7 +59,7 @@ export function LogPlayDialog({
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      setPlayers([{ id: "1", name: "", playerId: null, isGuest: false, isWinner: false, isNew: false }]);
+      setPlayers([{ id: "1", name: "", playerId: null, isGuest: false, isWinner: false }]);
       // Set default date to today in local timezone
       const today = new Date();
       const year = today.getFullYear();
@@ -75,7 +74,7 @@ export function LogPlayDialog({
 
   const addPlayer = () => {
     const newId = String(Date.now());
-    setPlayers([...players, { id: newId, name: "", playerId: null, isGuest: false, isWinner: false, isNew: false }]);
+    setPlayers([...players, { id: newId, name: "", playerId: null, isGuest: false, isWinner: false }]);
   };
 
   const removePlayer = (id: string) => {
@@ -107,7 +106,6 @@ export function LogPlayDialog({
               name: player.name.trim(),
               playerId: player.playerId,
               isWinner: player.isWinner,
-              isNew: player.isNew,
             };
           }
 
@@ -117,7 +115,6 @@ export function LogPlayDialog({
               name: player.name.trim(),
               playerId: undefined,
               isWinner: player.isWinner,
-              isNew: player.isNew,
             };
           }
 
@@ -135,7 +132,6 @@ export function LogPlayDialog({
                 name: data.player.displayName,
                 playerId: data.player.id,
                 isWinner: player.isWinner,
-                isNew: player.isNew,
               };
             } else {
               // If creation fails, send without playerId
@@ -143,7 +139,6 @@ export function LogPlayDialog({
                 name: player.name.trim(),
                 playerId: undefined,
                 isWinner: player.isWinner,
-                isNew: player.isNew,
               };
             }
           } catch (error) {
@@ -153,7 +148,6 @@ export function LogPlayDialog({
               name: player.name.trim(),
               playerId: undefined,
               isWinner: player.isWinner,
-              isNew: player.isNew,
             };
           }
         })
@@ -233,20 +227,6 @@ export function LogPlayDialog({
                     title={player.isWinner ? "Winner" : "Mark as winner"}
                   >
                     <Trophy className="size-4" />
-                  </button>
-
-                  {/* New player toggle */}
-                  <button
-                    type="button"
-                    onClick={() => updatePlayer(player.id, { isNew: !player.isNew })}
-                    className={`p-2 rounded-md transition-colors ${
-                      player.isNew
-                        ? "bg-emerald-600 text-white"
-                        : "bg-background hover:bg-accent"
-                    }`}
-                    title={player.isNew ? "New to game" : "Mark as new"}
-                  >
-                    <Sparkles className="size-4" />
                   </button>
 
                   {/* Guest toggle - only show for players without a linked Player entity */}

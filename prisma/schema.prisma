@@ -245,7 +245,6 @@ model GamePlayPlayer {
   name      String
   playerId  String?  // Optional link to Player entity
   isWinner  Boolean  @default(false)
-  isNew     Boolean  @default(false)  // First time playing this game?
   createdAt DateTime @default(now())
 
   play      GamePlay @relation(fields: [playId], references: [id], onDelete: Cascade)

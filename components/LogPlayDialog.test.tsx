@@ -219,20 +219,4 @@ describe("LogPlayDialog", () => {
     expect(winnerButton).toHaveClass("bg-amber-600");
   });
 
-  it("should toggle new player status", () => {
-    render(
-      <LogPlayDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        gameId="game1"
-        gameName="Test Game"
-      />
-    );
-
-    const newButton = screen.getByTitle("Mark as new");
-    expect(newButton).not.toHaveClass("bg-emerald-600");
-
-    fireEvent.click(newButton);
-    expect(newButton).toHaveClass("bg-emerald-600");
-  });
 });

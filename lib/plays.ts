@@ -8,7 +8,7 @@ type PrismaGamePlay = GamePlay & {
   loggedBy?: Pick<User, "id" | "name" | "email"> | null;
 };
 
-type PrismaPlayer = Pick<GamePlayPlayer, "id" | "name" | "playerId" | "isWinner" | "isNew">;
+type PrismaPlayer = Pick<GamePlayPlayer, "id" | "name" | "playerId" | "isWinner">;
 
 /**
  * Transform Prisma GamePlay to external GamePlayData interface
@@ -27,7 +27,6 @@ function transformGamePlay(play: PrismaGamePlay): GamePlayData {
       name: p.name,
       playerId: p.playerId,
       isWinner: p.isWinner,
-      isNew: p.isNew,
     })) || [],
     game: play.game ? {
       id: play.game.id,
@@ -62,7 +61,6 @@ export async function createGamePlay(
           name: p.name,
           playerId: p.playerId || null,
           isWinner: p.isWinner ?? false,
-          isNew: p.isNew ?? false,
         })),
       },
     },
@@ -195,7 +193,6 @@ export async function updateGamePlay(
             name: p.name,
             playerId: p.playerId || null,
             isWinner: p.isWinner ?? false,
-            isNew: p.isNew ?? false,
           })),
         },
       }),

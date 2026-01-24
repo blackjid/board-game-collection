@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   Trophy,
-  Sparkles,
   MapPin,
   Clock,
   MessageSquare,
@@ -161,7 +160,6 @@ function PlayCard({
               }`}
             >
               {player.isWinner && <Trophy className="size-3" />}
-              {player.isNew && <Sparkles className="size-3 text-emerald-500" />}
               {player.name}
             </span>
           ))}
