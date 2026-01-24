@@ -6,7 +6,7 @@ import Link from "next/link";
 
 // Validate redirect URL to prevent open redirect attacks
 function getSafeRedirect(redirectParam: string | null): string {
-  const defaultRedirect = "/settings";
+  const defaultRedirect = "/";
 
   if (!redirectParam) {
     return defaultRedirect;
