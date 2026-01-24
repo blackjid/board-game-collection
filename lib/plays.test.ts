@@ -310,7 +310,7 @@ describe("lib/plays", () => {
       ).rejects.toThrow("Play not found");
     });
 
-    it("should throw if user is not the owner", async () => {
+    it("should throw if user is not the owner and not admin", async () => {
       const existingPlay = {
         id: "play1",
         loggedById: "user1",
@@ -319,8 +319,38 @@ describe("lib/plays", () => {
       vi.mocked(prisma.gamePlay.findUnique).mockResolvedValue(existingPlay as any);
 
       await expect(
-        updateGamePlay("play1", "user2", { location: "Cafe" })
+        updateGamePlay("play1", "user2", { location: "Cafe" }, false)
       ).rejects.toThrow("Unauthorized: You can only edit your own plays");
+    });
+
+    it("should allow admin to edit other users plays", async () => {
+      const existingPlay = {
+        id: "play1",
+        loggedById: "user1",
+      };
+
+      const updatedPlay = {
+        id: "play1",
+        gameId: "game1",
+        loggedById: "user1", // Original creator is preserved
+        playedAt: new Date("2026-01-03"),
+        location: "Cafe",
+        duration: 120,
+        notes: "Admin updated",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        players: [],
+        game: mockGame,
+        loggedBy: mockUser,
+      };
+
+      vi.mocked(prisma.gamePlay.findUnique).mockResolvedValue(existingPlay as any);
+      vi.mocked(prisma.gamePlay.update).mockResolvedValue(updatedPlay as any);
+
+      const result = await updateGamePlay("play1", "admin-user", { location: "Cafe" }, true);
+
+      expect(result.location).toBe("Cafe");
+      expect(result.loggedById).toBe("user1"); // Original creator preserved
     });
 
     it("should delete and recreate players if players are provided", async () => {
@@ -395,7 +425,7 @@ describe("lib/plays", () => {
       );
     });
 
-    it("should throw if user is not the owner", async () => {
+    it("should throw if user is not the owner and not admin", async () => {
       const existingPlay = {
         id: "play1",
         loggedById: "user1",
@@ -403,9 +433,25 @@ describe("lib/plays", () => {
 
       vi.mocked(prisma.gamePlay.findUnique).mockResolvedValue(existingPlay as any);
 
-      await expect(deleteGamePlay("play1", "user2")).rejects.toThrow(
+      await expect(deleteGamePlay("play1", "user2", false)).rejects.toThrow(
         "Unauthorized: You can only delete your own plays"
       );
+    });
+
+    it("should allow admin to delete other users plays", async () => {
+      const existingPlay = {
+        id: "play1",
+        loggedById: "user1",
+      };
+
+      vi.mocked(prisma.gamePlay.findUnique).mockResolvedValue(existingPlay as any);
+      vi.mocked(prisma.gamePlay.delete).mockResolvedValue({} as any);
+
+      await deleteGamePlay("play1", "admin-user", true);
+
+      expect(prisma.gamePlay.delete).toHaveBeenCalledWith({
+        where: { id: "play1" },
+      });
     });
   });
 
