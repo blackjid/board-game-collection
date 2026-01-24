@@ -218,25 +218,42 @@ model Player {
   @@index([displayName])
 }
 
+// Saved Location - reusable locations with GPS coordinates
+model SavedLocation {
+  id        String   @id @default(cuid())
+  name      String   // Display name (e.g., "Home", "Game Store")
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gamePlays GamePlay[]
+
+  @@index([name])
+}
+
 // Game Play Tracking - records of actual game plays
 model GamePlay {
-  id          String   @id @default(cuid())
-  gameId      String
-  loggedById  String
-  playedAt    DateTime @default(now())
-  location    String?
-  duration    Int?     // minutes
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  gameId          String
+  loggedById      String
+  playedAt        DateTime @default(now())
+  location        String?  // Display name (backward compatible, or manual entry)
+  savedLocationId String?  // Optional link to saved location with coords
+  duration        Int?     // minutes
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  game        Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  loggedBy    User     @relation(fields: [loggedById], references: [id], onDelete: Cascade)
-  players     GamePlayPlayer[]
+  game          Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  loggedBy      User           @relation(fields: [loggedById], references: [id], onDelete: Cascade)
+  savedLocation SavedLocation? @relation(fields: [savedLocationId], references: [id], onDelete: SetNull)
+  players       GamePlayPlayer[]
 
   @@index([gameId])
   @@index([loggedById])
   @@index([playedAt])
+  @@index([savedLocationId])
 }
 
 model GamePlayPlayer {

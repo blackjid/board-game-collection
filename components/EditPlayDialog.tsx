@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PlayerInput } from "@/components/PlayerInput";
+import { LocationInput } from "@/components/LocationInput";
 import type { GamePlayData } from "@/types/play";
 
 // ============================================================================
@@ -50,6 +51,7 @@ export function EditPlayDialog({
   const [players, setPlayers] = useState<Player[]>([]);
   const [playedAt, setPlayedAt] = useState("");
   const [location, setLocation] = useState("");
+  const [savedLocationId, setSavedLocationId] = useState<string | null>(null);
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -73,6 +75,7 @@ export function EditPlayDialog({
       setPlayedAt(format(date, "yyyy-MM-dd"));
 
       setLocation(play.location || "");
+      setSavedLocationId(play.savedLocationId || null);
       setDuration(play.duration ? String(play.duration) : "");
       setNotes(play.notes || "");
     }
@@ -165,6 +168,7 @@ export function EditPlayDialog({
         body: JSON.stringify({
           playedAt: playedAt ? new Date(playedAt + "T12:00:00").toISOString() : undefined,
           location: location.trim() || null,
+          savedLocationId: savedLocationId,
           duration: duration ? parseInt(duration, 10) : null,
           notes: notes.trim() || null,
           players: playersWithIds,
@@ -290,12 +294,14 @@ export function EditPlayDialog({
 
           {/* Location */}
           <div className="space-y-2">
-            <Label htmlFor="edit-location">Location (optional)</Label>
-            <Input
-              id="edit-location"
+            <Label>Location (optional)</Label>
+            <LocationInput
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Home, game store, etc."
+              savedLocationId={savedLocationId}
+              onChange={(name, locId) => {
+                setLocation(name);
+                setSavedLocationId(locId ?? null);
+              }}
             />
           </div>
 

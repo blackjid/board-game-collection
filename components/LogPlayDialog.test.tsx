@@ -33,6 +33,28 @@ vi.mock("./PlayerInput", () => ({
   ),
 }));
 
+// Mock LocationInput component to simplify testing
+vi.mock("./LocationInput", () => ({
+  LocationInput: ({
+    value,
+    onChange,
+  }: {
+    value: string;
+    savedLocationId?: string | null;
+    onChange: (locationName: string, savedLocationId?: string | null) => void;
+    className?: string;
+  }) => (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value, null)}
+      placeholder="Select or enter location..."
+      data-testid="location-input"
+      aria-label="Location (optional)"
+    />
+  ),
+}));
+
 // Mock fetch
 global.fetch = vi.fn();
 

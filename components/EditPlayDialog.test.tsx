@@ -34,6 +34,28 @@ vi.mock("./PlayerInput", () => ({
   ),
 }));
 
+// Mock LocationInput component to simplify testing
+vi.mock("./LocationInput", () => ({
+  LocationInput: ({
+    value,
+    onChange,
+  }: {
+    value: string;
+    savedLocationId?: string | null;
+    onChange: (locationName: string, savedLocationId?: string | null) => void;
+    className?: string;
+  }) => (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value, null)}
+      placeholder="Select or enter location..."
+      data-testid="location-input"
+      aria-label="Location (optional)"
+    />
+  ),
+}));
+
 // Mock fetch
 global.fetch = vi.fn();
 
@@ -43,6 +65,7 @@ const mockPlay: GamePlayData = {
   loggedById: "user1",
   playedAt: new Date("2026-01-03T12:00:00Z"),
   location: "Home",
+  savedLocationId: null,
   duration: 60,
   notes: "Great game!",
   game: {

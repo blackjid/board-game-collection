@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PlayerInput } from "@/components/PlayerInput";
+import { LocationInput } from "@/components/LocationInput";
 
 // ============================================================================
 // Types
@@ -52,6 +53,7 @@ export function LogPlayDialog({
   ]);
   const [playedAt, setPlayedAt] = useState("");
   const [location, setLocation] = useState("");
+  const [savedLocationId, setSavedLocationId] = useState<string | null>(null);
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -67,6 +69,7 @@ export function LogPlayDialog({
       const day = String(today.getDate()).padStart(2, "0");
       setPlayedAt(`${year}-${month}-${day}`);
       setLocation("");
+      setSavedLocationId(null);
       setDuration("");
       setNotes("");
     }
@@ -160,6 +163,7 @@ export function LogPlayDialog({
           gameId,
           playedAt: playedAt ? new Date(playedAt + "T12:00:00").toISOString() : undefined,
           location: location.trim() || undefined,
+          savedLocationId: savedLocationId || undefined,
           duration: duration ? parseInt(duration, 10) : undefined,
           notes: notes.trim() || undefined,
           players: playersWithIds,
@@ -285,12 +289,14 @@ export function LogPlayDialog({
 
           {/* Location */}
           <div className="space-y-2">
-            <Label htmlFor="location">Location (optional)</Label>
-            <Input
-              id="location"
+            <Label>Location (optional)</Label>
+            <LocationInput
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Home, game store, etc."
+              savedLocationId={savedLocationId}
+              onChange={(name, locId) => {
+                setLocation(name);
+                setSavedLocationId(locId ?? null);
+              }}
             />
           </div>
 
