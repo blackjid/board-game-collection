@@ -45,8 +45,6 @@ const mockPlay: GamePlayData = {
   location: "Home",
   duration: 60,
   notes: "Great game!",
-  createdAt: new Date(),
-  updatedAt: new Date(),
   game: {
     id: "game1",
     name: "Test Game",
@@ -57,8 +55,8 @@ const mockPlay: GamePlayData = {
     name: "Test User",
   },
   players: [
-    { id: "p1", name: "Alice", isWinner: true, isNew: false },
-    { id: "p2", name: "Bob", isWinner: false, isNew: true },
+    { id: "p1", name: "Alice", isWinner: true },
+    { id: "p2", name: "Bob", isWinner: false },
   ],
 };
 
@@ -225,7 +223,7 @@ describe("EditPlayDialog", () => {
   it("should disable submit when no players have names", () => {
     const emptyPlayersPlay: GamePlayData = {
       ...mockPlay,
-      players: [{ id: "p1", name: "", isWinner: false, isNew: false }],
+      players: [{ id: "p1", name: "", isWinner: false }],
     };
 
     render(
@@ -252,20 +250,6 @@ describe("EditPlayDialog", () => {
     const winnerButtons = screen.getAllByTitle(/winner|mark as winner/i);
     // Alice is winner, so first button should have amber background
     expect(winnerButtons[0]).toHaveClass("bg-amber-600");
-  });
-
-  it("should show new player status for pre-populated players", () => {
-    render(
-      <EditPlayDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        play={mockPlay}
-      />
-    );
-
-    const newButtons = screen.getAllByTitle(/new|mark as new/i);
-    // Bob is new, so second button should have emerald background
-    expect(newButtons[1]).toHaveClass("bg-emerald-600");
   });
 
   it("should handle API errors gracefully", async () => {

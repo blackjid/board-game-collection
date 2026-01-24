@@ -16,7 +16,6 @@ import {
   Trophy,
   Pencil,
   Trash2,
-  Sparkles,
 } from "lucide-react";
 import type { GameData, ManualListSummary } from "@/lib/games";
 import type { GamePlayData } from "@/types/play";
@@ -579,7 +578,6 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                                 )}
                               >
                                 {player.isWinner && <Trophy className="size-3" />}
-                                {player.isNew && <Sparkles className="size-3 text-emerald-500" />}
                                 {player.name}
                               </span>
                             ))}

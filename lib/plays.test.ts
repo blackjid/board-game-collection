@@ -49,7 +49,6 @@ describe("lib/plays", () => {
             id: "p1",
             name: "Alice",
             isWinner: true,
-            isNew: false,
             playId: "play1",
             createdAt: new Date(),
           },
@@ -57,7 +56,6 @@ describe("lib/plays", () => {
             id: "p2",
             name: "Bob",
             isWinner: false,
-            isNew: true,
             playId: "play1",
             createdAt: new Date(),
           },
@@ -75,8 +73,8 @@ describe("lib/plays", () => {
         duration: 90,
         notes: "Great game",
         players: [
-          { name: "Alice", isWinner: true, isNew: false },
-          { name: "Bob", isWinner: false, isNew: true },
+          { name: "Alice", isWinner: true },
+          { name: "Bob", isWinner: false },
         ],
       });
 
@@ -98,8 +96,8 @@ describe("lib/plays", () => {
           notes: "Great game",
           players: {
             create: [
-              { name: "Alice", playerId: null, isWinner: true, isNew: false },
-              { name: "Bob", playerId: null, isWinner: false, isNew: true },
+              { name: "Alice", playerId: null, isWinner: true },
+              { name: "Bob", playerId: null, isWinner: false },
             ],
           },
         },
@@ -127,7 +125,6 @@ describe("lib/plays", () => {
             id: "p1",
             name: "Alice",
             isWinner: false,
-            isNew: false,
             playId: "play1",
             createdAt: new Date(),
           },
@@ -147,7 +144,6 @@ describe("lib/plays", () => {
       expect(result.duration).toBeNull();
       expect(result.notes).toBeNull();
       expect(result.players[0].isWinner).toBe(false);
-      expect(result.players[0].isNew).toBe(false);
     });
   });
 
@@ -344,7 +340,6 @@ describe("lib/plays", () => {
             id: "p1",
             name: "Charlie",
             isWinner: true,
-            isNew: false,
             playId: "play1",
             createdAt: new Date(),
           },

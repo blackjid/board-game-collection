@@ -36,7 +36,7 @@ describe("app/api/plays/route", () => {
           location: "Home",
           duration: 90,
           notes: "Fun game",
-          players: [{ id: "p1", name: "Alice", isWinner: true, isNew: false }],
+          players: [{ id: "p1", name: "Alice", isWinner: true }],
         },
       ];
 
@@ -131,8 +131,8 @@ describe("app/api/plays/route", () => {
         duration: 90,
         notes: "Great game",
         players: [
-          { id: "p1", name: "Alice", isWinner: true, isNew: false },
-          { id: "p2", name: "Bob", isWinner: false, isNew: true },
+          { id: "p1", name: "Alice", isWinner: true },
+          { id: "p2", name: "Bob", isWinner: false },
         ],
       };
 
@@ -147,8 +147,8 @@ describe("app/api/plays/route", () => {
           duration: 90,
           notes: "Great game",
           players: [
-            { name: "Alice", isWinner: true, isNew: false },
-            { name: "Bob", isWinner: false, isNew: true },
+            { name: "Alice", isWinner: true },
+            { name: "Bob", isWinner: false },
           ],
         }),
       });
@@ -165,8 +165,8 @@ describe("app/api/plays/route", () => {
         duration: 90,
         notes: "Great game",
         players: [
-          { name: "Alice", isWinner: true, isNew: false },
-          { name: "Bob", isWinner: false, isNew: true },
+          { name: "Alice", isWinner: true },
+          { name: "Bob", isWinner: false },
         ],
       });
     });

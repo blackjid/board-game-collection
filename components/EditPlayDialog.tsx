@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Trophy, X, Plus, Sparkles, UserX } from "lucide-react";
+import { Loader2, Trophy, X, Plus, UserX } from "lucide-react";
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ interface Player {
   playerId?: string | null;
   isGuest: boolean;
   isWinner: boolean;
-  isNew: boolean;
 }
 
 interface EditPlayDialogProps {
@@ -66,9 +65,8 @@ export function EditPlayDialog({
         playerId: p.playerId,
         isGuest: !p.playerId, // No playerId means guest
         isWinner: p.isWinner,
-        isNew: p.isNew,
       }));
-      setPlayers(playPlayers.length > 0 ? playPlayers : [{ id: "1", name: "", playerId: null, isGuest: false, isWinner: false, isNew: false }]);
+      setPlayers(playPlayers.length > 0 ? playPlayers : [{ id: "1", name: "", playerId: null, isGuest: false, isWinner: false }]);
 
       // Format date for input
       const date = new Date(play.playedAt);
@@ -82,7 +80,7 @@ export function EditPlayDialog({
 
   const addPlayer = () => {
     const newId = String(Date.now());
-    setPlayers([...players, { id: newId, name: "", playerId: null, isGuest: false, isWinner: false, isNew: false }]);
+    setPlayers([...players, { id: newId, name: "", playerId: null, isGuest: false, isWinner: false }]);
   };
 
   const removePlayer = (id: string) => {
@@ -114,7 +112,6 @@ export function EditPlayDialog({
               name: player.name.trim(),
               playerId: player.playerId,
               isWinner: player.isWinner,
-              isNew: player.isNew,
             };
           }
 
@@ -124,7 +121,6 @@ export function EditPlayDialog({
               name: player.name.trim(),
               playerId: undefined,
               isWinner: player.isWinner,
-              isNew: player.isNew,
             };
           }
 
@@ -142,7 +138,6 @@ export function EditPlayDialog({
                 name: data.player.displayName,
                 playerId: data.player.id,
                 isWinner: player.isWinner,
-                isNew: player.isNew,
               };
             } else {
               // If creation fails, send without playerId
@@ -150,7 +145,6 @@ export function EditPlayDialog({
                 name: player.name.trim(),
                 playerId: undefined,
                 isWinner: player.isWinner,
-                isNew: player.isNew,
               };
             }
           } catch (error) {
@@ -160,7 +154,6 @@ export function EditPlayDialog({
               name: player.name.trim(),
               playerId: undefined,
               isWinner: player.isWinner,
-              isNew: player.isNew,
             };
           }
         })
@@ -239,20 +232,6 @@ export function EditPlayDialog({
                     title={player.isWinner ? "Winner" : "Mark as winner"}
                   >
                     <Trophy className="size-4" />
-                  </button>
-
-                  {/* New player toggle */}
-                  <button
-                    type="button"
-                    onClick={() => updatePlayer(player.id, { isNew: !player.isNew })}
-                    className={`p-2 rounded-md transition-colors ${
-                      player.isNew
-                        ? "bg-emerald-600 text-white"
-                        : "bg-background hover:bg-accent"
-                    }`}
-                    title={player.isNew ? "New to game" : "Mark as new"}
-                  >
-                    <Sparkles className="size-4" />
                   </button>
 
                   {/* Guest toggle - only show for players without a linked Player entity */}

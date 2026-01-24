@@ -37,7 +37,7 @@ describe("app/api/plays/[id]/route", () => {
         location: "Home",
         duration: 90,
         notes: "Fun game",
-        players: [{ id: "p1", name: "Alice", isWinner: true, isNew: false }],
+        players: [{ id: "p1", name: "Alice", isWinner: true }],
       };
 
       vi.mocked(getGamePlayById).mockResolvedValue(mockPlay as any);
@@ -92,7 +92,7 @@ describe("app/api/plays/[id]/route", () => {
         location: "Cafe",
         duration: 120,
         notes: "Updated notes",
-        players: [{ id: "p1", name: "Charlie", isWinner: true, isNew: false }],
+        players: [{ id: "p1", name: "Charlie", isWinner: true }],
       };
 
       vi.mocked(updateGamePlay).mockResolvedValue(updatedPlay as any);

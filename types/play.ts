@@ -5,7 +5,6 @@ export interface GamePlayPlayer {
   name: string;
   playerId?: string | null;
   isWinner: boolean;
-  isNew: boolean;
 }
 
 export interface GamePlayData {
@@ -40,7 +39,6 @@ export interface CreateGamePlayInput {
     name: string;
     playerId?: string;
     isWinner?: boolean;
-    isNew?: boolean;
   }[];
 }
 
@@ -53,6 +51,5 @@ export interface UpdateGamePlayInput {
     name: string;
     playerId?: string;
     isWinner?: boolean;
-    isNew?: boolean;
   }[];
 }
