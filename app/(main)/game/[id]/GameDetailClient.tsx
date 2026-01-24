@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useSyncedState } from "@/lib/hooks";
 import {
   ExternalLink,
   Dice6,
@@ -83,7 +84,7 @@ interface GameDetailClientProps {
 
 export function GameDetailClient({ game, currentUser, lists, plays: initialPlays }: GameDetailClientProps) {
   const router = useRouter();
-  const [plays, setPlays] = useState(initialPlays);
+  const [plays, setPlays] = useSyncedState(initialPlays);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showCreateListDialog, setShowCreateListDialog] = useState(false);
   const [showLogPlayDialog, setShowLogPlayDialog] = useState(false);

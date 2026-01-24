@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useSyncedState } from "@/lib/hooks";
 import { format } from "date-fns";
 import {
   Trophy,
@@ -188,7 +189,7 @@ function PlayCard({
 
 export function PlaysClient({ plays: initialPlays, games, currentUser }: PlaysClientProps) {
   const router = useRouter();
-  const [plays, setPlays] = useState(initialPlays);
+  const [plays, setPlays] = useSyncedState(initialPlays);
   const [editingPlay, setEditingPlay] = useState<GamePlayData | null>(null);
   const [deletingPlay, setDeletingPlay] = useState<GamePlayData | null>(null);
   const [deleting, setDeleting] = useState(false);
