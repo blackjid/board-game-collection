@@ -175,13 +175,15 @@ export async function listGamePlays(filters?: {
 
 /**
  * Update a game play record
+ * Admins can edit any play, regular users can only edit their own
  */
 export async function updateGamePlay(
   playId: string,
   userId: string,
-  input: UpdateGamePlayInput
+  input: UpdateGamePlayInput,
+  isAdmin: boolean = false
 ): Promise<GamePlayData> {
-  // First verify ownership
+  // First verify ownership (admins can edit any play)
   const existingPlay = await prisma.gamePlay.findUnique({
     where: { id: playId },
   });
@@ -190,7 +192,7 @@ export async function updateGamePlay(
     throw new Error("Play not found");
   }
 
-  if (existingPlay.loggedById !== userId) {
+  if (!isAdmin && existingPlay.loggedById !== userId) {
     throw new Error("Unauthorized: You can only edit your own plays");
   }
 
@@ -244,9 +246,10 @@ export async function updateGamePlay(
 
 /**
  * Delete a game play record
+ * Admins can delete any play, regular users can only delete their own
  */
-export async function deleteGamePlay(playId: string, userId: string): Promise<void> {
-  // First verify ownership
+export async function deleteGamePlay(playId: string, userId: string, isAdmin: boolean = false): Promise<void> {
+  // First verify ownership (admins can delete any play)
   const existingPlay = await prisma.gamePlay.findUnique({
     where: { id: playId },
   });
@@ -255,7 +258,7 @@ export async function deleteGamePlay(playId: string, userId: string): Promise<vo
     throw new Error("Play not found");
   }
 
-  if (existingPlay.loggedById !== userId) {
+  if (!isAdmin && existingPlay.loggedById !== userId) {
     throw new Error("Unauthorized: You can only delete your own plays");
   }
 

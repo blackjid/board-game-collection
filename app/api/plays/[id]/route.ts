@@ -39,7 +39,7 @@ export async function GET(
 /**
  * PATCH /api/plays/[id]
  * Update a game play record
- * Only the user who logged it can update it
+ * Admins can update any play, regular users can only update their own
  */
 export async function PATCH(
   request: NextRequest,
@@ -79,7 +79,8 @@ export async function PATCH(
       }
     }
 
-    const play = await updateGamePlay(id, user.id, body);
+    const isAdmin = user.role === "admin";
+    const play = await updateGamePlay(id, user.id, body, isAdmin);
 
     return NextResponse.json({ play });
   } catch (error) {
@@ -118,7 +119,7 @@ export async function PATCH(
 /**
  * DELETE /api/plays/[id]
  * Delete a game play record
- * Only the user who logged it can delete it
+ * Admins can delete any play, regular users can only delete their own
  */
 export async function DELETE(
   request: NextRequest,
@@ -128,7 +129,8 @@ export async function DELETE(
     const user = await requireAuth();
     const { id } = await params;
 
-    await deleteGamePlay(id, user.id);
+    const isAdmin = user.role === "admin";
+    await deleteGamePlay(id, user.id, isAdmin);
 
     return NextResponse.json({ success: true });
   } catch (error) {

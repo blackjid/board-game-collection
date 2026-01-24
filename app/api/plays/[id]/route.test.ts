@@ -117,7 +117,41 @@ describe("app/api/plays/[id]/route", () => {
         duration: 120,
         notes: "Updated notes",
         players: [{ name: "Charlie", isWinner: true }],
+      }, false);
+    });
+
+    it("should allow admin to update any play", async () => {
+      const adminUser = { id: "admin1", email: "admin@test.com", role: "admin" };
+      vi.mocked(requireAuth).mockResolvedValue(adminUser as any);
+
+      const updatedPlay = {
+        id: "play1",
+        gameId: "game1",
+        loggedById: "user1", // Original creator preserved
+        playedAt: "2026-01-01T00:00:00.000Z",
+        location: "Admin Updated",
+        duration: 60,
+        notes: "Admin notes",
+        players: [],
+      };
+
+      vi.mocked(updateGamePlay).mockResolvedValue(updatedPlay as any);
+
+      const request = new NextRequest("http://localhost:3000/api/plays/play1", {
+        method: "PATCH",
+        body: JSON.stringify({
+          location: "Admin Updated",
+        }),
       });
+
+      const response = await PATCH(request, mockParams);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.play.loggedById).toBe("user1"); // Original creator preserved
+      expect(updateGamePlay).toHaveBeenCalledWith("play1", "admin1", {
+        location: "Admin Updated",
+      }, true);
     });
 
     it("should require authentication", async () => {
@@ -222,7 +256,24 @@ describe("app/api/plays/[id]/route", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(deleteGamePlay).toHaveBeenCalledWith("play1", "user1");
+      expect(deleteGamePlay).toHaveBeenCalledWith("play1", "user1", false);
+    });
+
+    it("should allow admin to delete any play", async () => {
+      const adminUser = { id: "admin1", email: "admin@test.com", role: "admin" };
+      vi.mocked(requireAuth).mockResolvedValue(adminUser as any);
+      vi.mocked(deleteGamePlay).mockResolvedValue(undefined);
+
+      const request = new NextRequest("http://localhost:3000/api/plays/play1", {
+        method: "DELETE",
+      });
+
+      const response = await DELETE(request, mockParams);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(deleteGamePlay).toHaveBeenCalledWith("play1", "admin1", true);
     });
 
     it("should require authentication", async () => {
