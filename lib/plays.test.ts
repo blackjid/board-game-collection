@@ -92,6 +92,7 @@ describe("lib/plays", () => {
           loggedById: "user1",
           playedAt: new Date("2026-01-03T15:00:00Z"),
           location: "Home",
+          savedLocationId: null,
           duration: 90,
           notes: "Great game",
           players: {
@@ -105,6 +106,7 @@ describe("lib/plays", () => {
           players: true,
           game: { select: { id: true, name: true, thumbnail: true } },
           loggedBy: { select: { id: true, name: true, email: true } },
+          savedLocation: true,
         },
       });
     });
@@ -180,6 +182,7 @@ describe("lib/plays", () => {
           players: true,
           game: { select: { id: true, name: true, thumbnail: true } },
           loggedBy: { select: { id: true, name: true, email: true } },
+          savedLocation: true,
         },
       });
     });
@@ -227,6 +230,7 @@ describe("lib/plays", () => {
           players: true,
           game: { select: { id: true, name: true, thumbnail: true } },
           loggedBy: { select: { id: true, name: true, email: true } },
+          savedLocation: true,
         },
         orderBy: { playedAt: "desc" },
         take: 100,

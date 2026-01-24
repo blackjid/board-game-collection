@@ -1,14 +1,29 @@
 import prisma from "./prisma";
-import type { GamePlayData, CreateGamePlayInput, UpdateGamePlayInput } from "@/types/play";
-import type { GamePlay, GamePlayPlayer, Game, User } from "@prisma/client";
+import type { GamePlayData, CreateGamePlayInput, UpdateGamePlayInput, SavedLocationData } from "@/types/play";
+import type { GamePlay, GamePlayPlayer, Game, User, SavedLocation } from "@prisma/client";
 
 type PrismaGamePlay = GamePlay & {
   players?: GamePlayPlayer[];
   game?: Pick<Game, "id" | "name" | "thumbnail"> | null;
   loggedBy?: Pick<User, "id" | "name" | "email"> | null;
+  savedLocation?: SavedLocation | null;
 };
 
 type PrismaPlayer = Pick<GamePlayPlayer, "id" | "name" | "playerId" | "isWinner">;
+
+/**
+ * Transform Prisma SavedLocation to external interface
+ */
+function transformSavedLocation(location: SavedLocation): SavedLocationData {
+  return {
+    id: location.id,
+    name: location.name,
+    latitude: location.latitude,
+    longitude: location.longitude,
+    createdAt: location.createdAt,
+    updatedAt: location.updatedAt,
+  };
+}
 
 /**
  * Transform Prisma GamePlay to external GamePlayData interface
@@ -20,6 +35,7 @@ function transformGamePlay(play: PrismaGamePlay): GamePlayData {
     loggedById: play.loggedById,
     playedAt: play.playedAt,
     location: play.location,
+    savedLocationId: play.savedLocationId,
     duration: play.duration,
     notes: play.notes,
     players: play.players?.map((p: PrismaPlayer) => ({
@@ -38,6 +54,7 @@ function transformGamePlay(play: PrismaGamePlay): GamePlayData {
       name: play.loggedBy.name,
       email: play.loggedBy.email,
     } : undefined,
+    savedLocation: play.savedLocation ? transformSavedLocation(play.savedLocation) : null,
   };
 }
 
@@ -54,6 +71,7 @@ export async function createGamePlay(
       loggedById: userId,
       playedAt: input.playedAt ? new Date(input.playedAt) : new Date(),
       location: input.location || null,
+      savedLocationId: input.savedLocationId || null,
       duration: input.duration || null,
       notes: input.notes || null,
       players: {
@@ -80,6 +98,7 @@ export async function createGamePlay(
           email: true,
         },
       },
+      savedLocation: true,
     },
   });
 
@@ -108,6 +127,7 @@ export async function getGamePlayById(playId: string): Promise<GamePlayData | nu
           email: true,
         },
       },
+      savedLocation: true,
     },
   });
 
@@ -144,6 +164,7 @@ export async function listGamePlays(filters?: {
           email: true,
         },
       },
+      savedLocation: true,
     },
     orderBy: { playedAt: "desc" },
     take: filters?.limit || 100,
@@ -185,6 +206,7 @@ export async function updateGamePlay(
     data: {
       ...(input.playedAt !== undefined && { playedAt: new Date(input.playedAt) }),
       ...(input.location !== undefined && { location: input.location || null }),
+      ...(input.savedLocationId !== undefined && { savedLocationId: input.savedLocationId || null }),
       ...(input.duration !== undefined && { duration: input.duration || null }),
       ...(input.notes !== undefined && { notes: input.notes || null }),
       ...(input.players && {
@@ -213,6 +235,7 @@ export async function updateGamePlay(
           email: true,
         },
       },
+      savedLocation: true,
     },
   });
 
