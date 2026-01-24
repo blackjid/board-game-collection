@@ -1002,11 +1002,13 @@ Before committing any code changes:
 
 8. **Don't store arrays directly in Prisma** - SQLite requires JSON strings
 
-9. **Don't hardcode port 3000** - Use `process.env.PORT || "3000"`
+9. **Don't modify schema.prisma without creating a migration** - Always run `npx prisma migrate dev --name description` after schema changes. Verify the migration file exists in `prisma/migrations/` before committing. Without migration files, changes won't apply in production.
 
-10. **Don't forget `dynamic = "force-dynamic"`** - Required for pages with auth/dynamic data
+10. **Don't hardcode port 3000** - Use `process.env.PORT || "3000"`
 
-11. **Don't use `isVisible` on Game model** - Game visibility is determined by collection membership
+11. **Don't forget `dynamic = "force-dynamic"`** - Required for pages with auth/dynamic data
+
+12. **Don't use `isVisible` on Game model** - Game visibility is determined by collection membership
    ```tsx
    // Bad - isVisible field no longer exists
    await prisma.game.findMany({ where: { isVisible: true } });
@@ -1018,9 +1020,9 @@ Before committing any code changes:
    });
    ```
 
-12. **Don't create documentation files proactively** - Only create documentation (README, API docs, guides, etc.) when explicitly requested by the user
+13. **Don't create documentation files proactively** - Only create documentation (README, API docs, guides, etc.) when explicitly requested by the user
 
-13. **Don't use Prisma in middleware** - Middleware runs in Edge Runtime which doesn't support Prisma
+14. **Don't use Prisma in middleware** - Middleware runs in Edge Runtime which doesn't support Prisma
    ```tsx
    // Bad - middleware.ts
    import prisma from "@/lib/prisma";
@@ -1103,9 +1105,14 @@ node dist/server.js
 ### Adding a New Database Model
 
 1. Update `prisma/schema.prisma`
-2. Run `npx prisma migrate dev --name description`
-3. Create lib functions in `lib/[model].ts`
-4. Add transform functions for JSON fields if needed
+2. **Run `npx prisma migrate dev --name description`** - This generates a migration file
+3. **Verify a new migration folder was created** in `prisma/migrations/` before committing
+4. Create lib functions in `lib/[model].ts`
+5. Add transform functions for JSON fields if needed
+
+> **IMPORTANT**: Always run `prisma migrate dev` after schema changes, not `prisma db push`. 
+> The migration file is required for production deployments. Without it, schema changes 
+> won't be applied to the production database.
 
 ### Writing Tests
 
