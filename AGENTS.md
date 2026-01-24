@@ -171,6 +171,67 @@ export function HomeClient({ games }: { games: GameData[] }) {
 }
 ```
 
+### Syncing Local State with Server Data (useSyncedState)
+
+When client components need to:
+1. Maintain local state for optimistic updates (e.g., deleting an item from a list)
+2. Refresh data after dialog actions via `router.refresh()`
+
+Use the `useSyncedState` hook instead of `useState`. This ensures local state syncs with new prop values when the server re-renders.
+
+**Problem:** `useState(initialValue)` only uses `initialValue` on mount. After `router.refresh()`, the server component re-fetches data, but the client's local state remains stale.
+
+**Solution:**
+
+```tsx
+// Bad - local state won't update after router.refresh()
+const [plays, setPlays] = useState(initialPlays);
+
+// Good - syncs with prop changes from server
+import { useSyncedState } from "@/lib/hooks";
+const [plays, setPlays] = useSyncedState(initialPlays);
+```
+
+**Full example with dialog callback:**
+
+```tsx
+import { useSyncedState } from "@/lib/hooks";
+
+export function PlaysClient({ plays: initialPlays }: Props) {
+  const router = useRouter();
+  const [plays, setPlays] = useSyncedState(initialPlays);
+
+  // Local delete still works (optimistic update)
+  const handleDelete = async (id: string) => {
+    setPlays(plays.filter(p => p.id !== id));
+    await fetch(`/api/plays/${id}`, { method: "DELETE" });
+  };
+
+  return (
+    <>
+      {/* List of plays */}
+      <LogPlayDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        onPlayLogged={() => {
+          router.refresh(); // Triggers server re-fetch
+          // useSyncedState ensures local state syncs with new data
+        }}
+      />
+    </>
+  );
+}
+```
+
+**When to use:**
+- Client components that receive data from server components as props
+- Components that call `router.refresh()` after mutations (dialog actions, form submissions)
+- Components that also need local state mutations (optimistic updates, local filtering)
+
+**When NOT to use:**
+- Components that don't need `router.refresh()` behavior
+- Simple useState with no server synchronization needs
+
 ### API Route Pattern
 
 ```tsx
@@ -980,6 +1041,16 @@ Before committing any code changes:
      const collection = await prisma.collection.findUnique(...); // ✅ Works in Node.js runtime
      // Check permissions here
    }
+   ```
+
+14. **Don't use useState for data that should sync after router.refresh()** - Use `useSyncedState` from `@/lib/hooks`
+   ```tsx
+   // Bad - local state won't update after dialog actions call router.refresh()
+   const [plays, setPlays] = useState(initialPlays);
+   
+   // Good - syncs with new prop values from server
+   import { useSyncedState } from "@/lib/hooks";
+   const [plays, setPlays] = useSyncedState(initialPlays);
    ```
 
 ---
