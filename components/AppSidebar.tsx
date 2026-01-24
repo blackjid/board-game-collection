@@ -23,6 +23,7 @@ import {
   Link as LinkIcon,
   TrendingUp,
   Sparkles,
+  MapPin,
 } from "lucide-react";
 
 import {
@@ -85,6 +86,7 @@ const ADMIN_SECTIONS = [
   { id: "sessions", label: "Sessions", Icon: Gamepad2, href: "/settings?section=sessions" },
   { id: "users", label: "Users", Icon: Users, href: "/settings?section=users" },
   { id: "players", label: "Players", Icon: UsersRound, href: "/settings?section=players" },
+  { id: "locations", label: "Locations", Icon: MapPin, href: "/settings?section=locations" },
   { id: "about", label: "About", Icon: Info, href: "/settings?section=about" },
 ] as const;
 

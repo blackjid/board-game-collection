@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, createContext, useContext, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Settings, RefreshCw, Users, Gamepad2, Info, UsersRound } from "lucide-react";
+import { Settings, RefreshCw, Users, Gamepad2, Info, UsersRound, MapPin } from "lucide-react";
 
 import { SiteHeader } from "@/components/SiteHeader";
 import { GeneralSection } from "./sections/GeneralSection";
@@ -10,6 +10,7 @@ import { CollectionSection } from "./sections/CollectionSection";
 import { SessionsSection } from "./sections/SessionsSection";
 import { UsersSection } from "./sections/UsersSection";
 import { PlayersSection } from "./sections/PlayersSection";
+import { LocationsSection } from "./sections/LocationsSection";
 import { AboutSection } from "./sections/AboutSection";
 
 // ============================================================================
@@ -47,6 +48,7 @@ const SECTIONS = [
   { id: "sessions", label: "Sessions", Icon: Gamepad2 },
   { id: "users", label: "Users", Icon: Users },
   { id: "players", label: "Players", Icon: UsersRound },
+  { id: "locations", label: "Locations", Icon: MapPin },
   { id: "about", label: "About", Icon: Info },
 ] as const;
 
@@ -58,6 +60,7 @@ const SECTION_COMPONENTS: Record<SectionId, React.ComponentType> = {
   sessions: SessionsSection,
   users: UsersSection,
   players: PlayersSection,
+  locations: LocationsSection,
   about: AboutSection,
 };
 
