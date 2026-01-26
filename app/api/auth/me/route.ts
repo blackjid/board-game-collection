@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isFirstUser } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const [user, firstUser] = await Promise.all([
+      getCurrentUser(),
+      isFirstUser(),
+    ]);
 
     if (!user) {
-      return NextResponse.json({ user: null });
+      return NextResponse.json({ user: null, isFirstUser: firstUser });
     }
 
     return NextResponse.json({
@@ -16,6 +19,7 @@ export async function GET() {
         name: user.name,
         role: user.role,
       },
+      isFirstUser: firstUser,
     });
   } catch (error) {
     console.error("Get current user error:", error);
