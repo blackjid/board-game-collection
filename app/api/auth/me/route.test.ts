@@ -29,6 +29,7 @@ describe("Me API Route", () => {
       expect(response.status).toBe(200);
       expect(data.user).toBeNull();
       expect(data.isFirstUser).toBe(true);
+      expect(isFirstUser).toHaveBeenCalledTimes(1);
     });
 
     it("should return null user and isFirstUser false when users exist", async () => {
@@ -41,9 +42,10 @@ describe("Me API Route", () => {
       expect(response.status).toBe(200);
       expect(data.user).toBeNull();
       expect(data.isFirstUser).toBe(false);
+      expect(isFirstUser).toHaveBeenCalledTimes(1);
     });
 
-    it("should return user data and isFirstUser when authenticated", async () => {
+    it("should return user data and isFirstUser false when authenticated", async () => {
       const mockUser = {
         id: "user-1",
         email: "test@example.com",
@@ -55,7 +57,7 @@ describe("Me API Route", () => {
       };
 
       vi.mocked(getCurrentUser).mockResolvedValue(mockUser);
-      vi.mocked(isFirstUser).mockResolvedValue(false);
+      // isFirstUser should NOT be called when user is logged in
 
       const response = await GET();
       const data = await response.json();
@@ -68,6 +70,7 @@ describe("Me API Route", () => {
         role: "admin",
       });
       expect(data.isFirstUser).toBe(false);
+      expect(isFirstUser).not.toHaveBeenCalled();
     });
 
     it("should not expose passwordHash in response", async () => {
@@ -82,12 +85,13 @@ describe("Me API Route", () => {
       };
 
       vi.mocked(getCurrentUser).mockResolvedValue(mockUser);
-      vi.mocked(isFirstUser).mockResolvedValue(false);
+      // isFirstUser should NOT be called when user is logged in
 
       const response = await GET();
       const data = await response.json();
 
       expect(data.user).not.toHaveProperty("passwordHash");
+      expect(isFirstUser).not.toHaveBeenCalled();
     });
 
     it("should return 500 on error", async () => {

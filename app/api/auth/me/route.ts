@@ -3,24 +3,24 @@ import { getCurrentUser, isFirstUser } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const [user, firstUser] = await Promise.all([
-      getCurrentUser(),
-      isFirstUser(),
-    ]);
+    const user = await getCurrentUser();
 
-    if (!user) {
-      return NextResponse.json({ user: null, isFirstUser: firstUser });
+    // If user is logged in, by definition it's not the first user
+    if (user) {
+      return NextResponse.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        isFirstUser: false,
+      });
     }
 
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-      isFirstUser: firstUser,
-    });
+    // Only check isFirstUser when NOT logged in (for login page UI)
+    const firstUser = await isFirstUser();
+    return NextResponse.json({ user: null, isFirstUser: firstUser });
   } catch (error) {
     console.error("Get current user error:", error);
     return NextResponse.json(
