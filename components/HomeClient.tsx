@@ -1235,6 +1235,7 @@ export function HomeClient({
               queuedIds={queuedIds}
               showRemoveFromList={!!isViewingList}
               hasManualLists={hasManualLists}
+              showInCollectionColumn={!!selectedCollection && !selectedCollection.isPrimary}
             />
         )}
       </main>

@@ -87,6 +87,7 @@ export interface GameTableProps {
   queuedIds?: Set<string>;
   showRemoveFromList?: boolean;
   hasManualLists?: boolean;
+  showInCollectionColumn?: boolean; // Show "In Collection" column for list views
 }
 
 function SortableHeader({
@@ -144,6 +145,7 @@ export function GameTable({
   queuedIds = new Set(),
   showRemoveFromList = false,
   hasManualLists = false,
+  showInCollectionColumn = false,
 }: GameTableProps) {
   const router = useRouter();
 
@@ -359,14 +361,17 @@ export function GameTable({
                 onSort={onSort}
               />
             </TableHead>
-            {isAdmin && <TableHead className="w-16 px-2">Status</TableHead>}
+            {isAdmin && showInCollectionColumn && (
+              <TableHead className="w-20 px-2">In Collection</TableHead>
+            )}
             {isAdmin && <TableHead className="w-8 px-1"></TableHead>}
           </TableRow>
         </TableHeader>
       <TableBody>
         {games.map((game) => {
           const imageUrl = game.selectedThumbnail || game.thumbnail || game.image || null;
-          const isVisible = game.collections && game.collections.length > 0;
+          // Check if game is in primary collection (for "In Collection" column)
+          const isInPrimaryCollection = game.collections?.some(c => c.type === "bgg_sync") ?? false;
           const isSelected = selectedIds.has(game.id);
           const ratingColor = game.rating ? getRatingColor(game.rating) : undefined;
 
@@ -457,17 +462,17 @@ export function GameTable({
               <TableCell className="px-2 py-1 text-xs text-muted-foreground">
                 {playtime ? `${playtime}m` : "-"}
               </TableCell>
-              {isAdmin && (
+              {isAdmin && showInCollectionColumn && (
                 <TableCell className="px-2 py-1">
                   <span
                     className={cn(
                       "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                      isVisible
+                      isInPrimaryCollection
                         ? "bg-primary/20 text-primary"
                         : "bg-muted text-muted-foreground"
                     )}
                   >
-                    {isVisible ? "Visible" : "Hidden"}
+                    {isInPrimaryCollection ? "Yes" : "No"}
                   </span>
                 </TableCell>
               )}
