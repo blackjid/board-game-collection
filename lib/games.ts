@@ -567,12 +567,46 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
 
   if (!collection) return null;
 
+  // Find the primary collection once (for efficiency)
+  const primaryCollection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
+    select: { id: true, name: true, type: true },
+  });
+
   // Handle automatic collections - compute games dynamically
   if (collection.type === "automatic" && collection.autoRuleType) {
     const games = await getAutomaticCollectionGames(
       collection.autoRuleType,
       collection.autoRuleConfig
     );
+
+    // Efficiently check which games are in the primary collection
+    const gameIds = games.map(g => g.id);
+    if (gameIds.length > 0 && primaryCollection) {
+      // Only fetch memberships for the primary collection (much more efficient)
+      const primaryMemberships = await prisma.collectionGame.findMany({
+        where: {
+          collectionId: primaryCollection.id,
+          gameId: { in: gameIds },
+        },
+        select: { gameId: true },
+      });
+
+      // Create a Set for O(1) lookup
+      const gamesInPrimaryCollection = new Set(primaryMemberships.map(m => m.gameId));
+
+      // Attach minimal collection info - only primary collection membership
+      games.forEach(game => {
+        game.collections = gamesInPrimaryCollection.has(game.id)
+          ? [{ id: primaryCollection.id, name: primaryCollection.name, type: primaryCollection.type }]
+          : [];
+      });
+    } else {
+      // No primary collection or no games, mark all as not in collection
+      games.forEach(game => {
+        game.collections = [];
+      });
+    }
 
     return {
       id: collection.id,
@@ -602,6 +636,34 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
     .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null)
     .map((cg: CollectionGameWithGame) => transformGame(cg.game))
     .filter((g: GameData | null): g is GameData => g !== null);
+
+  // Efficiently check which games are in the primary collection
+  const gameIds = games.map(g => g.id);
+  if (gameIds.length > 0 && primaryCollection) {
+    // Only fetch memberships for the primary collection (much more efficient)
+    const primaryMemberships = await prisma.collectionGame.findMany({
+      where: {
+        collectionId: primaryCollection.id,
+        gameId: { in: gameIds },
+      },
+      select: { gameId: true },
+    });
+
+    // Create a Set for O(1) lookup
+    const gamesInPrimaryCollection = new Set(primaryMemberships.map(m => m.gameId));
+
+    // Attach minimal collection info - only primary collection membership
+    games.forEach(game => {
+      game.collections = gamesInPrimaryCollection.has(game.id)
+        ? [{ id: primaryCollection.id, name: primaryCollection.name, type: primaryCollection.type }]
+        : [];
+    });
+  } else {
+    // No primary collection or no games, mark all as not in collection
+    games.forEach(game => {
+      game.collections = [];
+    });
+  }
 
   return {
     id: collection.id,
@@ -649,12 +711,46 @@ export async function getCollectionBySlug(
 
   if (!collection) return null;
 
+  // Find the primary collection once (for efficiency)
+  const primaryCollection = await prisma.collection.findFirst({
+    where: { isPrimary: true },
+    select: { id: true, name: true, type: true },
+  });
+
   // Handle automatic collections - compute games dynamically
   if (collection.type === "automatic" && collection.autoRuleType) {
     const games = await getAutomaticCollectionGames(
       collection.autoRuleType,
       collection.autoRuleConfig
     );
+
+    // Efficiently check which games are in the primary collection
+    const gameIds = games.map(g => g.id);
+    if (gameIds.length > 0 && primaryCollection) {
+      // Only fetch memberships for the primary collection (much more efficient)
+      const primaryMemberships = await prisma.collectionGame.findMany({
+        where: {
+          collectionId: primaryCollection.id,
+          gameId: { in: gameIds },
+        },
+        select: { gameId: true },
+      });
+
+      // Create a Set for O(1) lookup
+      const gamesInPrimaryCollection = new Set(primaryMemberships.map(m => m.gameId));
+
+      // Attach minimal collection info - only primary collection membership
+      games.forEach(game => {
+        game.collections = gamesInPrimaryCollection.has(game.id)
+          ? [{ id: primaryCollection.id, name: primaryCollection.name, type: primaryCollection.type }]
+          : [];
+      });
+    } else {
+      // No primary collection or no games, mark all as not in collection
+      games.forEach(game => {
+        game.collections = [];
+      });
+    }
 
     return {
       id: collection.id,
@@ -684,6 +780,34 @@ export async function getCollectionBySlug(
     .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null)
     .map((cg: CollectionGameWithGame) => transformGame(cg.game))
     .filter((g: GameData | null): g is GameData => g !== null);
+
+  // Efficiently check which games are in the primary collection
+  const gameIds = games.map(g => g.id);
+  if (gameIds.length > 0 && primaryCollection) {
+    // Only fetch memberships for the primary collection (much more efficient)
+    const primaryMemberships = await prisma.collectionGame.findMany({
+      where: {
+        collectionId: primaryCollection.id,
+        gameId: { in: gameIds },
+      },
+      select: { gameId: true },
+    });
+
+    // Create a Set for O(1) lookup
+    const gamesInPrimaryCollection = new Set(primaryMemberships.map(m => m.gameId));
+
+    // Attach minimal collection info - only primary collection membership
+    games.forEach(game => {
+      game.collections = gamesInPrimaryCollection.has(game.id)
+        ? [{ id: primaryCollection.id, name: primaryCollection.name, type: primaryCollection.type }]
+        : [];
+    });
+  } else {
+    // No primary collection or no games, mark all as not in collection
+    games.forEach(game => {
+      game.collections = [];
+    });
+  }
 
   return {
     id: collection.id,

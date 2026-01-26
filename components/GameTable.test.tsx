@@ -146,12 +146,40 @@ describe("GameTable", () => {
   });
 
   describe("admin features", () => {
-    it("should show status column for admins", () => {
+    it("should hide In Collection column by default", () => {
       const games = [createMockGame()];
       render(<GameTable games={games} isAdmin={true} />);
 
-      expect(screen.getByText("Status")).toBeInTheDocument();
-      expect(screen.getByText("Visible")).toBeInTheDocument();
+      expect(screen.queryByText("In Collection")).not.toBeInTheDocument();
+    });
+
+    it("should show In Collection column when enabled", () => {
+      const games = [createMockGame()];
+      render(<GameTable games={games} isAdmin={true} showInCollectionColumn={true} />);
+
+      expect(screen.getByText("In Collection")).toBeInTheDocument();
+      expect(screen.getByText("Yes")).toBeInTheDocument();
+    });
+
+    it("should show Yes for games in primary collection", () => {
+      const games = [createMockGame({ collections: [{ id: "col-1", name: "Primary", type: "bgg_sync" }] })];
+      render(<GameTable games={games} isAdmin={true} showInCollectionColumn={true} />);
+
+      expect(screen.getByText("Yes")).toBeInTheDocument();
+    });
+
+    it("should show No for games not in primary collection", () => {
+      const games = [createMockGame({ collections: [] })];
+      render(<GameTable games={games} isAdmin={true} showInCollectionColumn={true} />);
+
+      expect(screen.getByText("No")).toBeInTheDocument();
+    });
+
+    it("should show No for games in manual collection only", () => {
+      const games = [createMockGame({ collections: [{ id: "col-2", name: "Manual", type: "manual" }] })];
+      render(<GameTable games={games} isAdmin={true} showInCollectionColumn={true} />);
+
+      expect(screen.getByText("No")).toBeInTheDocument();
     });
 
     it("should show checkbox when onSelectGame provided", () => {
@@ -171,13 +199,6 @@ describe("GameTable", () => {
       const checkbox = screen.getByRole("checkbox", { name: /select test game/i });
       fireEvent.click(checkbox);
       expect(onSelectGame).toHaveBeenCalledWith("123");
-    });
-
-    it("should show Hidden status for games not in collection", () => {
-      const games = [createMockGame({ collections: [] })];
-      render(<GameTable games={games} isAdmin={true} />);
-
-      expect(screen.getByText("Hidden")).toBeInTheDocument();
     });
 
     it("should show dropdown menu trigger for admins", () => {
