@@ -43,7 +43,7 @@ function LoginContent() {
 
   // Check if this is the first user (show registration)
   useEffect(() => {
-    async function checkFirstUser() {
+    async function checkAuthStatus() {
       try {
         const res = await fetch("/api/auth/me");
         const data = await res.json();
@@ -54,26 +54,20 @@ function LoginContent() {
           return;
         }
 
-        // Check if any users exist
-        const firstUserRes = await fetch("/api/auth/check-first-user");
-        if (firstUserRes.ok) {
-          const firstUserData = await firstUserRes.json();
-          if (firstUserData.isFirstUser) {
-            setIsFirstUser(true);
-            setMode("register");
-          } else {
-            setIsFirstUser(false);
-            setMode("login");
-          }
+        // Set mode based on whether this is the first user
+        if (data.isFirstUser) {
+          setIsFirstUser(true);
+          setMode("register");
         } else {
           setIsFirstUser(false);
+          setMode("login");
         }
       } catch {
         // If we can't check, assume there are users
         setIsFirstUser(false);
       }
     }
-    checkFirstUser();
+    checkAuthStatus();
   }, [redirect, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
