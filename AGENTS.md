@@ -38,7 +38,8 @@ When proposing AGENTS.md updates, add to the relevant section or create a new se
 | Testing | Vitest + Testing Library |
 | Real-time | Socket.IO |
 | Auth | Cookie-based sessions (bcrypt) |
-| Scraping | Playwright (Chromium) |
+| BGG API | XML API v2 (with token) or Geekdo JSON API (fallback) |
+| Scraping | Playwright (Chromium) - only used by GeekdoApiClient |
 
 ### Architecture Pattern
 
@@ -917,6 +918,91 @@ socket.on("session-update", (data) => { ... });
 
 ---
 
+## BGG Client Architecture
+
+The project uses an abstraction layer to interact with BoardGameGeek APIs, supporting two implementations:
+
+### Client Types
+
+| Client | API | Authentication | Use Case |
+|--------|-----|----------------|----------|
+| `GeekdoApiClient` | Internal JSON API (`api.geekdo.com`) | None | Default fallback, uses Playwright for collection scraping |
+| `XmlApi2Client` | Official XML API v2 | Bearer token | Recommended when `BGG_TOKEN` is set |
+
+### Client Selection
+
+The client is automatically selected based on environment configuration:
+
+```tsx
+import { getBggClient } from "@/lib/bgg";
+
+// Returns XmlApi2Client if BGG_TOKEN is set, otherwise GeekdoApiClient
+const client = getBggClient();
+
+// Use the client interface
+const games = await client.getCollection("username");
+const details = await client.getGameDetails("174430");
+const searchResults = await client.search("Gloomhaven");
+```
+
+### BggClient Interface
+
+All clients implement the same interface:
+
+```tsx
+interface BggClient {
+  clientType: "geekdo" | "xmlapi2";
+  getGameDetails(gameId: string): Promise<BggGameDetails | null>;
+  getGamesDetails(gameIds: string[]): Promise<BggGameDetails[]>;
+  getCollection(username: string): Promise<BggCollectionItem[]>;
+  getGalleryImages(gameId: string): Promise<string[]>;  // Edition box art
+  search(query: string, limit?: number): Promise<BggSearchResult[]>;
+  getHotGames(): Promise<BggHotItem[]>;
+}
+```
+
+### Image Sources
+
+`getGalleryImages()` returns edition box art images for thumbnail selection:
+
+| Client | Source |
+|--------|--------|
+| `XmlApi2Client` | XML API `versions=1` (official edition covers) |
+| `GeekdoApiClient` | Geekdo gallery API |
+
+These images are stored in `availableImages` and used for thumbnail selection in the image editor.
+
+### Setting Up XML API v2
+
+1. Register your application at https://boardgamegeek.com/applications
+2. Create a token after approval (may take a week)
+3. Add the token to your environment:
+
+```bash
+# .env.local
+BGG_TOKEN=your-bearer-token-here
+```
+
+### Benefits of XML API v2
+
+- **No Playwright for collections**: Uses official API instead of HTML scraping
+- **Official support**: Less likely to break unexpectedly
+- **Rate limiting handled**: Client implements 5-second delay between requests
+- **Smaller Docker image**: Potentially remove Playwright dependency
+
+### File Structure
+
+```
+lib/bgg/
+├── types.ts           # BggClient interface and shared types
+├── client.ts          # getBggClient() factory function
+├── geekdo-client.ts   # Internal JSON API implementation
+├── xmlapi2-client.ts  # Official XML API v2 implementation
+└── index.ts           # Public exports
+```
+
+---
+
 ## Quality Checks (Always Do)
 
 AI agents **MUST** perform these checks after making code changes:
@@ -1065,6 +1151,7 @@ Before committing any code changes:
 | `DATA_PATH` | `/data` | Data directory (Docker) |
 | `PORT` | `3000` | Server port |
 | `NEXT_PUBLIC_BASE_URL` | (auto) | Base URL for QR codes/share links |
+| `BGG_TOKEN` | - | BGG XML API v2 bearer token (enables official API) |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | - | Custom Chromium path (Docker) |
 
 ---

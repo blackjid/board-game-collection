@@ -1,16 +1,9 @@
-import { chromium } from "playwright";
 import prisma from "@/lib/prisma";
+import { getBggClient } from "@/lib/bgg";
 
 // ============================================================================
 // Types
 // ============================================================================
-
-interface ScrapedGame {
-  id: string;
-  name: string;
-  yearPublished: number | null;
-  isExpansion: boolean;
-}
 
 export interface SyncResult {
   success: boolean;
@@ -83,75 +76,6 @@ export async function getSettings() {
 }
 
 // ============================================================================
-// Collection Scraping (from BGG)
-// ============================================================================
-
-async function scrapeCollection(username: string): Promise<ScrapedGame[]> {
-  const collectionUrl = `https://boardgamegeek.com/collection/user/${username}?own=1&subtype=boardgame&ff=1`;
-
-  const browser = await chromium.launch({
-    headless: true,
-    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--disable-software-rasterizer",
-      "--single-process",
-      "--no-zygote",
-    ],
-  });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-
-  await page.goto(collectionUrl, { waitUntil: "networkidle" });
-  await page.waitForSelector("table", { timeout: 30000 });
-
-  const games = await page.evaluate(() => {
-    const rows = document.querySelectorAll("table tbody tr");
-    const gameList: ScrapedGame[] = [];
-
-    rows.forEach((row) => {
-      const cells = row.querySelectorAll("td");
-      if (cells.length < 5) return;
-
-      const nameCell = cells[0];
-      const link = nameCell.querySelector("a");
-      if (!link) return;
-
-      const name = link.textContent?.trim() || "";
-      const href = link.getAttribute("href") || "";
-
-      // Skip invalid entries
-      if (!name || name.includes("»") || name.includes("Filters") || name.length < 2) {
-        return;
-      }
-
-      // Extract game ID from href
-      const idMatch = href.match(/\/(?:boardgame|boardgameexpansion)\/(\d+)/);
-      const id = idMatch ? idMatch[1] : "";
-      if (!id) return;
-
-      // Check if it's an expansion
-      const isExpansion = href.includes("boardgameexpansion");
-
-      // Extract year
-      const cellText = nameCell.textContent || "";
-      const yearMatch = cellText.match(/\((\d{4})\)/);
-      const yearPublished = yearMatch ? parseInt(yearMatch[1]) : null;
-
-      gameList.push({ id, name, yearPublished, isExpansion });
-    });
-
-    return gameList;
-  });
-
-  await browser.close();
-  return games;
-}
-
-// ============================================================================
 // Sync Collection (Main Import Function)
 // ============================================================================
 
@@ -191,7 +115,9 @@ export async function syncCollection(collectionId?: string): Promise<SyncResult>
   console.log(`[Sync] Starting collection import for user: ${bggUsername}...`);
 
   try {
-    const games = await scrapeCollection(bggUsername);
+    // Use the BGG client to fetch collection
+    const client = getBggClient();
+    const games = await client.getCollection(bggUsername);
     console.log(`[Sync] Found ${games.length} games in collection`);
 
     // Upsert all games - only update basic info, preserve existing scraped data
@@ -363,157 +289,16 @@ export async function performSyncWithAutoScrape(
 // Game Scraping (Fetch Details from BGG)
 // ============================================================================
 
-// Strip HTML tags from text
+/**
+ * Strip HTML tags from text
+ */
 export function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-// Fetch gallery images from BGG's internal API
-async function fetchGalleryImagesFromAPI(gameId: string): Promise<string[]> {
-  try {
-    const response = await fetch(
-      `https://api.geekdo.com/api/images?ajax=1&foritempage=1&galleries[]=game&nosession=1&objectid=${gameId}&objecttype=thing&showcount=20&size=original&sort=hot`
-    );
-    const data = await response.json();
-    const images = data.images || [];
-
-    return images
-      .map((img: { imageurl_lg?: string; imageurl?: string }) => img.imageurl_lg || img.imageurl)
-      .filter((url: string) => url && url.includes("geekdo-images"));
-  } catch (e) {
-    console.log(`[Scrape] Images API error for ${gameId}: ${e}`);
-    return [];
-  }
-}
-
-// BGG API link type for expansion relationships
-interface BggLink {
-  objectid: string;
-  name: string;
-}
-
-// Fetch extended game data from BGG's internal JSON API
-async function fetchExtendedDataFromAPI(gameId: string) {
-  const result = {
-    rating: null as number | null,
-    description: null as string | null,
-    minAge: null as number | null,
-    categories: [] as string[],
-    mechanics: [] as string[],
-    isExpansion: false,
-    minPlayers: null as number | null,
-    maxPlayers: null as number | null,
-    minPlaytime: null as number | null,
-    maxPlaytime: null as number | null,
-    // Expansion relationships
-    baseGameIds: [] as string[], // For expansions: which base game(s) this expands
-    expansionIds: [] as string[], // For base games: list of expansion IDs
-  };
-
-  try {
-    // Fetch basic game info and dynamic stats in parallel
-    const [geekItemResponse, dynamicInfoResponse] = await Promise.all([
-      fetch(`https://api.geekdo.com/api/geekitems?objecttype=thing&objectid=${gameId}`),
-      fetch(`https://api.geekdo.com/api/dynamicinfo?objectid=${gameId}&objecttype=thing`),
-    ]);
-
-    const geekItemData = await geekItemResponse.json();
-    const dynamicData = await dynamicInfoResponse.json();
-
-    const item = geekItemData.item;
-
-    if (item) {
-      result.isExpansion = item.subtype === "boardgameexpansion";
-
-      if (item.short_description) {
-        result.description = item.short_description;
-      } else if (item.description) {
-        let desc = stripHtml(item.description);
-        if (desc.length > 500) {
-          desc = desc.substring(0, 500).replace(/\s+\S*$/, "") + "...";
-        }
-        result.description = desc;
-      }
-
-      if (item.minplayers) result.minPlayers = parseInt(item.minplayers, 10);
-      if (item.maxplayers) result.maxPlayers = parseInt(item.maxplayers, 10);
-      if (item.minplaytime) result.minPlaytime = parseInt(item.minplaytime, 10);
-      if (item.maxplaytime) result.maxPlaytime = parseInt(item.maxplaytime, 10);
-      if (item.minage) result.minAge = parseInt(item.minage, 10);
-
-      const categories = item.links?.boardgamecategory || [];
-      result.categories = categories.map((c: { name: string }) => c.name);
-
-      const mechanics = item.links?.boardgamemechanic || [];
-      result.mechanics = mechanics.map((m: { name: string }) => m.name);
-
-      // Extract expansion relationships
-      // For expansions: expandsboardgame contains the base game(s)
-      const expandsboardgame: BggLink[] = item.links?.expandsboardgame || [];
-      result.baseGameIds = expandsboardgame.map((e) => e.objectid);
-
-      // For base games: boardgameexpansion contains expansion IDs
-      const boardgameexpansion: BggLink[] = item.links?.boardgameexpansion || [];
-      result.expansionIds = boardgameexpansion.map((e) => e.objectid);
-    }
-
-    // Get rating from dynamic info (stats.average is the community rating)
-    const stats = dynamicData?.item?.stats;
-    if (stats?.average) {
-      result.rating = Math.round(parseFloat(stats.average) * 10) / 10;
-    }
-  } catch (e) {
-    console.log(`[Scrape] API fetch error for ${gameId}: ${e}`);
-  }
-
-  return result;
-}
-
-// Scrape main image from game page
-async function scrapeGamePage(gameId: string, isExpansion: boolean) {
-  const browser = await chromium.launch({
-    headless: true,
-    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--disable-software-rasterizer",
-      "--single-process",
-      "--no-zygote",
-    ],
-  });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-
-  let image = "";
-
-  try {
-    const url = isExpansion
-      ? `https://boardgamegeek.com/boardgameexpansion/${gameId}`
-      : `https://boardgamegeek.com/boardgame/${gameId}`;
-
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
-
-    const result = await page.evaluate(() => {
-      // Get the main game image
-      const imgEl = document.querySelector('img[src*="cf.geekdo-images"][src*="itemrep"]') ||
-                   document.querySelector('img[src*="cf.geekdo-images"]:not([src*="avatar"])');
-      return imgEl?.getAttribute("src") || "";
-    });
-
-    image = result;
-  } catch (e) {
-    console.log(`[Scrape] Scrape error for ${gameId}: ${e}`);
-  } finally {
-    await browser.close();
-  }
-
-  return { image };
-}
-
-// Scrape a single game
+/**
+ * Scrape a single game using the BGG client
+ */
 export async function scrapeGame(gameId: string): Promise<boolean> {
   const game = await prisma.game.findUnique({ where: { id: gameId } });
   if (!game) {
@@ -524,43 +309,49 @@ export async function scrapeGame(gameId: string): Promise<boolean> {
   console.log(`[Scrape] Scraping game: ${game.name} (${gameId})`);
 
   try {
-    // Fetch all data in parallel
-    const [pageData, extendedData, galleryImages] = await Promise.all([
-      scrapeGamePage(gameId, game.isExpansion),
-      fetchExtendedDataFromAPI(gameId),
-      fetchGalleryImagesFromAPI(gameId),
+    const client = getBggClient();
+
+    // Fetch game details and gallery images (edition covers for thumbnail selection)
+    const [gameDetails, galleryImages] = await Promise.all([
+      client.getGameDetails(gameId),
+      client.getGalleryImages(gameId),
     ]);
+
+    if (!gameDetails) {
+      console.error(`[Scrape] No details found for ${gameId}`);
+      return false;
+    }
 
     // Update the game with scraped data
     await prisma.game.update({
       where: { id: gameId },
       data: {
-        image: pageData.image || null,
-        thumbnail: pageData.image || null,
-        rating: extendedData.rating,
-        description: extendedData.description,
-        minPlayers: extendedData.minPlayers,
-        maxPlayers: extendedData.maxPlayers,
-        minPlaytime: extendedData.minPlaytime,
-        maxPlaytime: extendedData.maxPlaytime,
-        minAge: extendedData.minAge,
-        categories: JSON.stringify(extendedData.categories),
-        mechanics: JSON.stringify(extendedData.mechanics),
-        isExpansion: extendedData.isExpansion,
+        image: gameDetails.image,
+        thumbnail: gameDetails.thumbnail || gameDetails.image,
+        rating: gameDetails.rating,
+        description: gameDetails.description,
+        minPlayers: gameDetails.minPlayers,
+        maxPlayers: gameDetails.maxPlayers,
+        minPlaytime: gameDetails.minPlaytime,
+        maxPlaytime: gameDetails.maxPlaytime,
+        minAge: gameDetails.minAge,
+        categories: JSON.stringify(gameDetails.categories),
+        mechanics: JSON.stringify(gameDetails.mechanics),
+        isExpansion: gameDetails.isExpansion,
         availableImages: JSON.stringify(galleryImages),
         lastScraped: new Date(),
       },
     });
 
     // Create expansion relationships (many-to-many)
-    if (extendedData.isExpansion && extendedData.baseGameIds.length > 0) {
+    if (gameDetails.isExpansion && gameDetails.baseGameIds.length > 0) {
       // Clear old "expands" relationships for this game
       await prisma.gameRelationship.deleteMany({
         where: { fromGameId: gameId, type: "expands" },
       });
 
       // Create new relationships for ALL base games (not just ones in collection)
-      for (const baseGameId of extendedData.baseGameIds) {
+      for (const baseGameId of gameDetails.baseGameIds) {
         // Check if the base game exists in our database
         const baseGameExists = await prisma.game.findUnique({
           where: { id: baseGameId },
@@ -589,7 +380,9 @@ export async function scrapeGame(gameId: string): Promise<boolean> {
   }
 }
 
-// Scrape multiple games
+/**
+ * Scrape multiple games
+ */
 export async function scrapeGames(gameIds: string[]): Promise<ScrapeResult> {
   let scraped = 0;
   let failed = 0;
