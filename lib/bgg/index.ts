@@ -13,13 +13,7 @@ export type {
 } from "./types";
 
 // Client factory
-export {
-  getBggClient,
-  resetBggClient,
-  isXmlApiAvailable,
-  getClientType,
-} from "./client";
+export { getBggClient, resetBggClient, isBggConfigured } from "./client";
 
-// Client implementations (for advanced usage)
-export { GeekdoApiClient } from "./geekdo-client";
+// Client implementation (for advanced usage)
 export { XmlApi2Client } from "./xmlapi2-client";

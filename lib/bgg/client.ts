@@ -1,5 +1,4 @@
 import type { BggClient } from "./types";
-import { GeekdoApiClient } from "./geekdo-client";
 import { XmlApi2Client } from "./xmlapi2-client";
 
 // ============================================================================
@@ -11,8 +10,8 @@ let cachedClient: BggClient | null = null;
 /**
  * Get the BGG client instance.
  *
- * If BGG_TOKEN is set, uses the official XML API v2 client.
- * Otherwise, falls back to the internal Geekdo JSON API client.
+ * Uses the official XML API v2 client with BGG_TOKEN authentication.
+ * Throws an error if BGG_TOKEN is not configured.
  *
  * The client instance is cached for reuse.
  */
@@ -23,13 +22,15 @@ export function getBggClient(): BggClient {
 
   const token = process.env.BGG_TOKEN;
 
-  if (token) {
-    console.log("[BGG] Using XML API v2 client (authenticated)");
-    cachedClient = new XmlApi2Client(token);
-  } else {
-    console.log("[BGG] Using Geekdo API client (unauthenticated)");
-    cachedClient = new GeekdoApiClient();
+  if (!token) {
+    throw new Error(
+      "BGG_TOKEN environment variable is required. " +
+        "Register an application at BoardGameGeek to get a token."
+    );
   }
+
+  console.log("[BGG] Using XML API v2 client");
+  cachedClient = new XmlApi2Client(token);
 
   return cachedClient;
 }
@@ -42,18 +43,8 @@ export function resetBggClient(): void {
 }
 
 /**
- * Check if the XML API v2 client is available (token is configured)
+ * Check if BGG_TOKEN is configured
  */
-export function isXmlApiAvailable(): boolean {
+export function isBggConfigured(): boolean {
   return !!process.env.BGG_TOKEN;
-}
-
-/**
- * Get the current client type
- */
-export function getClientType(): "geekdo" | "xmlapi2" | null {
-  if (!cachedClient) {
-    return null;
-  }
-  return cachedClient.clientType;
 }

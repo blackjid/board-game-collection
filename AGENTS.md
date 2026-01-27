@@ -38,8 +38,7 @@ When proposing AGENTS.md updates, add to the relevant section or create a new se
 | Testing | Vitest + Testing Library |
 | Real-time | Socket.IO |
 | Auth | Cookie-based sessions (bcrypt) |
-| BGG API | XML API v2 (with token) or Geekdo JSON API (fallback) |
-| Scraping | Playwright (Chromium) - only used by GeekdoApiClient |
+| BGG API | Official XML API v2 (requires BGG_TOKEN) |
 
 ### Architecture Pattern
 
@@ -924,10 +923,11 @@ The project uses an abstraction layer to interact with BoardGameGeek APIs, suppo
 
 ### Client Types
 
-| Client | API | Authentication | Use Case |
-|--------|-----|----------------|----------|
-| `GeekdoApiClient` | Internal JSON API (`api.geekdo.com`) | None | Default fallback, uses Playwright for collection scraping |
-| `XmlApi2Client` | Official XML API v2 | Bearer token | Recommended when `BGG_TOKEN` is set |
+The application uses the official BoardGameGeek XML API v2 for all BGG data:
+
+| Client | API | Authentication |
+|--------|-----|----------------|
+| `XmlApi2Client` | Official XML API v2 | Bearer token (BGG_TOKEN required) |
 
 ### Client Selection
 
@@ -936,7 +936,7 @@ The client is automatically selected based on environment configuration:
 ```tsx
 import { getBggClient } from "@/lib/bgg";
 
-// Returns XmlApi2Client if BGG_TOKEN is set, otherwise GeekdoApiClient
+// Returns XmlApi2Client (requires BGG_TOKEN to be set)
 const client = getBggClient();
 
 // Use the client interface
@@ -951,7 +951,7 @@ All clients implement the same interface:
 
 ```tsx
 interface BggClient {
-  clientType: "geekdo" | "xmlapi2";
+  clientType: "xmlapi2";
   getGameDetails(gameId: string): Promise<BggGameDetails | null>;
   getGamesDetails(gameIds: string[]): Promise<BggGameDetails[]>;
   getCollection(username: string): Promise<BggCollectionItem[]>;
@@ -965,12 +965,7 @@ interface BggClient {
 
 `getGalleryImages()` returns edition box art images for thumbnail selection:
 
-| Client | Source |
-|--------|--------|
-| `XmlApi2Client` | XML API `versions=1` (official edition covers) |
-| `GeekdoApiClient` | Geekdo gallery API |
-
-These images are stored in `availableImages` and used for thumbnail selection in the image editor.
+`getGalleryImages()` uses XML API `versions=1` to fetch official edition cover images (different language editions, printing runs). These are stored in `availableImages` and used for thumbnail selection in the image editor.
 
 ### Setting Up XML API v2
 
@@ -985,10 +980,10 @@ BGG_TOKEN=your-bearer-token-here
 
 ### Benefits of XML API v2
 
-- **No Playwright for collections**: Uses official API instead of HTML scraping
-- **Official support**: Less likely to break unexpectedly
+- **Official support**: Stable API, less likely to break unexpectedly
 - **Rate limiting handled**: Client implements 5-second delay between requests
-- **Smaller Docker image**: Potentially remove Playwright dependency
+- **Smaller Docker image**: No Playwright/Chromium dependencies
+- **Structured data**: No HTML scraping required
 
 ### File Structure
 
@@ -996,7 +991,6 @@ BGG_TOKEN=your-bearer-token-here
 lib/bgg/
 ├── types.ts           # BggClient interface and shared types
 ├── client.ts          # getBggClient() factory function
-├── geekdo-client.ts   # Internal JSON API implementation
 ├── xmlapi2-client.ts  # Official XML API v2 implementation
 └── index.ts           # Public exports
 ```
@@ -1151,8 +1145,7 @@ Before committing any code changes:
 | `DATA_PATH` | `/data` | Data directory (Docker) |
 | `PORT` | `3000` | Server port |
 | `NEXT_PUBLIC_BASE_URL` | (auto) | Base URL for QR codes/share links |
-| `BGG_TOKEN` | - | BGG XML API v2 bearer token (enables official API) |
-| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | - | Custom Chromium path (Docker) |
+| `BGG_TOKEN` | **required** | BGG XML API v2 bearer token |
 
 ---
 
@@ -1161,8 +1154,7 @@ Before committing any code changes:
 Multi-stage Dockerfile with:
 1. **deps** - Install all dependencies, generate Prisma client
 2. **builder** - Build Next.js, compile TypeScript server
-3. **prod-deps** - Production dependencies only
-4. **runner** - Minimal runtime with Chromium for scraping
+3. **runner** - Minimal Node.js runtime
 
 Entrypoint runs migrations before starting:
 ```bash

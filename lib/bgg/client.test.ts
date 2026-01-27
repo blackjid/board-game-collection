@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getBggClient, resetBggClient, isXmlApiAvailable, getClientType } from "./client";
-import { GeekdoApiClient } from "./geekdo-client";
+import { getBggClient, resetBggClient, isBggConfigured } from "./client";
 import { XmlApi2Client } from "./xmlapi2-client";
 
 describe("lib/bgg/client", () => {
@@ -22,13 +21,10 @@ describe("lib/bgg/client", () => {
   // ============================================================================
 
   describe("getBggClient", () => {
-    it("should return GeekdoApiClient when BGG_TOKEN is not set", () => {
+    it("should throw error when BGG_TOKEN is not set", () => {
       delete process.env.BGG_TOKEN;
 
-      const client = getBggClient();
-
-      expect(client).toBeInstanceOf(GeekdoApiClient);
-      expect(client.clientType).toBe("geekdo");
+      expect(() => getBggClient()).toThrow("BGG_TOKEN environment variable is required");
     });
 
     it("should return XmlApi2Client when BGG_TOKEN is set", () => {
@@ -41,7 +37,7 @@ describe("lib/bgg/client", () => {
     });
 
     it("should cache and return the same client instance", () => {
-      delete process.env.BGG_TOKEN;
+      process.env.BGG_TOKEN = "test-token";
 
       const client1 = getBggClient();
       const client2 = getBggClient();
@@ -50,7 +46,7 @@ describe("lib/bgg/client", () => {
     });
 
     it("should return new instance after resetBggClient", () => {
-      delete process.env.BGG_TOKEN;
+      process.env.BGG_TOKEN = "test-token";
 
       const client1 = getBggClient();
       resetBggClient();
@@ -61,44 +57,20 @@ describe("lib/bgg/client", () => {
   });
 
   // ============================================================================
-  // isXmlApiAvailable
+  // isBggConfigured
   // ============================================================================
 
-  describe("isXmlApiAvailable", () => {
+  describe("isBggConfigured", () => {
     it("should return false when BGG_TOKEN is not set", () => {
       delete process.env.BGG_TOKEN;
 
-      expect(isXmlApiAvailable()).toBe(false);
+      expect(isBggConfigured()).toBe(false);
     });
 
     it("should return true when BGG_TOKEN is set", () => {
       process.env.BGG_TOKEN = "test-token";
 
-      expect(isXmlApiAvailable()).toBe(true);
-    });
-  });
-
-  // ============================================================================
-  // getClientType
-  // ============================================================================
-
-  describe("getClientType", () => {
-    it("should return null when client not initialized", () => {
-      expect(getClientType()).toBeNull();
-    });
-
-    it("should return 'geekdo' when using GeekdoApiClient", () => {
-      delete process.env.BGG_TOKEN;
-      getBggClient();
-
-      expect(getClientType()).toBe("geekdo");
-    });
-
-    it("should return 'xmlapi2' when using XmlApi2Client", () => {
-      process.env.BGG_TOKEN = "test-token";
-      getBggClient();
-
-      expect(getClientType()).toBe("xmlapi2");
+      expect(isBggConfigured()).toBe(true);
     });
   });
 });

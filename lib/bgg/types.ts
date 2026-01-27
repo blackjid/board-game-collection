@@ -57,7 +57,7 @@ export interface BggHotItem {
 }
 
 /**
- * BGG Client interface - implemented by both GeekdoApiClient and XmlApi2Client
+ * BGG Client interface - implemented by XmlApi2Client
  */
 export interface BggClient {
   /**
@@ -95,7 +95,7 @@ export interface BggClient {
   /**
    * Get the client type identifier
    */
-  readonly clientType: "geekdo" | "xmlapi2";
+  readonly clientType: "xmlapi2";
 }
 
 /**
