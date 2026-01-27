@@ -424,18 +424,23 @@ export function groupGamesByBaseGame(games: GameData[]): GameGroup[] {
   }
 
   // Build a map of base game ID -> expansions that work with it
+  // Note: we only group expansions under actual BASE GAMES (non-expansions),
+  // not under other expansions. This keeps the view flat without deep nesting.
   const baseGameExpansionsMap = new Map<string, GameData[]>();
   const orphanedExpansions: GameData[] = [];
   
+  // Create a set of base game IDs for efficient lookup
+  const baseGameIds = new Set(baseGames.map((g) => g.id));
+  
   for (const expansion of expansions) {
-    // Find which base games this expansion works with that are in the collection
-    const expandsGamesInCollection = expansion.expandsGames.filter(
-      (g) => gameMap.has(g.id)
+    // Find which BASE GAMES (not expansions) this expansion works with that are in the collection
+    const baseGamesInCollection = expansion.expandsGames.filter(
+      (g) => baseGameIds.has(g.id)
     );
 
-    if (expandsGamesInCollection.length > 0) {
+    if (baseGamesInCollection.length > 0) {
       // Group with ALL matching base games in collection
-      for (const baseGameRef of expandsGamesInCollection) {
+      for (const baseGameRef of baseGamesInCollection) {
         if (!baseGameExpansionsMap.has(baseGameRef.id)) {
           baseGameExpansionsMap.set(baseGameRef.id, []);
         }
@@ -461,9 +466,7 @@ export function groupGamesByBaseGame(games: GameData[]): GameGroup[] {
     });
   }
 
-  // Add orphaned expansions as their own groups
-  // Note: orphaned expansions may have sub-expansions grouped under them
-  // (e.g., "Expansion 5-6 Player" expands "Expansion" which is orphaned)
+  // Add orphaned expansions as their own groups (flat, no nesting under other expansions)
   for (const orphan of orphanedExpansions) {
     // Calculate missing requirements for orphaned expansions
     const missingRequirements = [
@@ -471,12 +474,9 @@ export function groupGamesByBaseGame(games: GameData[]): GameGroup[] {
       ...orphan.requiredGames.filter((g) => !g.inCollection).map((g) => g.name),
     ];
 
-    // Check if this orphan has sub-expansions grouped under it
-    const subExpansions = baseGameExpansionsMap.get(orphan.id) || [];
-
     groups.push({
       baseGame: orphan,
-      expansions: subExpansions.sort((a, b) => a.name.localeCompare(b.name)),
+      expansions: [],
       isOrphanedExpansion: true,
       missingRequirements,
     });
