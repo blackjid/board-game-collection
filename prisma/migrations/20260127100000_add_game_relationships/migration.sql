@@ -1,5 +1,5 @@
 -- CreateTable: GameRelationship for many-to-many game relationships
-CREATE TABLE "GameRelationship" (
+CREATE TABLE IF NOT EXISTS "GameRelationship" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "fromGameId" TEXT NOT NULL,
     "toGameId" TEXT NOT NULL,
@@ -8,38 +8,31 @@ CREATE TABLE "GameRelationship" (
     CONSTRAINT "GameRelationship_toGameId_fkey" FOREIGN KEY ("toGameId") REFERENCES "Game" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Migrate existing baseGameId data to GameRelationship table
--- Only migrate where the referenced base game actually exists (avoid FK constraint errors)
-INSERT INTO "GameRelationship" ("id", "fromGameId", "toGameId", "type")
-SELECT 
-    lower(hex(randomblob(12))),
-    g."id",
-    g."baseGameId",
-    'expands'
-FROM "Game" g
-INNER JOIN "Game" base ON g."baseGameId" = base."id"
-WHERE g."baseGameId" IS NOT NULL;
+-- NOTE: Data migration from baseGameId to GameRelationship is handled by the scraper
+-- when games are re-scraped. The baseGameId column may not exist in all databases
+-- (it was removed in some environments before this migration was created).
+-- The scraper will create GameRelationship records during the next sync.
+
+-- CreateIndex (IF NOT EXISTS for idempotency)
+CREATE INDEX IF NOT EXISTS "GameRelationship_fromGameId_idx" ON "GameRelationship"("fromGameId");
 
 -- CreateIndex
-CREATE INDEX "GameRelationship_fromGameId_idx" ON "GameRelationship"("fromGameId");
+CREATE INDEX IF NOT EXISTS "GameRelationship_toGameId_idx" ON "GameRelationship"("toGameId");
 
 -- CreateIndex
-CREATE INDEX "GameRelationship_toGameId_idx" ON "GameRelationship"("toGameId");
+CREATE INDEX IF NOT EXISTS "GameRelationship_type_idx" ON "GameRelationship"("type");
 
 -- CreateIndex
-CREATE INDEX "GameRelationship_type_idx" ON "GameRelationship"("type");
+CREATE UNIQUE INDEX IF NOT EXISTS "GameRelationship_fromGameId_toGameId_type_key" ON "GameRelationship"("fromGameId", "toGameId", "type");
 
--- CreateIndex
-CREATE UNIQUE INDEX "GameRelationship_fromGameId_toGameId_type_key" ON "GameRelationship"("fromGameId", "toGameId", "type");
-
--- DropIndex
+-- DropIndex (IF EXISTS - may not exist in all databases)
 DROP INDEX IF EXISTS "Game_baseGameId_idx";
 
--- AlterTable: Remove deprecated baseGameId column
--- RedefineTables
+-- Ensure Game table has correct schema (without baseGameId)
+-- Using new_Game pattern for SQLite table alteration
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
-CREATE TABLE "new_Game" (
+CREATE TABLE IF NOT EXISTS "new_Game" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "yearPublished" INTEGER,
@@ -62,9 +55,9 @@ CREATE TABLE "new_Game" (
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
-INSERT INTO "new_Game" ("id", "name", "yearPublished", "lastScraped", "image", "thumbnail", "description", "minPlayers", "maxPlayers", "minPlaytime", "maxPlaytime", "rating", "minAge", "categories", "mechanics", "isExpansion", "availableImages", "selectedThumbnail", "componentImages", "createdAt", "updatedAt")
-SELECT "id", "name", "yearPublished", "lastScraped", "image", "thumbnail", "description", "minPlayers", "maxPlayers", "minPlaytime", "maxPlaytime", "rating", "minAge", "categories", "mechanics", "isExpansion", "availableImages", "selectedThumbnail", "componentImages", "createdAt", "updatedAt" FROM "Game";
-DROP TABLE "Game";
+INSERT OR REPLACE INTO "new_Game" ("id", "name", "yearPublished", "lastScraped", "image", "thumbnail", "description", "minPlayers", "maxPlayers", "minPlaytime", "maxPlaytime", "rating", "minAge", "categories", "mechanics", "isExpansion", "availableImages", "selectedThumbnail", "componentImages", "createdAt", "updatedAt")
+SELECT "id", "name", "yearPublished", "lastScraped", "image", "thumbnail", "description", "minPlayers", "maxPlayers", "minPlaytime", "maxPlaytime", "rating", "minAge", "categories", "mechanics", "isExpansion", "availableImages", "selectedThumbnail", "componentImages", "createdAt", "updatedAt" FROM "Game" WHERE true;
+DROP TABLE IF EXISTS "Game";
 ALTER TABLE "new_Game" RENAME TO "Game";
 PRAGMA foreign_keys=ON;
 PRAGMA defer_foreign_keys=OFF;
