@@ -44,6 +44,28 @@ model Game {
   // Collections this game belongs to
   collections     CollectionGame[]
   plays           GamePlay[]
+
+  // Game relationships (expansions, requirements)
+  relationshipsFrom  GameRelationship[] @relation("GameRelationshipsFrom")
+  relationshipsTo    GameRelationship[] @relation("GameRelationshipsTo")
+}
+
+// Game relationships - links games via "expands" or "requires" relationships
+// - "expands": fromGame is an expansion that can be played with toGame (base game)
+// - "requires": fromGame requires toGame to play (could be base game or another expansion)
+model GameRelationship {
+  id          String   @id @default(cuid())
+  fromGameId  String   // The expansion/dependent game
+  toGameId    String   // The base/required game
+  type        String   // "expands" | "requires"
+
+  fromGame    Game     @relation("GameRelationshipsFrom", fields: [fromGameId], references: [id], onDelete: Cascade)
+  toGame      Game     @relation("GameRelationshipsTo", fields: [toGameId], references: [id], onDelete: Cascade)
+
+  @@unique([fromGameId, toGameId, type])
+  @@index([fromGameId])
+  @@index([toGameId])
+  @@index([type])
 }
 
 model SyncLog {

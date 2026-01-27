@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSyncedState } from "@/lib/hooks";
 import {
@@ -17,6 +18,9 @@ import {
   Trophy,
   Pencil,
   Trash2,
+  AlertTriangle,
+  Puzzle,
+  ChevronRight,
 } from "lucide-react";
 import type { GameData, ManualListSummary } from "@/lib/games";
 import type { GamePlayData } from "@/types/play";
@@ -448,6 +452,159 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                   <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
                     {game.description}
                   </p>
+                </div>
+              )}
+
+              {/* Works With Section - For expansions, show compatible base games */}
+              {game.isExpansion && game.expandsGames.length > 0 && (
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3 flex items-center gap-2">
+                    <Puzzle className="size-4" />
+                    Works with {game.expandsGames.length > 1 ? `(${game.expandsGames.length} games)` : ""}
+                  </h2>
+                  <div className="space-y-2">
+                    {game.expandsGames.map((baseGame) => (
+                      <Link
+                        key={baseGame.id}
+                        href={`/game/${baseGame.id}`}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all group"
+                      >
+                        {baseGame.thumbnail ? (
+                          <div className="w-12 h-12 rounded-lg overflow-hidden relative flex-shrink-0">
+                            <Image
+                              src={baseGame.thumbnail}
+                              alt={baseGame.name}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                            <Dice6 className="size-6 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-foreground group-hover:text-primary transition-colors truncate block">
+                            {baseGame.name}
+                          </span>
+                          {!baseGame.inCollection && (
+                            <span className="flex items-center gap-1 text-xs text-amber-500 mt-0.5">
+                              <AlertTriangle className="size-3" />
+                              Not in your collection
+                            </span>
+                          )}
+                        </div>
+                        <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Required Games Section - For expansions that need other games */}
+              {game.requiredGames.length > 0 && (
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3 flex items-center gap-2">
+                    <AlertTriangle className="size-4 text-amber-500" />
+                    Requires ({game.requiredGames.length})
+                  </h2>
+                  <div className="space-y-2">
+                    {game.requiredGames.map((required) => (
+                      <Link
+                        key={required.id}
+                        href={`/game/${required.id}`}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-lg border transition-all group",
+                          required.inCollection
+                            ? "border-border bg-muted/30 hover:bg-muted/50 hover:border-primary/50"
+                            : "border-red-500/30 bg-red-500/10 hover:bg-red-500/20"
+                        )}
+                      >
+                        {required.thumbnail ? (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0">
+                            <Image
+                              src={required.thumbnail}
+                              alt={required.name}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                            <Dice6 className="size-4 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate block">
+                            {required.name}
+                          </span>
+                          {!required.inCollection && (
+                            <span className="flex items-center gap-1 text-xs text-red-500 mt-0.5">
+                              <AlertTriangle className="size-3" />
+                              Missing from collection
+                            </span>
+                          )}
+                        </div>
+                        <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Warning for expansions without any base game info */}
+              {game.isExpansion && game.expandsGames.length === 0 && (
+                <div className="mb-6 sm:mb-8">
+                  <div className="flex items-center gap-2 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-500 text-sm">
+                    <AlertTriangle className="size-4 flex-shrink-0" />
+                    <span>Base game information not yet available. Try re-scraping this game.</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Expansions Section - For base games, show expansions that work with this game */}
+              {!game.isExpansion && game.expansions.length > 0 && (
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3 flex items-center gap-2">
+                    <Puzzle className="size-4" />
+                    Expansions ({game.expansions.length})
+                  </h2>
+                  <div className="space-y-2">
+                    {game.expansions.map((expansion) => (
+                      <Link
+                        key={expansion.id}
+                        href={`/game/${expansion.id}`}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all group"
+                      >
+                        {expansion.thumbnail ? (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0">
+                            <Image
+                              src={expansion.thumbnail}
+                              alt={expansion.name}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                            <Puzzle className="size-4 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate block">
+                            {expansion.name}
+                          </span>
+                          {expansion.inCollection && (
+                            <span className="text-xs text-emerald-500 mt-0.5">In collection</span>
+                          )}
+                        </div>
+                        <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
 

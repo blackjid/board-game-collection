@@ -28,6 +28,9 @@ import {
   XCircle,
   Square,
   Share2,
+  Layers,
+  Puzzle,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -65,7 +68,8 @@ import { GameRowItem } from "@/components/GameRowItem";
 import { GameTable, SortField, SortDirection } from "@/components/GameTable";
 import { EditListDialog, DeleteListDialog, DuplicateListDialog, ShareListDialog } from "@/components/ListDialogs";
 import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
-import type { GameData } from "@/lib/games";
+import type { GameData, GameGroup } from "@/lib/games";
+import { groupGamesByBaseGame } from "@/lib/games";
 import { saveUIPreference } from "@/lib/cookies";
 
 type SortOption = "default" | "name" | "year" | "rating";
@@ -321,6 +325,9 @@ export function HomeClient({
   const isAutomaticList = selectedCollection?.type === "automatic";
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Grouped view state - shows expansions nested under base games
+  const [isGroupedView, setIsGroupedView] = useState(false);
 
   // Set default sort for automatic lists on mount
   useEffect(() => {
@@ -504,6 +511,12 @@ export function HomeClient({
       }
     });
   }, [games, sortBy, searchQuery, viewMode, tableSortField, tableSortDirection]);
+
+  // Group games by base game for grouped view
+  const groupedGames = useMemo((): GameGroup[] => {
+    if (!isGroupedView) return [];
+    return groupGamesByBaseGame(filteredAndSortedGames);
+  }, [filteredAndSortedGames, isGroupedView]);
 
   // ============================================================================
   // Handlers
@@ -1008,6 +1021,22 @@ export function HomeClient({
                 </Button>
               </div>
 
+              {/* Grouped view toggle - only for card/list views */}
+              {viewMode !== "table" && (
+                <Button
+                  variant={isGroupedView ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setIsGroupedView(!isGroupedView)}
+                  title={isGroupedView ? "Show flat list" : "Group by base game"}
+                  className="gap-1.5"
+                >
+                  <Layers className="size-4" />
+                  <span className="hidden sm:inline text-xs">
+                    {isGroupedView ? "Grouped" : "Group"}
+                  </span>
+                </Button>
+              )}
+
               {/* Sort Dropdown - only for card/list views, hidden for automatic lists */}
               {viewMode !== "table" && !isAutomaticList && (
                 <div className="flex items-center gap-1.5">
@@ -1169,53 +1198,212 @@ export function HomeClient({
                 }
               }
             `}</style>
-            <div className="game-grid-custom grid gap-3 sm:gap-4 grid-cols-2 print:grid-cols-6 print:gap-2">
-              {filteredAndSortedGames.map((game) => (
-                <div key={game.id} className="relative">
-                  {/* Selection checkbox for admin */}
-                  {isAdmin && (
-                    <div
-                      className="absolute top-2 left-2 z-20"
-                      onClick={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                    >
-                      <Checkbox
-                        checked={selectedGameIds.has(game.id)}
-                        onCheckedChange={() => toggleGameSelection(game.id)}
-                        className="bg-background/80 backdrop-blur-sm"
-                      />
+            {isGroupedView ? (
+              // Grouped view - show base games with their expansions nested
+              <div className="space-y-6">
+                {groupedGames.map((group) => (
+                  <div key={group.baseGame.id} className="space-y-3">
+                    {/* Base game or orphaned expansion header */}
+                    <div className="flex items-center gap-2">
+                      {group.isOrphanedExpansion ? (
+                        <div className="flex items-center gap-2 text-amber-500">
+                          <AlertTriangle className="size-4" />
+                          <span className="text-sm font-medium">
+                            {group.missingRequirements.length > 0 
+                              ? `Requires: ${group.missingRequirements.join(", ")}`
+                              : "Expansion (base game not in collection)"}
+                          </span>
+                        </div>
+                      ) : group.expansions.length > 0 ? (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Puzzle className="size-4" />
+                          <span className="text-sm font-medium">
+                            {group.expansions.length} expansion{group.expansions.length !== 1 ? "s" : ""} in collection
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
-                  )}
-                  <GameCard game={game} />
-                </div>
-              ))}
-            </div>
+                    
+                    {/* Base game card */}
+                    <div className="game-grid-custom grid gap-3 sm:gap-4 grid-cols-2 print:grid-cols-6 print:gap-2">
+                      <div className="relative">
+                        {isAdmin && (
+                          <div
+                            className="absolute top-2 left-2 z-20"
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedGameIds.has(group.baseGame.id)}
+                              onCheckedChange={() => toggleGameSelection(group.baseGame.id)}
+                              className="bg-background/80 backdrop-blur-sm"
+                            />
+                          </div>
+                        )}
+                        <GameCard game={group.baseGame} />
+                      </div>
+                    </div>
+
+                    {/* Expansion cards - indented */}
+                    {group.expansions.length > 0 && (
+                      <div className="ml-6 border-l-2 border-purple-500/30 pl-4">
+                        <div className="game-grid-custom grid gap-3 sm:gap-4 grid-cols-2 print:grid-cols-6 print:gap-2">
+                          {group.expansions.map((expansion) => (
+                            <div key={expansion.id} className="relative">
+                              {isAdmin && (
+                                <div
+                                  className="absolute top-2 left-2 z-20"
+                                  onClick={(e) => e.stopPropagation()}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                >
+                                  <Checkbox
+                                    checked={selectedGameIds.has(expansion.id)}
+                                    onCheckedChange={() => toggleGameSelection(expansion.id)}
+                                    className="bg-background/80 backdrop-blur-sm"
+                                  />
+                                </div>
+                              )}
+                              <GameCard game={expansion} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Flat view - original grid
+              <div className="game-grid-custom grid gap-3 sm:gap-4 grid-cols-2 print:grid-cols-6 print:gap-2">
+                {filteredAndSortedGames.map((game) => (
+                  <div key={game.id} className="relative">
+                    {/* Selection checkbox for admin */}
+                    {isAdmin && (
+                      <div
+                        className="absolute top-2 left-2 z-20"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={selectedGameIds.has(game.id)}
+                          onCheckedChange={() => toggleGameSelection(game.id)}
+                          className="bg-background/80 backdrop-blur-sm"
+                        />
+                      </div>
+                    )}
+                    <GameCard game={game} />
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         ) : viewMode === "list" ? (
           // List View (compact rows)
-          <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-            {filteredAndSortedGames.map((game) => (
-              <GameRowItem
-                key={game.id}
-                game={game}
-                isAdmin={isAdmin}
-                isSelected={selectedGameIds.has(game.id)}
-                onSelect={toggleGameSelection}
-                onToggleVisibility={handleToggleVisibility}
-                onScrape={handleScrape}
-                onEditImages={setSelectedGameForImages}
-                onAddToList={(id) => openAddToListDialog([id])}
-                onRemoveFromList={handleRemoveFromList}
-                isScraping={scrapingIds.has(game.id)}
-                isInQueue={queuedIds.has(game.id)}
-                isPending={queueStatus?.recentJobs.some(
-                  (j) => j.gameId === game.id && j.status === "pending"
-                )}
-                showRemoveFromList={!!isViewingList}
-                hasManualLists={hasManualLists}
-              />
-            ))}
-          </div>
+          isGroupedView ? (
+            // Grouped list view
+            <div className="space-y-4">
+              {groupedGames.map((group) => (
+                <div key={group.baseGame.id} className="space-y-1">
+                  {/* Group header */}
+                  {(group.isOrphanedExpansion || group.expansions.length > 0) && (
+                    <div className="flex items-center gap-2 px-3 py-1">
+                      {group.isOrphanedExpansion ? (
+                        <div className="flex items-center gap-2 text-amber-500 text-xs">
+                          <AlertTriangle className="size-3" />
+                          <span>
+                            {group.missingRequirements.length > 0 
+                              ? `Requires: ${group.missingRequirements.slice(0, 2).join(", ")}${group.missingRequirements.length > 2 ? "..." : ""}`
+                              : "Base game not in collection"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                          <Puzzle className="size-3" />
+                          <span>{group.expansions.length} expansion{group.expansions.length !== 1 ? "s" : ""}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Base game */}
+                  <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+                    <GameRowItem
+                      game={group.baseGame}
+                      isAdmin={isAdmin}
+                      isSelected={selectedGameIds.has(group.baseGame.id)}
+                      onSelect={toggleGameSelection}
+                      onToggleVisibility={handleToggleVisibility}
+                      onScrape={handleScrape}
+                      onEditImages={setSelectedGameForImages}
+                      onAddToList={(id) => openAddToListDialog([id])}
+                      onRemoveFromList={handleRemoveFromList}
+                      isScraping={scrapingIds.has(group.baseGame.id)}
+                      isInQueue={queuedIds.has(group.baseGame.id)}
+                      isPending={queueStatus?.recentJobs.some(
+                        (j) => j.gameId === group.baseGame.id && j.status === "pending"
+                      )}
+                      showRemoveFromList={!!isViewingList}
+                      hasManualLists={hasManualLists}
+                    />
+                  </div>
+
+                  {/* Expansions - indented */}
+                  {group.expansions.length > 0 && (
+                    <div className="ml-6 border-l-2 border-purple-500/30 pl-4">
+                      <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+                        {group.expansions.map((expansion) => (
+                          <GameRowItem
+                            key={expansion.id}
+                            game={expansion}
+                            isAdmin={isAdmin}
+                            isSelected={selectedGameIds.has(expansion.id)}
+                            onSelect={toggleGameSelection}
+                            onToggleVisibility={handleToggleVisibility}
+                            onScrape={handleScrape}
+                            onEditImages={setSelectedGameForImages}
+                            onAddToList={(id) => openAddToListDialog([id])}
+                            onRemoveFromList={handleRemoveFromList}
+                            isScraping={scrapingIds.has(expansion.id)}
+                            isInQueue={queuedIds.has(expansion.id)}
+                            isPending={queueStatus?.recentJobs.some(
+                              (j) => j.gameId === expansion.id && j.status === "pending"
+                            )}
+                            showRemoveFromList={!!isViewingList}
+                            hasManualLists={hasManualLists}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Flat list view
+            <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+              {filteredAndSortedGames.map((game) => (
+                <GameRowItem
+                  key={game.id}
+                  game={game}
+                  isAdmin={isAdmin}
+                  isSelected={selectedGameIds.has(game.id)}
+                  onSelect={toggleGameSelection}
+                  onToggleVisibility={handleToggleVisibility}
+                  onScrape={handleScrape}
+                  onEditImages={setSelectedGameForImages}
+                  onAddToList={(id) => openAddToListDialog([id])}
+                  onRemoveFromList={handleRemoveFromList}
+                  isScraping={scrapingIds.has(game.id)}
+                  isInQueue={queuedIds.has(game.id)}
+                  isPending={queueStatus?.recentJobs.some(
+                    (j) => j.gameId === game.id && j.status === "pending"
+                  )}
+                  showRemoveFromList={!!isViewingList}
+                  hasManualLists={hasManualLists}
+                />
+              ))}
+            </div>
+          )
         ) : (
           // Table View - no container styling, full width
           <GameTable

@@ -52,6 +52,7 @@ describe("Game [id] API Route", () => {
     categories: '["Card Game", "Animals"]',
     mechanics: '["Hand Management"]',
     isExpansion: false,
+    baseGameId: null,
     lastScraped: new Date(),
     availableImages: '["img1.jpg"]',
     componentImages: '["comp1.jpg"]',

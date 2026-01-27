@@ -30,6 +30,11 @@ describe("GameCard", () => {
     isExpansion: false,
     availableImages: [],
     componentImages: [],
+    lastScraped: "2024-01-01T00:00:00Z",
+    expandsGames: [],
+    requiredGames: [],
+    expansions: [],
+    requiredBy: [],
   };
 
   it("should render game name", () => {
@@ -168,6 +173,11 @@ describe("GameCard rating colors", () => {
     isExpansion: false,
     availableImages: [],
     componentImages: [],
+    lastScraped: "2024-01-01T00:00:00Z",
+    expandsGames: [],
+    requiredGames: [],
+    expansions: [],
+    requiredBy: [],
   });
 
   it("should render low rating (below 6) with reddish color", () => {

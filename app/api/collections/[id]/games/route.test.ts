@@ -50,6 +50,7 @@ describe("/api/collections/[id]/games", () => {
         name: gameName,
         yearPublished: 2023,
         isExpansion: false,
+        baseGameId: null,
         rating: null,
         description: null,
         image: null,
@@ -104,6 +105,7 @@ describe("/api/collections/[id]/games", () => {
           name: gameName,
           yearPublished: 2023,
           isExpansion: false,
+        baseGameId: null,
           rating: null,
           description: null,
           image: null,
@@ -150,6 +152,7 @@ describe("/api/collections/[id]/games", () => {
           name: gameName,
           yearPublished: 2023,
           isExpansion: false,
+        baseGameId: null,
         }),
       });
 
@@ -219,6 +222,7 @@ describe("/api/collections/[id]/games", () => {
         name: gameName,
         yearPublished: 2024,
         isExpansion: false,
+        baseGameId: null,
         rating: null,
         description: null,
         image: null,
@@ -250,6 +254,7 @@ describe("/api/collections/[id]/games", () => {
           name: gameName,
           yearPublished: 2024,
           isExpansion: false,
+        baseGameId: null,
           rating: null,
           description: null,
           image: null,
@@ -296,6 +301,7 @@ describe("/api/collections/[id]/games", () => {
           name: gameName,
           yearPublished: 2024,
           isExpansion: false,
+        baseGameId: null,
         }),
       });
 

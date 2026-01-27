@@ -33,12 +33,17 @@ vi.mock("@/lib/prisma", () => ({
     syncLog: {
       findFirst: vi.fn(),
     },
+    gameRelationship: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
 describe("lib/games", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock for gameRelationship - return empty array
+    vi.mocked(prisma.gameRelationship.findMany).mockResolvedValue([]);
   });
 
   const mockDbGame = {
@@ -327,8 +332,11 @@ describe("lib/games", () => {
         collections: [
           { collection: { id: "col-1", name: "Primary", type: "bgg_sync" } },
         ],
+        relationshipsFrom: [],
+        relationshipsTo: [],
       };
       vi.mocked(prisma.game.findUnique).mockResolvedValue(mockGameWithCollections);
+      vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([]);
 
       const result = await getGameById("123");
 
@@ -339,6 +347,33 @@ describe("lib/games", () => {
             include: {
               collection: {
                 select: { id: true, name: true, type: true },
+              },
+            },
+          },
+          relationshipsFrom: {
+            include: {
+              toGame: {
+                select: {
+                  id: true,
+                  name: true,
+                  thumbnail: true,
+                  selectedThumbnail: true,
+                  image: true,
+                },
+              },
+            },
+          },
+          relationshipsTo: {
+            include: {
+              fromGame: {
+                select: {
+                  id: true,
+                  name: true,
+                  thumbnail: true,
+                  selectedThumbnail: true,
+                  image: true,
+                  lastScraped: true,
+                },
               },
             },
           },
@@ -409,6 +444,7 @@ describe("lib/games", () => {
         categories: [],
         mechanics: [],
         isExpansion: false,
+    baseGameId: null,
         availableImages: [],
         componentImages: [],
         lastScraped: null,
@@ -435,6 +471,7 @@ describe("lib/games", () => {
         categories: [],
         mechanics: [],
         isExpansion: false,
+    baseGameId: null,
         availableImages: [],
         componentImages: [],
         lastScraped: null,
@@ -461,6 +498,7 @@ describe("lib/games", () => {
         categories: [],
         mechanics: [],
         isExpansion: false,
+    baseGameId: null,
         availableImages: [],
         componentImages: [],
         lastScraped: null,
@@ -487,6 +525,7 @@ describe("lib/games", () => {
         categories: [],
         mechanics: [],
         isExpansion: false,
+    baseGameId: null,
         availableImages: [],
         componentImages: [],
         lastScraped: null,

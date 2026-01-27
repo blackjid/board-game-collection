@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Dice6, Users, Clock } from "lucide-react";
+import { Dice6, Users, Clock, AlertTriangle } from "lucide-react";
 import type { GameData } from "@/lib/games";
 
 import { Card } from "@/components/ui/card";
@@ -81,6 +81,15 @@ export function GameListItem({ game }: GameListItemProps) {
             <Badge className="absolute top-1 left-1 bg-purple-600 hover:bg-purple-600 text-white text-[8px] font-bold px-1 py-0.5 border-0">
               EXP
             </Badge>
+          )}
+          {/* Warning for expansions without any base game in collection */}
+          {game.isExpansion && game.expandsGames.length > 0 && !game.expandsGames.some(g => g.inCollection) && (
+            <div 
+              className="absolute bottom-1 left-1"
+              title={`Works with: ${game.expandsGames.map(g => g.name).join(", ")}`}
+            >
+              <AlertTriangle className="size-3 text-amber-500" />
+            </div>
           )}
         </div>
 

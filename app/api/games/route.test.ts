@@ -54,6 +54,7 @@ describe("Games API Route", () => {
         categories: '["Card Game", "Animals"]',
         mechanics: '["Hand Management", "Engine Building"]',
         isExpansion: false,
+        baseGameId: null,
         lastScraped: new Date(),
         availableImages: '["img1.jpg", "img2.jpg"]',
         componentImages: "[]",
@@ -77,6 +78,7 @@ describe("Games API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         lastScraped: null,
         availableImages: null,
         componentImages: null,
@@ -132,19 +134,32 @@ describe("Games API Route", () => {
     });
 
     it("should combine filters when both active=true and scraped=true", async () => {
+      // Mock collectionGame.findMany to return game IDs first
       vi.mocked(prisma.collectionGame.findMany).mockResolvedValue([
-        { gameId: "1", game: mockGames[0] },
+        { gameId: "1" },
       ] as never);
+      
+      // Mock game.findMany to return games with scraped filter
+      vi.mocked(prisma.game.findMany).mockResolvedValue([mockGames[0]]);
 
       const request = new NextRequest("http://localhost:3000/api/games?active=true&scraped=true");
       const response = await GET(request);
 
       expect(response.status).toBe(200);
+      // Should first query for game IDs in the primary collection
       expect(prisma.collectionGame.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             collectionId: "primary-collection-id",
-            game: { lastScraped: { not: null } },
+          }),
+        })
+      );
+      // Then should query games with scraped filter
+      expect(prisma.game.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: { in: ["1"] },
+            lastScraped: { not: null },
           }),
         })
       );

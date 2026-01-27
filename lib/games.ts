@@ -22,6 +22,21 @@ type CollectionGameWithGamePreview = CollectionGame & {
 // Game Data Types
 // ============================================================================
 
+// Game info for relationship references (base games, expansions, requirements)
+export interface GameRelationshipRef {
+  id: string;
+  name: string;
+  thumbnail: string | null;
+  inCollection: boolean; // True if this game is in any collection
+}
+
+// Deprecated: Use GameRelationshipRef instead
+export interface GameReference {
+  id: string;
+  name: string;
+  thumbnail: string | null;
+}
+
 export interface GameData {
   id: string;
   name: string;
@@ -44,6 +59,11 @@ export interface GameData {
   lastScraped: string | null;
   // Collections this game belongs to
   collections?: { id: string; name: string; type: string }[];
+  // Game relationships (many-to-many)
+  expandsGames: GameRelationshipRef[];    // Base games this expansion works with
+  requiredGames: GameRelationshipRef[];   // Games required to play this
+  expansions: GameRelationshipRef[];      // Expansions for this base game
+  requiredBy: GameRelationshipRef[];      // Games that require this
 }
 
 function parseJsonArray(json: string | null): string[] {
@@ -78,7 +98,81 @@ function transformGame(game: Awaited<ReturnType<typeof prisma.game.findFirst>>):
     availableImages: parseJsonArray(game.availableImages),
     componentImages: parseJsonArray(game.componentImages),
     lastScraped: game.lastScraped?.toISOString() ?? null,
+    // Relationships are populated separately when needed
+    expandsGames: [],
+    requiredGames: [],
+    expansions: [],
+    requiredBy: [],
   };
+}
+
+// ============================================================================
+// Relationship Population Helpers
+// ============================================================================
+
+/**
+ * Populate relationships for a list of games
+ * This is more efficient than fetching relationships for each game individually
+ */
+async function populateGameRelationships(games: GameData[]): Promise<void> {
+  if (games.length === 0) return;
+
+  const gameIds = games.map((g) => g.id);
+  const gameMap = new Map(games.map((g) => [g.id, g]));
+
+  // Fetch all "expands" relationships where these games are the "from" side
+  const expandsRelations = await prisma.gameRelationship.findMany({
+    where: {
+      fromGameId: { in: gameIds },
+      type: "expands",
+    },
+    include: {
+      toGame: {
+        select: {
+          id: true,
+          name: true,
+          thumbnail: true,
+          selectedThumbnail: true,
+          image: true,
+        },
+      },
+    },
+  });
+
+  // Check which related games are in any collection
+  const relatedGameIds = new Set<string>();
+  expandsRelations.forEach((r) => relatedGameIds.add(r.toGameId));
+
+  const gamesInCollections = new Set<string>();
+  if (relatedGameIds.size > 0) {
+    const memberships = await prisma.collectionGame.findMany({
+      where: { gameId: { in: Array.from(relatedGameIds) } },
+      select: { gameId: true },
+      distinct: ["gameId"],
+    });
+    memberships.forEach((m) => gamesInCollections.add(m.gameId));
+  }
+
+  // Populate the expandsGames for each game
+  for (const relation of expandsRelations) {
+    const game = gameMap.get(relation.fromGameId);
+    if (game) {
+      game.expandsGames.push({
+        id: relation.toGame.id,
+        name: relation.toGame.name,
+        thumbnail:
+          relation.toGame.selectedThumbnail ||
+          relation.toGame.thumbnail ||
+          relation.toGame.image,
+        inCollection: gamesInCollections.has(relation.toGame.id),
+      });
+    }
+  }
+
+  // Sort expandsGames by name for each game
+  for (const game of games) {
+    game.expandsGames.sort((a, b) => a.name.localeCompare(b.name));
+  }
 }
 
 // ============================================================================
@@ -141,7 +235,12 @@ export async function getActiveGames(): Promise<GameData[]> {
   }
 
   // Convert to array and sort by name
-  return Array.from(gameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  const result = Array.from(gameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  
+  // Populate relationships for grouping
+  await populateGameRelationships(result);
+  
+  return result;
 }
 
 export async function getGameById(id: string): Promise<GameData | null> {
@@ -152,6 +251,35 @@ export async function getGameById(id: string): Promise<GameData | null> {
         include: {
           collection: {
             select: { id: true, name: true, type: true },
+          },
+        },
+      },
+      // Get relationships where this game is the "from" side
+      relationshipsFrom: {
+        include: {
+          toGame: {
+            select: {
+              id: true,
+              name: true,
+              thumbnail: true,
+              selectedThumbnail: true,
+              image: true,
+            },
+          },
+        },
+      },
+      // Get relationships where this game is the "to" side
+      relationshipsTo: {
+        include: {
+          fromGame: {
+            select: {
+              id: true,
+              name: true,
+              thumbnail: true,
+              selectedThumbnail: true,
+              image: true,
+              lastScraped: true,
+            },
           },
         },
       },
@@ -167,6 +295,66 @@ export async function getGameById(id: string): Promise<GameData | null> {
       name: cg.collection.name,
       type: cg.collection.type,
     }));
+
+    // Get all related game IDs to check collection membership in one query
+    const relatedGameIds = new Set<string>();
+    game.relationshipsFrom.forEach((r) => relatedGameIds.add(r.toGameId));
+    game.relationshipsTo.forEach((r) => relatedGameIds.add(r.fromGameId));
+
+    // Check which related games are in any collection
+    const gamesInCollections = new Set<string>();
+    if (relatedGameIds.size > 0) {
+      const memberships = await prisma.collectionGame.findMany({
+        where: { gameId: { in: Array.from(relatedGameIds) } },
+        select: { gameId: true },
+        distinct: ["gameId"],
+      });
+      memberships.forEach((m) => gamesInCollections.add(m.gameId));
+    }
+
+    // Process "expands" relationships (this game expands those base games)
+    gameData.expandsGames = game.relationshipsFrom
+      .filter((r) => r.type === "expands")
+      .map((r) => ({
+        id: r.toGame.id,
+        name: r.toGame.name,
+        thumbnail: r.toGame.selectedThumbnail || r.toGame.thumbnail || r.toGame.image,
+        inCollection: gamesInCollections.has(r.toGame.id),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    // Process "requires" relationships (this game requires those games)
+    gameData.requiredGames = game.relationshipsFrom
+      .filter((r) => r.type === "requires")
+      .map((r) => ({
+        id: r.toGame.id,
+        name: r.toGame.name,
+        thumbnail: r.toGame.selectedThumbnail || r.toGame.thumbnail || r.toGame.image,
+        inCollection: gamesInCollections.has(r.toGame.id),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    // Process expansions (games that expand this one) - only scraped ones
+    gameData.expansions = game.relationshipsTo
+      .filter((r) => r.type === "expands" && r.fromGame.lastScraped !== null)
+      .map((r) => ({
+        id: r.fromGame.id,
+        name: r.fromGame.name,
+        thumbnail: r.fromGame.selectedThumbnail || r.fromGame.thumbnail || r.fromGame.image,
+        inCollection: gamesInCollections.has(r.fromGame.id),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    // Process "requiredBy" relationships (games that require this one) - only scraped ones
+    gameData.requiredBy = game.relationshipsTo
+      .filter((r) => r.type === "requires" && r.fromGame.lastScraped !== null)
+      .map((r) => ({
+        id: r.fromGame.id,
+        name: r.fromGame.name,
+        thumbnail: r.fromGame.selectedThumbnail || r.fromGame.thumbnail || r.fromGame.image,
+        inCollection: gamesInCollections.has(r.fromGame.id),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   return gameData;
@@ -195,6 +383,112 @@ export async function getGameCount(): Promise<{ total: number; active: number }>
 // Helper to get the display image (selectedThumbnail or fallback to image)
 export function getDisplayImage(game: GameData): string | null {
   return game.selectedThumbnail || game.image || game.thumbnail;
+}
+
+// ============================================================================
+// Game Grouping (for grouped expansion view)
+// ============================================================================
+
+/**
+ * Represents a game group for the grouped view
+ * - Base games have their expansions nested
+ * - Standalone games (no base game, no expansions) are shown individually
+ * - Orphaned expansions (base game not in collection) are grouped separately
+ */
+export interface GameGroup {
+  baseGame: GameData;
+  expansions: GameData[];
+  isOrphanedExpansion: boolean; // True if this is an expansion without its base game in collection
+  missingRequirements: string[]; // Names of required games not in collection
+}
+
+/**
+ * Groups games by their base game for the grouped view
+ * With many-to-many relationships, an expansion may appear under MULTIPLE base games.
+ * Returns an array of GameGroups sorted by base game name.
+ */
+export function groupGamesByBaseGame(games: GameData[]): GameGroup[] {
+  const gameMap = new Map<string, GameData>();
+  const baseGames: GameData[] = [];
+  const expansions: GameData[] = [];
+
+  // First pass: categorize games and build lookup map
+  for (const game of games) {
+    gameMap.set(game.id, game);
+    
+    if (game.isExpansion) {
+      expansions.push(game);
+    } else {
+      baseGames.push(game);
+    }
+  }
+
+  // Build a map of base game ID -> expansions that work with it
+  const baseGameExpansionsMap = new Map<string, GameData[]>();
+  const orphanedExpansions: GameData[] = [];
+  
+  for (const expansion of expansions) {
+    // Find which base games this expansion works with that are in the collection
+    const expandsGamesInCollection = expansion.expandsGames.filter(
+      (g) => gameMap.has(g.id)
+    );
+
+    if (expandsGamesInCollection.length > 0) {
+      // Group with ALL matching base games in collection
+      for (const baseGameRef of expandsGamesInCollection) {
+        if (!baseGameExpansionsMap.has(baseGameRef.id)) {
+          baseGameExpansionsMap.set(baseGameRef.id, []);
+        }
+        baseGameExpansionsMap.get(baseGameRef.id)!.push(expansion);
+      }
+    } else {
+      // No base game in collection - orphaned expansion
+      orphanedExpansions.push(expansion);
+    }
+  }
+
+  // Build the result groups
+  const groups: GameGroup[] = [];
+
+  // Add base games with their expansions
+  for (const baseGame of baseGames) {
+    const gameExpansions = baseGameExpansionsMap.get(baseGame.id) || [];
+    groups.push({
+      baseGame,
+      expansions: gameExpansions.sort((a, b) => a.name.localeCompare(b.name)),
+      isOrphanedExpansion: false,
+      missingRequirements: [],
+    });
+  }
+
+  // Add orphaned expansions as their own groups
+  for (const orphan of orphanedExpansions) {
+    // Calculate missing requirements for orphaned expansions
+    const missingRequirements = [
+      ...orphan.expandsGames.filter((g) => !g.inCollection).map((g) => g.name),
+      ...orphan.requiredGames.filter((g) => !g.inCollection).map((g) => g.name),
+    ];
+
+    groups.push({
+      baseGame: orphan,
+      expansions: [],
+      isOrphanedExpansion: true,
+      missingRequirements,
+    });
+  }
+
+  // Sort by base game name
+  groups.sort((a, b) => a.baseGame.name.localeCompare(b.baseGame.name));
+
+  return groups;
+}
+
+/**
+ * Gets the count of expansions in collection for a base game
+ */
+export function getExpansionCount(groups: GameGroup[], baseGameId: string): number {
+  const group = groups.find(g => g.baseGame.id === baseGameId);
+  return group?.expansions.length || 0;
 }
 
 // ============================================================================
