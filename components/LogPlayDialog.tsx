@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { PlayerInput } from "@/components/PlayerInput";
 import { LocationInput } from "@/components/LocationInput";
+import { ExpansionSelector, type ExpansionOption } from "@/components/ExpansionSelector";
 
 // ============================================================================
 // Types
@@ -35,6 +36,7 @@ interface LogPlayDialogProps {
   gameId: string;
   gameName: string;
   onPlayLogged?: () => void;
+  availableExpansions?: ExpansionOption[];
 }
 
 // ============================================================================
@@ -47,6 +49,7 @@ export function LogPlayDialog({
   gameId,
   gameName,
   onPlayLogged,
+  availableExpansions = [],
 }: LogPlayDialogProps) {
   const [players, setPlayers] = useState<Player[]>([
     { id: "1", name: "", playerId: null, isGuest: false, isWinner: false },
@@ -57,6 +60,7 @@ export function LogPlayDialog({
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [selectedExpansionIds, setSelectedExpansionIds] = useState<string[]>([]);
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -72,6 +76,7 @@ export function LogPlayDialog({
       setSavedLocationId(null);
       setDuration("");
       setNotes("");
+      setSelectedExpansionIds([]);
     }
   }, [open]);
 
@@ -167,6 +172,7 @@ export function LogPlayDialog({
           duration: duration ? parseInt(duration, 10) : undefined,
           notes: notes.trim() || undefined,
           players: playersWithIds,
+          expansionIds: selectedExpansionIds.length > 0 ? selectedExpansionIds : undefined,
         }),
       });
 
@@ -201,6 +207,18 @@ export function LogPlayDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Expansions Used - first after game title */}
+          {availableExpansions.length > 0 && (
+            <div className="space-y-2">
+              <ExpansionSelector
+                availableExpansions={availableExpansions}
+                selectedIds={selectedExpansionIds}
+                onChange={setSelectedExpansionIds}
+                defaultOpen={true}
+              />
+            </div>
+          )}
+
           {/* Players */}
           <div className="space-y-3">
             <Label className="text-base">Players *</Label>

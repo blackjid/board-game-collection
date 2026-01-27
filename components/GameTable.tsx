@@ -15,6 +15,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -435,9 +436,18 @@ export function GameTable({
                     {game.name}
                   </span>
                   {game.isExpansion && (
-                    <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 flex-shrink-0">
+                    <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 flex-shrink-0 bg-purple-600/20 text-purple-400 border-purple-500/30">
                       Exp
                     </Badge>
+                  )}
+                  {/* Warning for expansions without any base game in collection */}
+                  {game.isExpansion && game.expandsGames.length > 0 && !game.expandsGames.some(g => g.inCollection) && (
+                    <div 
+                      className="flex-shrink-0"
+                      title={`Works with: ${game.expandsGames.map(g => g.name).join(", ")}`}
+                    >
+                      <AlertTriangle className="size-3 text-amber-500" />
+                    </div>
                   )}
                 </div>
               </TableCell>

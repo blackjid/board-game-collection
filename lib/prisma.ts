@@ -1,11 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import path from "path";
-import { fileURLToPath } from "url";
-
-// Get __dirname equivalent in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Get database URL from environment variables
 // Priority: DATABASE_URL > DATA_PATH/games.db > local prisma/dev.db
@@ -16,9 +11,8 @@ const getDatabaseUrl = () => {
   if (process.env.DATA_PATH) {
     return `file:${process.env.DATA_PATH}/games.db`;
   }
-  // Default for local development - use absolute path based on this file's location
-  // This works regardless of process.cwd()
-  return `file:${path.resolve(__dirname, "..", "prisma", "dev.db")}`;
+  // Default for local development - use absolute path based on cwd
+  return `file:${path.resolve(process.cwd(), "prisma", "dev.db")}`;
 };
 
 // Create libSQL adapter

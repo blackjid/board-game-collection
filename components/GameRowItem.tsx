@@ -13,6 +13,7 @@ import {
   Trash2,
   ExternalLink,
   CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -284,9 +285,19 @@ export function GameRowItem({
             {game.name}
           </h4>
           {game.isExpansion && (
-            <Badge variant="secondary" className="text-[10px] sm:text-xs">
+            <Badge variant="secondary" className="text-[10px] sm:text-xs bg-purple-600/20 text-purple-400 border-purple-500/30">
               Exp
             </Badge>
+          )}
+          {/* Warning for expansions without any base game in collection */}
+          {game.isExpansion && game.expandsGames.length > 0 && !game.expandsGames.some(g => g.inCollection) && (
+            <div 
+              className="flex items-center gap-1 text-amber-500"
+              title={`Works with: ${game.expandsGames.map(g => g.name).join(", ")}`}
+            >
+              <AlertTriangle className="size-3" />
+              <span className="hidden sm:inline text-[10px]">Missing base</span>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">

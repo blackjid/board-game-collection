@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { enqueueScrape } from "@/lib/scrape-queue";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -31,19 +32,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ games: [] });
     }
 
-    const collectionGames = await prisma.collectionGame.findMany({
-      include: {
-        game: true,
-      },
+    // First get game IDs in the primary collection
+    const collectionGameIds = await prisma.collectionGame.findMany({
       where: {
         collectionId: primaryCollectionId,
-        ...(scrapedOnly ? { game: { lastScraped: { not: null } } } : {}),
       },
+      select: { gameId: true },
     });
+    const gameIds = collectionGameIds.map((cg) => cg.gameId);
 
-    games = collectionGames.map((cg) => cg.game).sort((a, b) => a.name.localeCompare(b.name));
+    // Then query games
+    games = await prisma.game.findMany({
+      where: {
+        id: { in: gameIds },
+        ...(scrapedOnly ? { lastScraped: { not: null } } : {}),
+      },
+      orderBy: { name: "asc" },
+    });
   } else {
-    const where: Record<string, unknown> = {};
+    const where: Prisma.GameWhereInput = {};
     if (scrapedOnly) {
       where.lastScraped = { not: null };
     }
@@ -53,15 +60,55 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // Fetch "expands" relationships for expansion games
+  const expansionGameIds = games.filter(g => g.isExpansion).map(g => g.id);
+  const expandsRelations = expansionGameIds.length > 0
+    ? await prisma.gameRelationship.findMany({
+        where: {
+          fromGameId: { in: expansionGameIds },
+          type: "expands",
+        },
+        include: {
+          toGame: {
+            select: { id: true, name: true, thumbnail: true, selectedThumbnail: true, image: true },
+          },
+        },
+      })
+    : [];
+
+  // Build a map of gameId -> array of base games it expands
+  const expandsGamesMap = new Map<string, typeof expandsRelations[number]["toGame"][]>();
+  for (const relation of expandsRelations) {
+    if (!expandsGamesMap.has(relation.fromGameId)) {
+      expandsGamesMap.set(relation.fromGameId, []);
+    }
+    expandsGamesMap.get(relation.fromGameId)!.push(relation.toGame);
+  }
+
   // Parse JSON fields for response
-  const parsedGames = games.map((game) => ({
-    ...game,
-    isActive: primaryGameIds.has(game.id), // Active if in primary collection
-    categories: game.categories ? JSON.parse(game.categories) : [],
-    mechanics: game.mechanics ? JSON.parse(game.mechanics) : [],
-    availableImages: game.availableImages ? JSON.parse(game.availableImages) : [],
-    componentImages: game.componentImages ? JSON.parse(game.componentImages) : [],
-  }));
+  const parsedGames = games.map((game) => {
+    // Get base games from map if this is an expansion
+    const baseGamesData = expandsGamesMap.get(game.id) || [];
+    const expandsGames = baseGamesData.map(bg => ({
+      id: bg.id,
+      name: bg.name,
+      thumbnail: bg.selectedThumbnail || bg.thumbnail || bg.image,
+      inCollection: primaryGameIds.has(bg.id),
+    }));
+
+    return {
+      ...game,
+      isActive: primaryGameIds.has(game.id), // Active if in primary collection
+      categories: game.categories ? JSON.parse(game.categories) : [],
+      mechanics: game.mechanics ? JSON.parse(game.mechanics) : [],
+      availableImages: game.availableImages ? JSON.parse(game.availableImages) : [],
+      componentImages: game.componentImages ? JSON.parse(game.componentImages) : [],
+      expandsGames,
+      requiredGames: [], // TODO: Populate when "requires" relationships are scraped
+      expansions: [],
+      requiredBy: [],
+    };
+  });
 
   return NextResponse.json({ games: parsedGames });
 }

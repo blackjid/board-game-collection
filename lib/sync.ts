@@ -386,6 +386,12 @@ async function fetchGalleryImagesFromAPI(gameId: string): Promise<string[]> {
   }
 }
 
+// BGG API link type for expansion relationships
+interface BggLink {
+  objectid: string;
+  name: string;
+}
+
 // Fetch extended game data from BGG's internal JSON API
 async function fetchExtendedDataFromAPI(gameId: string) {
   const result = {
@@ -399,6 +405,9 @@ async function fetchExtendedDataFromAPI(gameId: string) {
     maxPlayers: null as number | null,
     minPlaytime: null as number | null,
     maxPlaytime: null as number | null,
+    // Expansion relationships
+    baseGameIds: [] as string[], // For expansions: which base game(s) this expands
+    expansionIds: [] as string[], // For base games: list of expansion IDs
   };
 
   try {
@@ -437,6 +446,15 @@ async function fetchExtendedDataFromAPI(gameId: string) {
 
       const mechanics = item.links?.boardgamemechanic || [];
       result.mechanics = mechanics.map((m: { name: string }) => m.name);
+
+      // Extract expansion relationships
+      // For expansions: expandsboardgame contains the base game(s)
+      const expandsboardgame: BggLink[] = item.links?.expandsboardgame || [];
+      result.baseGameIds = expandsboardgame.map((e) => e.objectid);
+
+      // For base games: boardgameexpansion contains expansion IDs
+      const boardgameexpansion: BggLink[] = item.links?.boardgameexpansion || [];
+      result.expansionIds = boardgameexpansion.map((e) => e.objectid);
     }
 
     // Get rating from dynamic info (stats.average is the community rating)
@@ -533,6 +551,36 @@ export async function scrapeGame(gameId: string): Promise<boolean> {
         lastScraped: new Date(),
       },
     });
+
+    // Create expansion relationships (many-to-many)
+    if (extendedData.isExpansion && extendedData.baseGameIds.length > 0) {
+      // Clear old "expands" relationships for this game
+      await prisma.gameRelationship.deleteMany({
+        where: { fromGameId: gameId, type: "expands" },
+      });
+
+      // Create new relationships for ALL base games (not just ones in collection)
+      for (const baseGameId of extendedData.baseGameIds) {
+        // Check if the base game exists in our database
+        const baseGameExists = await prisma.game.findUnique({
+          where: { id: baseGameId },
+          select: { id: true },
+        });
+
+        if (baseGameExists) {
+          await prisma.gameRelationship.create({
+            data: {
+              fromGameId: gameId,
+              toGameId: baseGameId,
+              type: "expands",
+            },
+          });
+          console.log(`[Scrape] Linked expansion ${game.name} -> base game ${baseGameId}`);
+        } else {
+          console.log(`[Scrape] Base game ${baseGameId} not in database (skipping relationship)`);
+        }
+      }
+    }
 
     return true;
   } catch (error) {

@@ -40,6 +40,10 @@ const createMockGame = (overrides: Partial<GameData> = {}): GameData => ({
   componentImages: [],
   lastScraped: "2024-01-01T00:00:00Z",
   collections: [{ id: "col-1", name: "Primary", type: "bgg_sync" }],
+  expandsGames: [],
+  requiredGames: [],
+  expansions: [],
+  requiredBy: [],
   ...overrides,
 });
 

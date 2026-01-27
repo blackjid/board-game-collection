@@ -79,6 +79,11 @@ describe("HomeClient", () => {
     isExpansion: false,
     availableImages: [],
     componentImages: [],
+    lastScraped: "2024-01-01T00:00:00Z",
+    expandsGames: [],
+    requiredGames: [],
+    expansions: [],
+    requiredBy: [],
     ...overrides,
   });
 

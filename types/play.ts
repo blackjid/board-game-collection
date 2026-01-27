@@ -30,6 +30,12 @@ export interface GamePlayPlayer {
   isWinner: boolean;
 }
 
+export interface GamePlayExpansionUsed {
+  id: string;
+  name: string;
+  thumbnail: string | null;
+}
+
 export interface GamePlayData {
   id: string;
   gameId: string;
@@ -40,6 +46,7 @@ export interface GamePlayData {
   duration: number | null; // minutes
   notes: string | null;
   players: GamePlayPlayer[];
+  expansionsUsed: GamePlayExpansionUsed[];
   // Optional related data for GET responses
   game?: {
     id: string;
@@ -66,6 +73,7 @@ export interface CreateGamePlayInput {
     playerId?: string;
     isWinner?: boolean;
   }[];
+  expansionIds?: string[];
 }
 
 export interface UpdateGamePlayInput {
@@ -79,4 +87,5 @@ export interface UpdateGamePlayInput {
     playerId?: string;
     isWinner?: boolean;
   }[];
+  expansionIds?: string[];
 }

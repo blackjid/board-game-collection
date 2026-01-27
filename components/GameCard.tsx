@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Dice6 } from "lucide-react";
+import { Dice6, AlertTriangle } from "lucide-react";
 import type { GameData } from "@/lib/games";
 
 import { Card } from "@/components/ui/card";
@@ -105,6 +105,26 @@ export function GameCard({ game }: GameCardProps) {
                 </span>
               </div>
             </div>
+          )}
+
+          {/* Warning for expansions without any base game in collection */}
+          {game.isExpansion && game.expandsGames.length > 0 && !game.expandsGames.some(g => g.inCollection) && (
+            <div 
+              className="absolute bottom-2 left-2 z-20 print:hidden"
+              title={`Works with: ${game.expandsGames.map(g => g.name).join(", ")}`}
+            >
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/90 text-white text-[10px] font-medium shadow-md">
+                <AlertTriangle className="size-3" />
+                <span className="hidden sm:inline">Missing base</span>
+              </div>
+            </div>
+          )}
+
+          {/* Expansion badge - positioned top-right to avoid checkbox */}
+          {game.isExpansion && (
+            <Badge className="absolute top-2 right-2 z-20 bg-purple-600 hover:bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 border-0 print:hidden">
+              EXP
+            </Badge>
           )}
         </div>
 

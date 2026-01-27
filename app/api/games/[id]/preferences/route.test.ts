@@ -52,6 +52,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         
         lastScraped: null,
         availableImages: '["img1.jpg", "img2.jpg", "img3.jpg"]',
@@ -101,6 +102,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         
         lastScraped: null,
         availableImages: null,
@@ -191,6 +193,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         
         lastScraped: null,
         availableImages: null,
@@ -215,6 +218,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         
         lastScraped: null,
         availableImages: null,
@@ -267,6 +271,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         
         lastScraped: null,
         availableImages: null,
@@ -291,6 +296,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         
         lastScraped: null,
         availableImages: null,
@@ -342,6 +348,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         
         lastScraped: null,
         availableImages: null,
@@ -366,6 +373,7 @@ describe("Game Preferences API Route", () => {
         categories: null,
         mechanics: null,
         isExpansion: false,
+        baseGameId: null,
         
         lastScraped: null,
         availableImages: null,

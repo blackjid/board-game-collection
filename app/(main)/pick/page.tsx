@@ -9,6 +9,13 @@ import Link from "next/link";
 // TYPES
 // ============================================================================
 
+interface GameRelationshipRef {
+  id: string;
+  name: string;
+  thumbnail: string | null;
+  inCollection: boolean;
+}
+
 interface GameData {
   id: string;
   name: string;
@@ -26,6 +33,11 @@ interface GameData {
   mechanics: string[];
   componentImages: string[];
   availableImages: string[];
+  // Expansion relationships (many-to-many)
+  expandsGames: GameRelationshipRef[];
+  requiredGames: GameRelationshipRef[];
+  expansions: GameRelationshipRef[];
+  requiredBy: GameRelationshipRef[];
 }
 
 interface Filters {
@@ -326,10 +338,17 @@ function GameCardDisplay({ game, showDescription = false, swipeIndicators }: Gam
           </div>
         )}
 
-        {/* Expansion badge */}
+        {/* Expansion badge and base game indicator */}
         {game.isExpansion && (
-          <div className="absolute top-3 left-3 bg-purple-600 text-white px-2 py-0.5 rounded-full text-xs font-bold z-20">
-            Expansion
+          <div className="absolute top-3 left-3 z-20 flex flex-col gap-1">
+            <div className="bg-purple-600 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+              Expansion
+            </div>
+            {game.expandsGames.length > 0 && (
+              <div className="bg-stone-900/90 text-stone-300 px-2 py-0.5 rounded text-[10px] font-medium max-w-[180px] truncate">
+                Works with: {game.expandsGames.map(g => g.name).join(", ")}
+              </div>
+            )}
           </div>
         )}
       </div>

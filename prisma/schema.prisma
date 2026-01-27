@@ -44,6 +44,31 @@ model Game {
   // Collections this game belongs to
   collections     CollectionGame[]
   plays           GamePlay[]
+
+  // Game relationships (expansions, requirements)
+  relationshipsFrom  GameRelationship[] @relation("GameRelationshipsFrom")
+  relationshipsTo    GameRelationship[] @relation("GameRelationshipsTo")
+
+  // Expansions used in plays (when this game is used as an expansion)
+  usedInPlays     GamePlayExpansion[]
+}
+
+// Game relationships - links games via "expands" or "requires" relationships
+// - "expands": fromGame is an expansion that can be played with toGame (base game)
+// - "requires": fromGame requires toGame to play (could be base game or another expansion)
+model GameRelationship {
+  id          String   @id @default(cuid())
+  fromGameId  String   // The expansion/dependent game
+  toGameId    String   // The base/required game
+  type        String   // "expands" | "requires"
+
+  fromGame    Game     @relation("GameRelationshipsFrom", fields: [fromGameId], references: [id], onDelete: Cascade)
+  toGame      Game     @relation("GameRelationshipsTo", fields: [toGameId], references: [id], onDelete: Cascade)
+
+  @@unique([fromGameId, toGameId, type])
+  @@index([fromGameId])
+  @@index([toGameId])
+  @@index([type])
 }
 
 model SyncLog {
@@ -249,6 +274,7 @@ model GamePlay {
   loggedBy      User           @relation(fields: [loggedById], references: [id], onDelete: Cascade)
   savedLocation SavedLocation? @relation(fields: [savedLocationId], references: [id], onDelete: SetNull)
   players       GamePlayPlayer[]
+  expansionsUsed GamePlayExpansion[]
 
   @@index([gameId])
   @@index([loggedById])
@@ -269,4 +295,18 @@ model GamePlayPlayer {
 
   @@index([playId])
   @@index([playerId])
+}
+
+// Tracks which expansions were used in a game play
+model GamePlayExpansion {
+  id        String   @id @default(cuid())
+  playId    String
+  gameId    String   // The expansion game ID
+
+  play      GamePlay @relation(fields: [playId], references: [id], onDelete: Cascade)
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([playId, gameId])
+  @@index([playId])
+  @@index([gameId])
 }

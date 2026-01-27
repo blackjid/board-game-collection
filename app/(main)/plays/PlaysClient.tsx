@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import {
   Calendar,
   Plus,
   Dice6,
+  Package,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -100,12 +101,20 @@ function PlayCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <Link
-              href={`/game/${play.gameId}`}
-              className="font-semibold text-foreground hover:text-primary transition-colors"
-            >
-              {play.game?.name || "Unknown Game"}
-            </Link>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link
+                href={`/game/${play.gameId}`}
+                className="font-semibold text-foreground hover:text-primary transition-colors"
+              >
+                {play.game?.name || "Unknown Game"}
+              </Link>
+              {play.expansionsUsed && play.expansionsUsed.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded" title={play.expansionsUsed.map(e => e.name).join(", ")}>
+                  <Package className="size-3" />
+                  +{play.expansionsUsed.length} expansion{play.expansionsUsed.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
               <span className="flex items-center gap-1">
                 <Calendar className="size-3.5" />
@@ -191,6 +200,9 @@ export function PlaysClient({ plays: initialPlays, games, currentUser }: PlaysCl
   const router = useRouter();
   const [plays, setPlays] = useSyncedState(initialPlays);
   const [editingPlay, setEditingPlay] = useState<GamePlayData | null>(null);
+  const [editExpansions, setEditExpansions] = useState<
+    { id: string; name: string; thumbnail: string | null }[]
+  >([]);
   const [deletingPlay, setDeletingPlay] = useState<GamePlayData | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -200,21 +212,80 @@ export function PlaysClient({ plays: initialPlays, games, currentUser }: PlaysCl
     id: string;
     name: string;
   } | null>(null);
+  const [availableExpansions, setAvailableExpansions] = useState<
+    { id: string; name: string; thumbnail: string | null }[]
+  >([]);
   const [showLogPlayDialog, setShowLogPlayDialog] = useState(false);
+  const [loadingExpansions, setLoadingExpansions] = useState(false);
 
-  const handleGameSelect = (selectedGames: SelectedGame[]) => {
+  // Fetch expansions when editing a play
+  const handleEdit = useCallback(async (play: GamePlayData) => {
+    setEditingPlay(play);
+    
+    // Fetch game data to get expansions
+    if (play.game?.id) {
+      try {
+        const response = await fetch(`/api/games/${play.game.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const expansions = (data.game.expansions || [])
+            .filter((e: { inCollection: boolean }) => e.inCollection)
+            .map((e: { id: string; name: string; thumbnail: string | null }) => ({
+              id: e.id,
+              name: e.name,
+              thumbnail: e.thumbnail,
+            }));
+          setEditExpansions(expansions);
+        } else {
+          setEditExpansions([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch game expansions:", error);
+        setEditExpansions([]);
+      }
+    }
+  }, []);
+
+  const handleGameSelect = useCallback(async (selectedGames: SelectedGame[]) => {
     if (selectedGames.length > 0) {
       const game = selectedGames[0];
       setSelectedGame({
         id: game.id,
         name: game.name,
       });
+
+      // Fetch game data to get expansions
+      setLoadingExpansions(true);
+      try {
+        const response = await fetch(`/api/games/${game.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Filter to only expansions that are in collection
+          const expansions = (data.game.expansions || [])
+            .filter((e: { inCollection: boolean }) => e.inCollection)
+            .map((e: { id: string; name: string; thumbnail: string | null }) => ({
+              id: e.id,
+              name: e.name,
+              thumbnail: e.thumbnail,
+            }));
+          setAvailableExpansions(expansions);
+        } else {
+          setAvailableExpansions([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch game expansions:", error);
+        setAvailableExpansions([]);
+      } finally {
+        setLoadingExpansions(false);
+      }
+
       setShowLogPlayDialog(true);
     }
-  };
+  }, []);
 
   const handlePlayLogged = () => {
     setSelectedGame(null);
+    setAvailableExpansions([]);
     setShowLogPlayDialog(false);
     router.refresh();
   };
@@ -292,7 +363,7 @@ export function PlaysClient({ plays: initialPlays, games, currentUser }: PlaysCl
                 key={play.id}
                 play={play}
                 currentUser={currentUser}
-                onEdit={() => setEditingPlay(play)}
+                onEdit={() => handleEdit(play)}
                 onDelete={() => setDeletingPlay(play)}
               />
             ))}
@@ -304,9 +375,15 @@ export function PlaysClient({ plays: initialPlays, games, currentUser }: PlaysCl
       {editingPlay && (
         <EditPlayDialog
           open={!!editingPlay}
-          onOpenChange={(open) => !open && setEditingPlay(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingPlay(null);
+              setEditExpansions([]);
+            }
+          }}
           play={editingPlay}
           onPlayUpdated={handlePlayUpdated}
+          availableExpansions={editExpansions}
         />
       )}
 
@@ -349,18 +426,20 @@ export function PlaysClient({ plays: initialPlays, games, currentUser }: PlaysCl
       />
 
       {/* Log Play Dialog */}
-      {selectedGame && (
+      {selectedGame && !loadingExpansions && (
         <LogPlayDialog
           open={showLogPlayDialog}
           onOpenChange={(open) => {
             if (!open) {
               setShowLogPlayDialog(false);
               setSelectedGame(null);
+              setAvailableExpansions([]);
             }
           }}
           gameId={selectedGame.id}
           gameName={selectedGame.name}
           onPlayLogged={handlePlayLogged}
+          availableExpansions={availableExpansions}
         />
       )}
     </div>

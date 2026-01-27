@@ -30,6 +30,11 @@ describe("GameListItem", () => {
     isExpansion: false,
     availableImages: [],
     componentImages: [],
+    lastScraped: "2024-01-01T00:00:00Z",
+    expandsGames: [],
+    requiredGames: [],
+    expansions: [],
+    requiredBy: [],
   };
 
   it("should render game name", () => {

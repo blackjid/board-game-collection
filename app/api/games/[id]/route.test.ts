@@ -15,6 +15,7 @@ vi.mock("@/lib/prisma", () => ({
     collectionGame: {
       upsert: vi.fn(),
       deleteMany: vi.fn(),
+      findMany: vi.fn(),
     },
   },
 }));
@@ -52,6 +53,7 @@ describe("Game [id] API Route", () => {
     categories: '["Card Game", "Animals"]',
     mechanics: '["Hand Management"]',
     isExpansion: false,
+    baseGameId: null,
     lastScraped: new Date(),
     availableImages: '["img1.jpg"]',
     componentImages: '["comp1.jpg"]',
@@ -67,6 +69,7 @@ describe("Game [id] API Route", () => {
         },
       },
     ],
+    relationshipsTo: [],
   };
 
   // ============================================================================

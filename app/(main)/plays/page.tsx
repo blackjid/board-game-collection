@@ -18,12 +18,14 @@ export default async function PlaysPage() {
     getActiveGames(),
   ]);
 
-  // Simplify games for the selector
-  const gameOptions = games.map((g) => ({
-    id: g.id,
-    name: g.name,
-    thumbnail: g.thumbnail,
-  }));
+  // Simplify games for the selector - only include base games, not expansions
+  const gameOptions = games
+    .filter((g) => !g.isExpansion)
+    .map((g) => ({
+      id: g.id,
+      name: g.name,
+      thumbnail: g.thumbnail,
+    }));
 
   return (
     <PlaysClient
