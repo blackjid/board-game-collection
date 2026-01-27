@@ -202,3 +202,102 @@ describe("GameCard rating colors", () => {
     expect(style).toContain("rgb(");
   });
 });
+
+// Test expansion warning display
+describe("GameCard expansion warnings", () => {
+  const createExpansionGame = (expandsGames: { id: string; name: string; inCollection: boolean }[]): GameData => ({
+    id: "1",
+    name: "Test Expansion",
+    yearPublished: 2020,
+    image: "https://example.com/test.jpg",
+    thumbnail: null,
+    selectedThumbnail: null,
+    description: null,
+    minPlayers: null,
+    maxPlayers: null,
+    minPlaytime: null,
+    maxPlaytime: null,
+    rating: 7.5,
+    minAge: null,
+    categories: [],
+    mechanics: [],
+    isExpansion: true,
+    availableImages: [],
+    componentImages: [],
+    lastScraped: "2024-01-01T00:00:00Z",
+    expandsGames: expandsGames.map(g => ({ ...g, thumbnail: null })),
+    requiredGames: [],
+    expansions: [],
+    requiredBy: [],
+  });
+
+  it("should show warning when expansion has no base games in collection", () => {
+    const game = createExpansionGame([
+      { id: "99", name: "Missing Base Game", inCollection: false },
+    ]);
+    render(<GameCard game={game} />);
+
+    expect(screen.getByText("Missing base")).toBeInTheDocument();
+  });
+
+  it("should NOT show warning when expansion has at least one base game in collection", () => {
+    const game = createExpansionGame([
+      { id: "1", name: "Catan", inCollection: true },
+    ]);
+    render(<GameCard game={game} />);
+
+    expect(screen.queryByText("Missing base")).not.toBeInTheDocument();
+  });
+
+  it("should NOT show warning when expansion has ANY base game in collection (multi-base)", () => {
+    const game = createExpansionGame([
+      { id: "1", name: "TTR", inCollection: true },
+      { id: "2", name: "TTR Europe", inCollection: false },
+    ]);
+    render(<GameCard game={game} />);
+
+    // Should NOT show warning because TTR is in collection
+    expect(screen.queryByText("Missing base")).not.toBeInTheDocument();
+  });
+
+  it("should show warning when expansion has multiple base games but NONE in collection", () => {
+    const game = createExpansionGame([
+      { id: "1", name: "TTR", inCollection: false },
+      { id: "2", name: "TTR Europe", inCollection: false },
+    ]);
+    render(<GameCard game={game} />);
+
+    expect(screen.getByText("Missing base")).toBeInTheDocument();
+  });
+
+  it("should NOT show warning for base games (non-expansions)", () => {
+    const baseGame: GameData = {
+      id: "1",
+      name: "Catan",
+      yearPublished: 2020,
+      image: "https://example.com/test.jpg",
+      thumbnail: null,
+      selectedThumbnail: null,
+      description: null,
+      minPlayers: null,
+      maxPlayers: null,
+      minPlaytime: null,
+      maxPlaytime: null,
+      rating: 7.5,
+      minAge: null,
+      categories: [],
+      mechanics: [],
+      isExpansion: false,
+      availableImages: [],
+      componentImages: [],
+      lastScraped: "2024-01-01T00:00:00Z",
+      expandsGames: [],
+      requiredGames: [],
+      expansions: [],
+      requiredBy: [],
+    };
+    render(<GameCard game={baseGame} />);
+
+    expect(screen.queryByText("Missing base")).not.toBeInTheDocument();
+  });
+});

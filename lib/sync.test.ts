@@ -33,6 +33,11 @@ vi.mock("@/lib/prisma", () => ({
     syncLog: {
       create: vi.fn(),
     },
+    gameRelationship: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      deleteMany: vi.fn(),
+    },
   },
 }));
 
@@ -370,6 +375,144 @@ describe("lib/sync", () => {
           image: "http://example.com/image.jpg",
         })
       });
+    });
+
+    it("should create expansion relationships for expansions with base games in DB", async () => {
+      // This is an expansion game
+      vi.mocked(prisma.game.findUnique)
+        .mockResolvedValueOnce({
+          id: "456", name: "Catan: Seafarers", isExpansion: true
+        } as Awaited<ReturnType<typeof prisma.game.findUnique>>)
+        // Base game exists check
+        .mockResolvedValueOnce({ id: "123" } as Awaited<ReturnType<typeof prisma.game.findUnique>>);
+
+      // Mock playwright for main image
+      mocks.page.evaluate.mockResolvedValueOnce("http://example.com/expansion.jpg");
+
+      // Mock fetch - expansion with base game
+      const mockGeekItem = {
+        item: {
+          subtype: "boardgameexpansion",
+          description: "Expansion Description",
+          minplayers: "3",
+          maxplayers: "4",
+          links: {
+            boardgamecategory: [],
+            boardgamemechanic: [],
+            // This expansion expands base game 123
+            expandsboardgame: [{ objectid: "123", name: "Catan" }],
+          }
+        }
+      };
+
+      const mockDynamicInfo = { item: { stats: { average: "7.5" } } };
+      const mockGallery = { images: [] };
+
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce({ json: () => Promise.resolve(mockGeekItem) } as Response)
+        .mockResolvedValueOnce({ json: () => Promise.resolve(mockDynamicInfo) } as Response)
+        .mockResolvedValueOnce({ json: () => Promise.resolve(mockGallery) } as Response);
+
+      const success = await scrapeGame("456");
+
+      expect(success).toBe(true);
+      
+      // Should delete old relationships first
+      expect(prisma.gameRelationship.deleteMany).toHaveBeenCalledWith({
+        where: { fromGameId: "456", type: "expands" },
+      });
+      
+      // Should create new relationship
+      expect(prisma.gameRelationship.create).toHaveBeenCalledWith({
+        data: {
+          fromGameId: "456",
+          toGameId: "123",
+          type: "expands",
+        },
+      });
+    });
+
+    it("should create multiple expansion relationships for multi-base-game expansions", async () => {
+      // Expansion that works with multiple base games (like TTR UK & Pennsylvania)
+      vi.mocked(prisma.game.findUnique)
+        .mockResolvedValueOnce({
+          id: "789", name: "TTR: UK & Pennsylvania", isExpansion: true
+        } as Awaited<ReturnType<typeof prisma.game.findUnique>>)
+        // Both base games exist
+        .mockResolvedValueOnce({ id: "100" } as Awaited<ReturnType<typeof prisma.game.findUnique>>)
+        .mockResolvedValueOnce({ id: "200" } as Awaited<ReturnType<typeof prisma.game.findUnique>>);
+
+      mocks.page.evaluate.mockResolvedValueOnce("http://example.com/ttr.jpg");
+
+      const mockGeekItem = {
+        item: {
+          subtype: "boardgameexpansion",
+          description: "Works with TTR and TTR Europe",
+          links: {
+            boardgamecategory: [],
+            boardgamemechanic: [],
+            // Expands TWO base games
+            expandsboardgame: [
+              { objectid: "100", name: "Ticket to Ride" },
+              { objectid: "200", name: "Ticket to Ride: Europe" },
+            ],
+          }
+        }
+      };
+
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce({ json: () => Promise.resolve(mockGeekItem) } as Response)
+        .mockResolvedValueOnce({ json: () => Promise.resolve({ item: { stats: {} } }) } as Response)
+        .mockResolvedValueOnce({ json: () => Promise.resolve({ images: [] }) } as Response);
+
+      const success = await scrapeGame("789");
+
+      expect(success).toBe(true);
+      
+      // Should create relationships to BOTH base games
+      expect(prisma.gameRelationship.create).toHaveBeenCalledTimes(2);
+      expect(prisma.gameRelationship.create).toHaveBeenCalledWith({
+        data: { fromGameId: "789", toGameId: "100", type: "expands" },
+      });
+      expect(prisma.gameRelationship.create).toHaveBeenCalledWith({
+        data: { fromGameId: "789", toGameId: "200", type: "expands" },
+      });
+    });
+
+    it("should skip relationship creation for base games not in database", async () => {
+      vi.mocked(prisma.game.findUnique)
+        .mockResolvedValueOnce({
+          id: "456", name: "Some Expansion", isExpansion: true
+        } as Awaited<ReturnType<typeof prisma.game.findUnique>>)
+        // Base game does NOT exist in DB
+        .mockResolvedValueOnce(null);
+
+      mocks.page.evaluate.mockResolvedValueOnce("http://example.com/exp.jpg");
+
+      const mockGeekItem = {
+        item: {
+          subtype: "boardgameexpansion",
+          description: "Expansion for missing base game",
+          links: {
+            expandsboardgame: [{ objectid: "999", name: "Missing Base Game" }],
+          }
+        }
+      };
+
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce({ json: () => Promise.resolve(mockGeekItem) } as Response)
+        .mockResolvedValueOnce({ json: () => Promise.resolve({ item: { stats: {} } }) } as Response)
+        .mockResolvedValueOnce({ json: () => Promise.resolve({ images: [] }) } as Response);
+
+      const success = await scrapeGame("456");
+
+      expect(success).toBe(true);
+      
+      // Should still delete old relationships
+      expect(prisma.gameRelationship.deleteMany).toHaveBeenCalled();
+      
+      // But should NOT create new relationship since base game doesn't exist
+      expect(prisma.gameRelationship.create).not.toHaveBeenCalled();
     });
   });
 
