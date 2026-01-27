@@ -178,7 +178,25 @@ export function GameSelectorDialog({
     if (selectedIds.size === 0) return;
 
     const selectedGames = Array.from(selectedIds).map((gameId) => {
-      const game = collectionGames.find((g) => g.id === gameId);
+      // Try to find game in collection first
+      let game = collectionGames.find((g) => g.id === gameId);
+      let isFromBgg = false;
+
+      // If not found in collection, try BGG results
+      if (!game) {
+        const bggGame = bggResults.find((g) => g.id === gameId);
+        if (bggGame) {
+          game = {
+            id: bggGame.id,
+            name: bggGame.name,
+            yearPublished: bggGame.yearPublished,
+            thumbnail: bggGame.thumbnail,
+            isExpansion: bggGame.isExpansion,
+          };
+          isFromBgg = true;
+        }
+      }
+
       if (!game) return null;
 
       return {
@@ -187,7 +205,7 @@ export function GameSelectorDialog({
         yearPublished: game.yearPublished ?? null,
         thumbnail: game.selectedThumbnail || game.thumbnail || game.image || null,
         isExpansion: game.isExpansion ?? false,
-        isFromBgg: false,
+        isFromBgg,
       };
     }).filter((g): g is SelectedGame => g !== null);
 
@@ -214,8 +232,15 @@ export function GameSelectorDialog({
     }
   };
 
-  // Handle BGG game selection - ensure it exists in DB first
+  // Handle BGG game selection - ensure it exists in DB first (only when selecting, not deselecting)
   const handleBggSelect = async (game: BggSearchResult) => {
+    // If already selected, just toggle off (no API call needed)
+    if (selectedIds.has(game.id)) {
+      toggleSelection(game.id);
+      return;
+    }
+
+    // Selecting a new game - need to ensure it exists in DB
     setProcessingGameId(game.id);
     try {
       // Ensure game exists in database
@@ -250,7 +275,7 @@ export function GameSelectorDialog({
       if (mode === "single") {
         handleSingleSelect(gameData, true);
       } else {
-        // In multi mode, add to selection and mark as added
+        // In multi mode, add to selection
         toggleSelection(game.id);
       }
     } catch (error) {
@@ -297,7 +322,7 @@ export function GameSelectorDialog({
           {/* From Collection Tab */}
           <TabsContent value="collection" className="flex-1 flex flex-col min-h-0 mt-4">
             {/* Filter input */}
-            <div className="relative mb-3">
+            <div className="relative mb-3 flex-shrink-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 placeholder="Filter collection..."
@@ -308,7 +333,7 @@ export function GameSelectorDialog({
             </div>
 
             {/* Games grid/list */}
-            <ScrollArea className="flex-1 border rounded-lg min-h-[300px]">
+            <ScrollArea className="flex-1 border rounded-lg min-h-0">
               {collectionLoading ? (
                 <div className="flex items-center justify-center h-[300px]">
                   <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -449,7 +474,7 @@ export function GameSelectorDialog({
 
             {/* Footer for multi-select mode */}
             {mode === "multi" && (
-              <div className="flex items-center justify-between mt-3 pt-3 border-t">
+              <div className="flex items-center justify-between mt-3 pt-3 border-t flex-shrink-0">
                 <span className="text-sm text-muted-foreground">
                   {selectedIds.size > 0
                     ? `${selectedIds.size} game${selectedIds.size !== 1 ? "s" : ""} selected`
@@ -475,7 +500,7 @@ export function GameSelectorDialog({
           {/* Search BGG Tab */}
           <TabsContent value="bgg" className="flex-1 flex flex-col min-h-0 mt-4">
             {/* Search input */}
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-2 mb-3 flex-shrink-0">
               <Input
                 placeholder="Search BoardGameGeek..."
                 value={bggQuery}
@@ -496,18 +521,19 @@ export function GameSelectorDialog({
             </div>
 
             {/* Results list */}
-            <ScrollArea className="flex-1 border rounded-lg min-h-[300px]">
-              {bggResults.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
-                  <Search className="size-10 mb-2" />
-                  <p className="text-sm">
-                    {bggSearching
-                      ? "Searching..."
-                      : "Search for games to add"}
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
+            <ScrollArea className="flex-1 border rounded-lg min-h-0">
+              <div className="w-full">
+                {bggResults.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                    <Search className="size-10 mb-2" />
+                    <p className="text-sm">
+                      {bggSearching
+                        ? "Searching..."
+                        : "Search for games to add"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
                   {bggResults.map((game) => {
                     const inExisting = isInExisting(game.id);
                     const isProcessing = processingGameId === game.id;
@@ -521,10 +547,10 @@ export function GameSelectorDialog({
                           type="button"
                           onClick={() => handleBggSelect(game)}
                           disabled={isProcessing}
-                          className="w-full p-3 flex items-center gap-3 hover:bg-muted transition-colors text-left disabled:opacity-50"
+                          className="w-full p-3 grid grid-cols-[48px_1fr_auto] items-center gap-3 hover:bg-muted transition-colors text-left disabled:opacity-50"
                         >
                           {/* Thumbnail */}
-                          <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
+                          <div className="w-12 h-12 rounded bg-muted overflow-hidden">
                             {game.thumbnail ? (
                               <Image
                                 src={game.thumbnail}
@@ -541,18 +567,18 @@ export function GameSelectorDialog({
                           </div>
 
                           {/* Info */}
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 overflow-hidden">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-sm truncate">
                                 {game.name}
                               </span>
                               {game.isExpansion && (
-                                <Badge variant="secondary" className="text-[10px]">
+                                <Badge variant="secondary" className="text-[10px] shrink-0">
                                   Exp
                                 </Badge>
                               )}
                               {game.isInMainCollection && (
-                                <Badge variant="outline" className="text-[10px]">
+                                <Badge variant="outline" className="text-[10px] shrink-0">
                                   Owned
                                 </Badge>
                               )}
@@ -565,24 +591,62 @@ export function GameSelectorDialog({
                           </div>
 
                           {/* Loading indicator */}
-                          {isProcessing && (
-                            <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                          )}
+                          <div>
+                            {isProcessing && (
+                              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                            )}
+                          </div>
                         </button>
                       );
                     }
 
-                    // Multi mode: div with add button
+                    // Multi mode: clickable row with checkbox
                     return (
                       <div
                         key={game.id}
+                        role="button"
+                        tabIndex={inExisting ? -1 : 0}
+                        aria-disabled={inExisting}
+                        onClick={() => {
+                          if (!inExisting && !isProcessing) {
+                            handleBggSelect(game);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            if (!inExisting && !isProcessing) {
+                              handleBggSelect(game);
+                            }
+                          }
+                        }}
                         className={cn(
-                          "p-3 flex items-center gap-3",
-                          inExisting && "opacity-50"
+                          "p-3 grid grid-cols-[auto_48px_1fr] items-center gap-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          inExisting
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer hover:bg-muted/50",
+                          selected && "bg-primary/10"
                         )}
                       >
+                        {/* Checkbox */}
+                        <div>
+                          {isProcessing ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : inExisting ? (
+                            <div className="size-5 rounded bg-emerald-500 flex items-center justify-center">
+                              <Check className="size-3 text-white" />
+                            </div>
+                          ) : (
+                            <Checkbox
+                              checked={selected}
+                              onCheckedChange={() => handleBggSelect(game)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          )}
+                        </div>
+
                         {/* Thumbnail */}
-                        <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
+                        <div className="w-12 h-12 rounded bg-muted overflow-hidden">
                           {game.thumbnail ? (
                             <Image
                               src={game.thumbnail}
@@ -599,18 +663,18 @@ export function GameSelectorDialog({
                         </div>
 
                         {/* Info */}
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 overflow-hidden">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm truncate">
                               {game.name}
                             </span>
                             {game.isExpansion && (
-                              <Badge variant="secondary" className="text-[10px]">
+                              <Badge variant="secondary" className="text-[10px] shrink-0">
                                 Exp
                               </Badge>
                             )}
                             {game.isInMainCollection && (
-                              <Badge variant="outline" className="text-[10px]">
+                              <Badge variant="outline" className="text-[10px] shrink-0">
                                 Owned
                               </Badge>
                             )}
@@ -621,44 +685,17 @@ export function GameSelectorDialog({
                             </span>
                           )}
                         </div>
-
-                        {/* Add button */}
-                        <div className="shrink-0">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={inExisting || selected ? "ghost" : "secondary"}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!inExisting) handleBggSelect(game);
-                            }}
-                            disabled={inExisting || isProcessing || selected}
-                          >
-                            {isProcessing ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : inExisting || selected ? (
-                              <>
-                                <Check className="size-4" />
-                                Added
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="size-4" />
-                                Add
-                              </>
-                            )}
-                          </Button>
-                        </div>
                       </div>
                     );
                   })}
                 </div>
               )}
+              </div>
             </ScrollArea>
 
             {/* Footer for single mode */}
             {mode === "single" && (
-              <DialogFooter className="mt-3 pt-3 border-t">
+              <DialogFooter className="mt-3 pt-3 border-t flex-shrink-0">
                 <Button variant="ghost" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
@@ -667,11 +704,26 @@ export function GameSelectorDialog({
 
             {/* Footer for multi mode */}
             {mode === "multi" && (
-              <DialogFooter className="mt-3 pt-3 border-t">
-                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Done
-                </Button>
-              </DialogFooter>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t flex-shrink-0">
+                <span className="text-sm text-muted-foreground">
+                  {selectedIds.size > 0
+                    ? `${selectedIds.size} game${selectedIds.size !== 1 ? "s" : ""} selected`
+                    : "Search and add games from BGG"}
+                </span>
+                <div className="flex gap-2">
+                  <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleMultiSelectConfirm}
+                    disabled={selectedIds.size === 0}
+                  >
+                    <Plus className="size-4 mr-2" />
+                    Add {selectedIds.size > 0 ? selectedIds.size : ""} Game
+                    {selectedIds.size !== 1 ? "s" : ""}
+                  </Button>
+                </div>
+              </div>
             )}
           </TabsContent>
         </Tabs>
