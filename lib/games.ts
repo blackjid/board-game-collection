@@ -902,6 +902,9 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
       });
     }
 
+    // Populate relationships for grouping
+    await populateGameRelationships(games);
+
     return {
       id: collection.id,
       name: collection.name,
@@ -958,6 +961,9 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
       game.collections = [];
     });
   }
+
+  // Populate relationships for grouping
+  await populateGameRelationships(games);
 
   return {
     id: collection.id,
@@ -1046,6 +1052,9 @@ export async function getCollectionBySlug(
       });
     }
 
+    // Populate relationships for grouping
+    await populateGameRelationships(games);
+
     return {
       id: collection.id,
       name: collection.name,
@@ -1102,6 +1111,9 @@ export async function getCollectionBySlug(
       game.collections = [];
     });
   }
+
+  // Populate relationships for grouping
+  await populateGameRelationships(games);
 
   return {
     id: collection.id,
