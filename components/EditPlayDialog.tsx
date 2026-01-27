@@ -214,6 +214,18 @@ export function EditPlayDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Expansions Used - first after game title */}
+          {availableExpansions.length > 0 && (
+            <div className="space-y-2">
+              <ExpansionSelector
+                availableExpansions={availableExpansions}
+                selectedIds={selectedExpansionIds}
+                onChange={setSelectedExpansionIds}
+                defaultOpen={true}
+              />
+            </div>
+          )}
+
           {/* Players */}
           <div className="space-y-3">
             <Label className="text-base">Players *</Label>
@@ -299,15 +311,6 @@ export function EditPlayDialog({
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
-
-          {/* Expansions Used */}
-          {availableExpansions.length > 0 && (
-            <ExpansionSelector
-              availableExpansions={availableExpansions}
-              selectedIds={selectedExpansionIds}
-              onChange={setSelectedExpansionIds}
-            />
-          )}
 
           {/* Location */}
           <div className="space-y-2">

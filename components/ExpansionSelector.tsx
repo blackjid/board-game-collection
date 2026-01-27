@@ -199,10 +199,9 @@ export function ExpansionSelector({
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          className="w-full justify-between px-0 hover:bg-transparent"
+          className="w-full flex items-center justify-between py-2 hover:opacity-80 transition-opacity"
         >
           <span className="flex items-center gap-2">
             <Package className="size-4 text-muted-foreground" />
@@ -219,7 +218,7 @@ export function ExpansionSelector({
               isOpen && "rotate-180"
             )}
           />
-        </Button>
+        </button>
       </CollapsibleTrigger>
       <CollapsibleContent className="pt-3">{content}</CollapsibleContent>
     </Collapsible>

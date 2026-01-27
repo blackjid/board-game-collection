@@ -19,12 +19,55 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           },
         },
       },
+      // Get expansions (games that expand this one)
+      relationshipsTo: {
+        where: { type: "expands" },
+        include: {
+          fromGame: {
+            select: {
+              id: true,
+              name: true,
+              thumbnail: true,
+              selectedThumbnail: true,
+              image: true,
+              lastScraped: true,
+            },
+          },
+        },
+      },
     },
   });
 
   if (!game) {
     return NextResponse.json({ error: "Game not found" }, { status: 404 });
   }
+
+  // Get expansion IDs that are scraped
+  const expansionIds = game.relationshipsTo
+    .filter((r) => r.fromGame.lastScraped !== null)
+    .map((r) => r.fromGame.id);
+
+  // Check which expansions are in a collection
+  const expansionsInCollection = new Set<string>();
+  if (expansionIds.length > 0) {
+    const memberships = await prisma.collectionGame.findMany({
+      where: { gameId: { in: expansionIds } },
+      select: { gameId: true },
+      distinct: ["gameId"],
+    });
+    memberships.forEach((m) => expansionsInCollection.add(m.gameId));
+  }
+
+  // Build expansions array with inCollection status
+  const expansions = game.relationshipsTo
+    .filter((r) => r.fromGame.lastScraped !== null)
+    .map((r) => ({
+      id: r.fromGame.id,
+      name: r.fromGame.name,
+      thumbnail: r.fromGame.selectedThumbnail || r.fromGame.thumbnail || r.fromGame.image,
+      inCollection: expansionsInCollection.has(r.fromGame.id),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // Parse JSON fields
   const parsedGame = {
@@ -40,6 +83,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       type: cg.collection.type,
       isPrimary: cg.collection.isPrimary,
     })),
+    expansions,
+    // Remove the raw relationshipsTo from response
+    relationshipsTo: undefined,
   };
 
   return NextResponse.json({ game: parsedGame });

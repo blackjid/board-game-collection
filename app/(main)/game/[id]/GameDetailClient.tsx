@@ -289,8 +289,8 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
         </DropdownMenu>
       )}
 
-      {/* Log Play / Let's Play Button */}
-      {isLoggedIn ? (
+      {/* Log Play / Let's Play Button - Only show for base games, not expansions */}
+      {isLoggedIn && !game.isExpansion ? (
         <Button
           onClick={() => setShowLogPlayDialog(true)}
           className="rounded-full font-bold gap-2 shadow-lg shadow-primary/20"
@@ -299,7 +299,7 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
           <span className="hidden sm:inline">Log Play</span>
           <Dice6 className="size-5" />
         </Button>
-      ) : (
+      ) : isLoggedIn && game.isExpansion ? null : (
         <Button
           onClick={() => {
             alert(`Tonight you're playing ${game.name}! 🎲`);

@@ -15,6 +15,7 @@ vi.mock("@/lib/prisma", () => ({
     collectionGame: {
       upsert: vi.fn(),
       deleteMany: vi.fn(),
+      findMany: vi.fn(),
     },
   },
 }));
@@ -68,6 +69,7 @@ describe("Game [id] API Route", () => {
         },
       },
     ],
+    relationshipsTo: [],
   };
 
   // ============================================================================
