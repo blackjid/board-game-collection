@@ -462,6 +462,8 @@ export function groupGamesByBaseGame(games: GameData[]): GameGroup[] {
   }
 
   // Add orphaned expansions as their own groups
+  // Note: orphaned expansions may have sub-expansions grouped under them
+  // (e.g., "Expansion 5-6 Player" expands "Expansion" which is orphaned)
   for (const orphan of orphanedExpansions) {
     // Calculate missing requirements for orphaned expansions
     const missingRequirements = [
@@ -469,9 +471,12 @@ export function groupGamesByBaseGame(games: GameData[]): GameGroup[] {
       ...orphan.requiredGames.filter((g) => !g.inCollection).map((g) => g.name),
     ];
 
+    // Check if this orphan has sub-expansions grouped under it
+    const subExpansions = baseGameExpansionsMap.get(orphan.id) || [];
+
     groups.push({
       baseGame: orphan,
-      expansions: [],
+      expansions: subExpansions.sort((a, b) => a.name.localeCompare(b.name)),
       isOrphanedExpansion: true,
       missingRequirements,
     });
