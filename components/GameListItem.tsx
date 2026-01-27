@@ -76,9 +76,9 @@ export function GameListItem({ game }: GameListItemProps) {
               <Dice6 className="size-8 text-muted-foreground" />
             </div>
           )}
-          {/* Expansion badge */}
+          {/* Expansion badge - positioned top-right to avoid checkbox */}
           {game.isExpansion && (
-            <Badge className="absolute top-1 left-1 bg-purple-600 hover:bg-purple-600 text-white text-[8px] font-bold px-1 py-0.5 border-0">
+            <Badge className="absolute top-1 right-1 bg-purple-600 hover:bg-purple-600 text-white text-[8px] font-bold px-1 py-0.5 border-0">
               EXP
             </Badge>
           )}
