@@ -47,6 +47,10 @@ vi.mock("@/lib/prisma", () => ({
     gamePlayPlayer: {
       deleteMany: vi.fn(),
     },
+    gamePlayExpansion: {
+      deleteMany: vi.fn(),
+      create: vi.fn(),
+    },
     collection: {
       findFirst: vi.fn(),
       findUnique: vi.fn(),

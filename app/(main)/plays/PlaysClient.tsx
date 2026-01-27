@@ -17,6 +17,7 @@ import {
   Calendar,
   Plus,
   Dice6,
+  Package,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -100,12 +101,20 @@ function PlayCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <Link
-              href={`/game/${play.gameId}`}
-              className="font-semibold text-foreground hover:text-primary transition-colors"
-            >
-              {play.game?.name || "Unknown Game"}
-            </Link>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link
+                href={`/game/${play.gameId}`}
+                className="font-semibold text-foreground hover:text-primary transition-colors"
+              >
+                {play.game?.name || "Unknown Game"}
+              </Link>
+              {play.expansionsUsed && play.expansionsUsed.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded" title={play.expansionsUsed.map(e => e.name).join(", ")}>
+                  <Package className="size-3" />
+                  +{play.expansionsUsed.length} expansion{play.expansionsUsed.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
               <span className="flex items-center gap-1">
                 <Calendar className="size-3.5" />

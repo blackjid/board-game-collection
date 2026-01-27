@@ -86,29 +86,32 @@ describe("lib/plays", () => {
       expect(result.game?.name).toBe("Test Game");
       expect(result.loggedBy?.name).toBe("Test User");
 
-      expect(prisma.gamePlay.create).toHaveBeenCalledWith({
-        data: {
-          gameId: "game1",
-          loggedById: "user1",
-          playedAt: new Date("2026-01-03T15:00:00Z"),
-          location: "Home",
-          savedLocationId: null,
-          duration: 90,
-          notes: "Great game",
-          players: {
-            create: [
-              { name: "Alice", playerId: null, isWinner: true },
-              { name: "Bob", playerId: null, isWinner: false },
-            ],
-          },
-        },
-        include: {
-          players: true,
-          game: { select: { id: true, name: true, thumbnail: true } },
-          loggedBy: { select: { id: true, name: true, email: true } },
-          savedLocation: true,
-        },
-      });
+      expect(prisma.gamePlay.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            gameId: "game1",
+            loggedById: "user1",
+            playedAt: new Date("2026-01-03T15:00:00Z"),
+            location: "Home",
+            savedLocationId: null,
+            duration: 90,
+            notes: "Great game",
+            players: {
+              create: [
+                { name: "Alice", playerId: null, isWinner: true },
+                { name: "Bob", playerId: null, isWinner: false },
+              ],
+            },
+          }),
+          include: expect.objectContaining({
+            players: true,
+            expansionsUsed: expect.any(Object),
+            game: { select: { id: true, name: true, thumbnail: true } },
+            loggedBy: { select: { id: true, name: true, email: true } },
+            savedLocation: true,
+          }),
+        })
+      );
     });
 
     it("should use defaults for optional fields", async () => {
@@ -147,6 +150,111 @@ describe("lib/plays", () => {
       expect(result.notes).toBeNull();
       expect(result.players[0].isWinner).toBe(false);
     });
+
+    it("should create a play with expansions used", async () => {
+      const mockPrismaPlay = {
+        id: "play1",
+        gameId: "game1",
+        loggedById: "user1",
+        playedAt: new Date("2026-01-03"),
+        location: "Home",
+        duration: 90,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        players: [
+          {
+            id: "p1",
+            name: "Alice",
+            isWinner: false,
+            playId: "play1",
+            createdAt: new Date(),
+          },
+        ],
+        expansionsUsed: [
+          {
+            id: "exp1",
+            playId: "play1",
+            gameId: "expansion1",
+            game: {
+              id: "expansion1",
+              name: "Expansion 1",
+              thumbnail: "https://example.com/exp1.jpg",
+            },
+          },
+          {
+            id: "exp2",
+            playId: "play1",
+            gameId: "expansion2",
+            game: {
+              id: "expansion2",
+              name: "Expansion 2",
+              thumbnail: null,
+            },
+          },
+        ],
+        game: mockGame,
+        loggedBy: mockUser,
+      };
+
+      vi.mocked(prisma.gamePlay.create).mockResolvedValue(mockPrismaPlay as any);
+
+      const result = await createGamePlay("user1", {
+        gameId: "game1",
+        playedAt: "2026-01-03T15:00:00Z",
+        location: "Home",
+        duration: 90,
+        players: [{ name: "Alice" }],
+        expansionIds: ["expansion1", "expansion2"],
+      });
+
+      expect(result.expansionsUsed).toHaveLength(2);
+      expect(result.expansionsUsed[0].id).toBe("expansion1");
+      expect(result.expansionsUsed[0].name).toBe("Expansion 1");
+      expect(result.expansionsUsed[1].id).toBe("expansion2");
+
+      expect(prisma.gamePlay.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            expansionsUsed: {
+              create: [
+                { gameId: "expansion1" },
+                { gameId: "expansion2" },
+              ],
+            },
+          }),
+        })
+      );
+    });
+
+    it("should not include expansionsUsed in create data when no expansions provided", async () => {
+      const mockPrismaPlay = {
+        id: "play1",
+        gameId: "game1",
+        loggedById: "user1",
+        playedAt: new Date(),
+        location: null,
+        duration: null,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        players: [],
+        expansionsUsed: [],
+        game: mockGame,
+        loggedBy: mockUser,
+      };
+
+      vi.mocked(prisma.gamePlay.create).mockResolvedValue(mockPrismaPlay as any);
+
+      await createGamePlay("user1", {
+        gameId: "game1",
+        players: [{ name: "Alice" }],
+      });
+
+      // Verify expansionsUsed is undefined (not included) in the data
+      const createCall = vi.mocked(prisma.gamePlay.create).mock.calls[0][0];
+      expect(createCall.data.expansionsUsed).toBeUndefined();
+    });
   });
 
   // ============================================================================
@@ -176,15 +284,18 @@ describe("lib/plays", () => {
 
       expect(result).toBeDefined();
       expect(result?.id).toBe("play1");
-      expect(prisma.gamePlay.findUnique).toHaveBeenCalledWith({
-        where: { id: "play1" },
-        include: {
-          players: true,
-          game: { select: { id: true, name: true, thumbnail: true } },
-          loggedBy: { select: { id: true, name: true, email: true } },
-          savedLocation: true,
-        },
-      });
+      expect(prisma.gamePlay.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "play1" },
+          include: expect.objectContaining({
+            players: true,
+            expansionsUsed: expect.any(Object),
+            game: { select: { id: true, name: true, thumbnail: true } },
+            loggedBy: { select: { id: true, name: true, email: true } },
+            savedLocation: true,
+          }),
+        })
+      );
     });
 
     it("should return null if play not found", async () => {
@@ -224,17 +335,20 @@ describe("lib/plays", () => {
       const result = await listGamePlays();
 
       expect(result).toHaveLength(1);
-      expect(prisma.gamePlay.findMany).toHaveBeenCalledWith({
-        where: {},
-        include: {
-          players: true,
-          game: { select: { id: true, name: true, thumbnail: true } },
-          loggedBy: { select: { id: true, name: true, email: true } },
-          savedLocation: true,
-        },
-        orderBy: { playedAt: "desc" },
-        take: 100,
-      });
+      expect(prisma.gamePlay.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {},
+          include: expect.objectContaining({
+            players: true,
+            expansionsUsed: expect.any(Object),
+            game: { select: { id: true, name: true, thumbnail: true } },
+            loggedBy: { select: { id: true, name: true, email: true } },
+            savedLocation: true,
+          }),
+          orderBy: { playedAt: "desc" },
+          take: 100,
+        })
+      );
     });
 
     it("should filter by gameId", async () => {
@@ -393,6 +507,90 @@ describe("lib/plays", () => {
       expect(prisma.gamePlayPlayer.deleteMany).toHaveBeenCalledWith({
         where: { playId: "play1" },
       });
+    });
+
+    it("should delete and recreate expansions if expansionIds are provided", async () => {
+      const existingPlay = {
+        id: "play1",
+        loggedById: "user1",
+      };
+
+      const updatedPlay = {
+        id: "play1",
+        gameId: "game1",
+        loggedById: "user1",
+        playedAt: new Date(),
+        location: null,
+        duration: null,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        players: [],
+        expansionsUsed: [
+          {
+            id: "exp1",
+            playId: "play1",
+            gameId: "expansion1",
+            game: {
+              id: "expansion1",
+              name: "Expansion 1",
+              thumbnail: null,
+            },
+          },
+        ],
+        game: mockGame,
+        loggedBy: mockUser,
+      };
+
+      vi.mocked(prisma.gamePlay.findUnique).mockResolvedValue(existingPlay as any);
+      vi.mocked(prisma.gamePlayExpansion.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.gamePlay.update).mockResolvedValue(updatedPlay as any);
+
+      const result = await updateGamePlay("play1", "user1", {
+        expansionIds: ["expansion1"],
+      });
+
+      expect(prisma.gamePlayExpansion.deleteMany).toHaveBeenCalledWith({
+        where: { playId: "play1" },
+      });
+      expect(result.expansionsUsed).toHaveLength(1);
+      expect(result.expansionsUsed[0].id).toBe("expansion1");
+    });
+
+    it("should clear expansions when empty array is provided", async () => {
+      const existingPlay = {
+        id: "play1",
+        loggedById: "user1",
+      };
+
+      const updatedPlay = {
+        id: "play1",
+        gameId: "game1",
+        loggedById: "user1",
+        playedAt: new Date(),
+        location: null,
+        duration: null,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        players: [],
+        expansionsUsed: [],
+        game: mockGame,
+        loggedBy: mockUser,
+      };
+
+      vi.mocked(prisma.gamePlay.findUnique).mockResolvedValue(existingPlay as any);
+      vi.mocked(prisma.gamePlayExpansion.deleteMany).mockResolvedValue({ count: 2 } as any);
+      vi.mocked(prisma.gamePlay.update).mockResolvedValue(updatedPlay as any);
+
+      const result = await updateGamePlay("play1", "user1", {
+        expansionIds: [],
+      });
+
+      expect(prisma.gamePlayExpansion.deleteMany).toHaveBeenCalledWith({
+        where: { playId: "play1" },
+      });
+      expect(result.expansionsUsed).toHaveLength(0);
     });
   });
 

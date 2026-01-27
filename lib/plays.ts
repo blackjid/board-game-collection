@@ -1,9 +1,14 @@
 import prisma from "./prisma";
 import type { GamePlayData, CreateGamePlayInput, UpdateGamePlayInput, SavedLocationData } from "@/types/play";
-import type { GamePlay, GamePlayPlayer, Game, User, SavedLocation } from "@prisma/client";
+import type { GamePlay, GamePlayPlayer, GamePlayExpansion, Game, User, SavedLocation } from "@prisma/client";
+
+type PrismaExpansionUsed = GamePlayExpansion & {
+  game: Pick<Game, "id" | "name" | "thumbnail">;
+};
 
 type PrismaGamePlay = GamePlay & {
   players?: GamePlayPlayer[];
+  expansionsUsed?: PrismaExpansionUsed[];
   game?: Pick<Game, "id" | "name" | "thumbnail"> | null;
   loggedBy?: Pick<User, "id" | "name" | "email"> | null;
   savedLocation?: SavedLocation | null;
@@ -44,6 +49,11 @@ function transformGamePlay(play: PrismaGamePlay): GamePlayData {
       playerId: p.playerId,
       isWinner: p.isWinner,
     })) || [],
+    expansionsUsed: play.expansionsUsed?.map((e) => ({
+      id: e.game.id,
+      name: e.game.name,
+      thumbnail: e.game.thumbnail,
+    })) || [],
     game: play.game ? {
       id: play.game.id,
       name: play.game.name,
@@ -81,9 +91,25 @@ export async function createGamePlay(
           isWinner: p.isWinner ?? false,
         })),
       },
+      expansionsUsed: input.expansionIds && input.expansionIds.length > 0
+        ? {
+            create: input.expansionIds.map(gameId => ({ gameId })),
+          }
+        : undefined,
     },
     include: {
       players: true,
+      expansionsUsed: {
+        include: {
+          game: {
+            select: {
+              id: true,
+              name: true,
+              thumbnail: true,
+            },
+          },
+        },
+      },
       game: {
         select: {
           id: true,
@@ -113,6 +139,17 @@ export async function getGamePlayById(playId: string): Promise<GamePlayData | nu
     where: { id: playId },
     include: {
       players: true,
+      expansionsUsed: {
+        include: {
+          game: {
+            select: {
+              id: true,
+              name: true,
+              thumbnail: true,
+            },
+          },
+        },
+      },
       game: {
         select: {
           id: true,
@@ -150,6 +187,17 @@ export async function listGamePlays(filters?: {
     },
     include: {
       players: true,
+      expansionsUsed: {
+        include: {
+          game: {
+            select: {
+              id: true,
+              name: true,
+              thumbnail: true,
+            },
+          },
+        },
+      },
       game: {
         select: {
           id: true,
@@ -203,6 +251,13 @@ export async function updateGamePlay(
     });
   }
 
+  // If updating expansions, delete old ones and create new ones
+  if (input.expansionIds !== undefined) {
+    await prisma.gamePlayExpansion.deleteMany({
+      where: { playId },
+    });
+  }
+
   const play = await prisma.gamePlay.update({
     where: { id: playId },
     data: {
@@ -220,9 +275,25 @@ export async function updateGamePlay(
           })),
         },
       }),
+      ...(input.expansionIds !== undefined && input.expansionIds.length > 0 && {
+        expansionsUsed: {
+          create: input.expansionIds.map(gameId => ({ gameId })),
+        },
+      }),
     },
     include: {
       players: true,
+      expansionsUsed: {
+        include: {
+          game: {
+            select: {
+              id: true,
+              name: true,
+              thumbnail: true,
+            },
+          },
+        },
+      },
       game: {
         select: {
           id: true,

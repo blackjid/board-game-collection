@@ -9,14 +9,16 @@ CREATE TABLE "GameRelationship" (
 );
 
 -- Migrate existing baseGameId data to GameRelationship table
+-- Only migrate where the referenced base game actually exists (avoid FK constraint errors)
 INSERT INTO "GameRelationship" ("id", "fromGameId", "toGameId", "type")
 SELECT 
     lower(hex(randomblob(12))),
-    "id",
-    "baseGameId",
+    g."id",
+    g."baseGameId",
     'expands'
-FROM "Game"
-WHERE "baseGameId" IS NOT NULL;
+FROM "Game" g
+INNER JOIN "Game" base ON g."baseGameId" = base."id"
+WHERE g."baseGameId" IS NOT NULL;
 
 -- CreateIndex
 CREATE INDEX "GameRelationship_fromGameId_idx" ON "GameRelationship"("fromGameId");

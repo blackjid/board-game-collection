@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { PlayerInput } from "@/components/PlayerInput";
 import { LocationInput } from "@/components/LocationInput";
+import { ExpansionSelector, type ExpansionOption } from "@/components/ExpansionSelector";
 import type { GamePlayData } from "@/types/play";
 
 // ============================================================================
@@ -36,6 +37,7 @@ interface EditPlayDialogProps {
   onOpenChange: (open: boolean) => void;
   play: GamePlayData;
   onPlayUpdated?: () => void;
+  availableExpansions?: ExpansionOption[];
 }
 
 // ============================================================================
@@ -47,6 +49,7 @@ export function EditPlayDialog({
   onOpenChange,
   play,
   onPlayUpdated,
+  availableExpansions = [],
 }: EditPlayDialogProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [playedAt, setPlayedAt] = useState("");
@@ -55,6 +58,7 @@ export function EditPlayDialog({
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [selectedExpansionIds, setSelectedExpansionIds] = useState<string[]>([]);
 
   // Initialize form with play data when dialog opens
   useEffect(() => {
@@ -78,6 +82,9 @@ export function EditPlayDialog({
       setSavedLocationId(play.savedLocationId || null);
       setDuration(play.duration ? String(play.duration) : "");
       setNotes(play.notes || "");
+      
+      // Initialize selected expansions from play data
+      setSelectedExpansionIds(play.expansionsUsed?.map(e => e.id) || []);
     }
   }, [open, play]);
 
@@ -172,6 +179,7 @@ export function EditPlayDialog({
           duration: duration ? parseInt(duration, 10) : null,
           notes: notes.trim() || null,
           players: playersWithIds,
+          expansionIds: selectedExpansionIds,
         }),
       });
 
@@ -291,6 +299,15 @@ export function EditPlayDialog({
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
+
+          {/* Expansions Used */}
+          {availableExpansions.length > 0 && (
+            <ExpansionSelector
+              availableExpansions={availableExpansions}
+              selectedIds={selectedExpansionIds}
+              onChange={setSelectedExpansionIds}
+            />
+          )}
 
           {/* Location */}
           <div className="space-y-2">

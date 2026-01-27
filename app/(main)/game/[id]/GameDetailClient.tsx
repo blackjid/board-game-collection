@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Puzzle,
   ChevronRight,
+  Package,
 } from "lucide-react";
 import type { GameData, ManualListSummary } from "@/lib/games";
 import type { GamePlayData } from "@/types/play";
@@ -723,8 +724,18 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                             )}
                           </div>
 
+                          {/* Expansions Used */}
+                          {play.expansionsUsed && play.expansionsUsed.length > 0 && (
+                            <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                              <Package className="size-3" />
+                              <span>
+                                With: {play.expansionsUsed.map(e => e.name).join(", ")}
+                              </span>
+                            </div>
+                          )}
+
                           {/* Players with inline badges */}
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="flex flex-wrap gap-1.5 mt-2">
                             {play.players.map((player, idx) => (
                               <span
                                 key={idx}
@@ -793,6 +804,9 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
         onPlayLogged={() => {
           router.refresh();
         }}
+        availableExpansions={game.expansions
+          .filter(e => e.inCollection)
+          .map(e => ({ id: e.id, name: e.name, thumbnail: e.thumbnail }))}
       />
 
       {/* Edit Play Dialog */}
@@ -804,6 +818,9 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
           onPlayUpdated={() => {
             router.refresh();
           }}
+          availableExpansions={game.expansions
+            .filter(e => e.inCollection)
+            .map(e => ({ id: e.id, name: e.name, thumbnail: e.thumbnail }))}
         />
       )}
 

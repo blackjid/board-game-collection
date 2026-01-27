@@ -48,6 +48,9 @@ model Game {
   // Game relationships (expansions, requirements)
   relationshipsFrom  GameRelationship[] @relation("GameRelationshipsFrom")
   relationshipsTo    GameRelationship[] @relation("GameRelationshipsTo")
+
+  // Expansions used in plays (when this game is used as an expansion)
+  usedInPlays     GamePlayExpansion[]
 }
 
 // Game relationships - links games via "expands" or "requires" relationships
@@ -271,6 +274,7 @@ model GamePlay {
   loggedBy      User           @relation(fields: [loggedById], references: [id], onDelete: Cascade)
   savedLocation SavedLocation? @relation(fields: [savedLocationId], references: [id], onDelete: SetNull)
   players       GamePlayPlayer[]
+  expansionsUsed GamePlayExpansion[]
 
   @@index([gameId])
   @@index([loggedById])
@@ -291,4 +295,18 @@ model GamePlayPlayer {
 
   @@index([playId])
   @@index([playerId])
+}
+
+// Tracks which expansions were used in a game play
+model GamePlayExpansion {
+  id        String   @id @default(cuid())
+  playId    String
+  gameId    String   // The expansion game ID
+
+  play      GamePlay @relation(fields: [playId], references: [id], onDelete: Cascade)
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([playId, gameId])
+  @@index([playId])
+  @@index([gameId])
 }
