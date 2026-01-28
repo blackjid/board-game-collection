@@ -1,14 +1,19 @@
-# Board Game Collection Printer
+# Board Game Collection Manager
 
-A static Next.js site that displays your BoardGameGeek collection in a beautiful, print-optimized grid.
+A Next.js application for managing your BoardGameGeek collection with collaborative game picking features.
 
 ## Features
 
-- Fetches your BGG collection using browser automation (no API key required)
+- Syncs your BGG collection using the official XML API v2
 - Displays game covers, titles, year, player count, and playtime
 - Responsive grid layout (6 columns on desktop, 2 on mobile)
 - Print-optimized CSS with proper page breaks
-- Static export for easy hosting
+- Real-time collaborative game sessions with Socket.IO
+- Multiple collection support
+
+## Requirements
+
+- **BGG_TOKEN**: A BoardGameGeek API token is required. Register an application at BoardGameGeek to obtain one.
 
 ## Setup
 
@@ -18,10 +23,17 @@ A static Next.js site that displays your BoardGameGeek collection in a beautiful
    npm install
    ```
 
-2. Install Playwright browsers (first time only):
+2. Set up environment variables:
 
    ```bash
-   npx playwright install chromium
+   cp .env.example .env.local
+   # Edit .env.local and add your BGG_TOKEN
+   ```
+
+3. Set up the database:
+
+   ```bash
+   npx prisma migrate dev
    ```
 
 ## Usage
@@ -36,15 +48,14 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view your collection.
 
-### Build Static Site
+### Build
 
-Build the static export:
+Build for production:
 
 ```bash
 npm run build
+npm start
 ```
-
-The static site will be in the `out/` directory.
 
 ## Running with Docker
 
@@ -61,6 +72,7 @@ docker run -d \
   --name board-game-geek \
   -p 3000:3000 \
   -v bgg-data:/data \
+  -e BGG_TOKEN=your-token-here \
   ghcr.io/blackjid/board-game-collection:latest
 ```
 
@@ -74,6 +86,7 @@ This will:
 
 | Variable | Default | Description |
 | -------- | ------- | ----------- |
+| `BGG_TOKEN` | **required** | BoardGameGeek XML API v2 bearer token |
 | `DATA_PATH` | `/data` | Directory for the SQLite database |
 | `DATABASE_URL` | `file:/data/games.db` | SQLite database connection string |
 | `PORT` | `3000` | Port the server listens on |
@@ -104,6 +117,7 @@ docker run -d \
   --name board-game-geek \
   -p 3000:3000 \
   -v /path/to/your/data:/data \
+  -e BGG_TOKEN=your-token-here \
   ghcr.io/blackjid/board-game-collection:latest
 ```
 
@@ -140,6 +154,7 @@ The BGG username is configured via the Settings page in the app. Navigate to `/s
 ├── components/
 │   └── GameCard.tsx       # Individual game card component
 ├── lib/
+│   ├── bgg/              # BGG API client (XML API v2)
 │   ├── games.ts          # Game data access layer
 │   ├── sync.ts           # BGG collection sync logic
 │   └── prisma.ts         # Database client
@@ -154,5 +169,5 @@ The BGG username is configured via the Settings page in the app. Navigate to `/s
 - [Next.js 16](https://nextjs.org/) - React framework
 - [Tailwind CSS v4](https://tailwindcss.com/) - Styling
 - [Prisma](https://www.prisma.io/) - Database ORM (SQLite)
-- [Playwright](https://playwright.dev/) - Browser automation
+- [Socket.IO](https://socket.io/) - Real-time communication
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
