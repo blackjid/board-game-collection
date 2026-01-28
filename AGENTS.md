@@ -35,6 +35,7 @@ When proposing AGENTS.md updates, add to the relevant section or create a new se
 | Database | SQLite via Prisma ORM (libSQL adapter in production) |
 | Styling | Tailwind CSS v4 |
 | UI Components | shadcn/ui (New York style) |
+| Theming | next-themes (light/dark/system) |
 | Testing | Vitest + Testing Library |
 | Real-time | Socket.IO |
 | Auth | Cookie-based sessions (bcrypt) |
@@ -759,25 +760,49 @@ Use semantic color classes from shadcn instead of raw Tailwind colors:
 
 ## UI & Styling Guidelines
 
-### Color System (Dark Theme)
+### Theming System
 
-```css
-/* Backgrounds */
-bg-stone-950     /* Page background */
-bg-stone-900     /* Card/section background */
-bg-stone-800     /* Input/button backgrounds */
+The app supports light, dark, and system themes via `next-themes`. Theme preference is stored in localStorage and respects system preferences.
 
-/* Text */
-text-white       /* Primary text */
-text-stone-400   /* Secondary text */
-text-stone-500   /* Muted text */
+**Key files:**
+- `components/ThemeProvider.tsx` - Wraps the app with next-themes provider
+- `components/ThemeSwitcher.tsx` - Dropdown to switch themes (in sidebar footer)
+- `app/globals.css` - CSS variables for light (`:root`) and dark (`.dark`) themes
 
-/* Accents */
-text-amber-500   /* Primary accent (links, highlights) */
-bg-amber-600     /* Primary buttons */
-text-emerald-400 /* Success states */
-text-red-400     /* Error states */
+**Adding a new theme:**
+1. Add CSS variables under a new class (e.g., `.theme-sepia`) in `globals.css`
+2. Add the theme to `ThemeProvider` via the `themes` prop
+3. Add the option to `ThemeSwitcher` dropdown
+
+**Using theme-aware colors:**
+```tsx
+// Good - use semantic CSS variable colors
+<div className="bg-background text-foreground" />
+<div className="bg-card text-card-foreground" />
+<span className="text-muted-foreground" />
+
+// Also good - use Tailwind dark: variant for specific overrides
+<div className="bg-white dark:bg-stone-900" />
 ```
+
+### Color System
+
+The app uses a stone color palette with amber accents. Colors are defined as CSS variables that change between themes.
+
+**Light theme (`:root`):**
+- Background: stone-50 (`#fafaf9`)
+- Cards: white (`#ffffff`)
+- Borders: stone-200 (`#e7e5e4`)
+
+**Dark theme (`.dark`):**
+- Background: stone-950 (`#0c0a09`)
+- Cards: stone-900 (`#1c1917`)
+- Borders: stone-800 (`#292524`)
+
+**Shared accents:**
+- Primary: amber-600 (`#d97706`)
+- Destructive: red-600 (`#dc2626`)
+- Ring/focus: amber-500 (`#f59e0b`)
 
 ### Responsive Pattern
 
@@ -1065,7 +1090,7 @@ Before committing any code changes:
    }
    ```
 
-4. **Don't use light theme colors** - This is a dark-themed app (stone-900/950 backgrounds)
+4. **Don't hardcode theme colors** - Use semantic CSS variables (`bg-background`, `text-foreground`, `bg-card`) or Tailwind's `dark:` variant instead of hardcoding specific colors
 
 5. **Don't put business logic in API routes** - Extract to lib/ modules
 
@@ -1106,18 +1131,18 @@ Before committing any code changes:
    ```tsx
    // Bad - middleware.ts
    import prisma from "@/lib/prisma";
-   
+
    export async function middleware(request: NextRequest) {
      const data = await prisma.collection.findUnique(...); // ❌ Won't work in Edge Runtime
    }
-   
+
    // Good - move database logic to API routes
    // middleware.ts - only handle routing/cookies
    export async function middleware(request: NextRequest) {
      const sessionId = request.cookies.get("session_id")?.value;
      // Simple checks only, no database queries
    }
-   
+
    // route.ts - handle database queries
    export async function GET(request: NextRequest) {
      const collection = await prisma.collection.findUnique(...); // ✅ Works in Node.js runtime
@@ -1129,7 +1154,7 @@ Before committing any code changes:
    ```tsx
    // Bad - local state won't update after dialog actions call router.refresh()
    const [plays, setPlays] = useState(initialPlays);
-   
+
    // Good - syncs with new prop values from server
    import { useSyncedState } from "@/lib/hooks";
    const [plays, setPlays] = useSyncedState(initialPlays);
@@ -1189,8 +1214,8 @@ node dist/server.js
 4. Create lib functions in `lib/[model].ts`
 5. Add transform functions for JSON fields if needed
 
-> **IMPORTANT**: Always run `prisma migrate dev` after schema changes, not `prisma db push`. 
-> The migration file is required for production deployments. Without it, schema changes 
+> **IMPORTANT**: Always run `prisma migrate dev` after schema changes, not `prisma db push`.
+> The migration file is required for production deployments. Without it, schema changes
 > won't be applied to the production database.
 
 ### Writing Tests

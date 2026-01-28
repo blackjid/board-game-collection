@@ -176,34 +176,85 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar for webkit browsers */
+/* Custom scrollbar for webkit browsers - uses CSS variables for theming */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1c1917;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #44403c;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #57534e;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Focus styles for accessibility */
 :focus-visible {
-  outline: 2px solid #f59e0b;
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-/* Dark theme by default - stone color palette with amber accents */
+/* Light theme (default) - stone color palette with amber accents */
 :root {
   --radius: 0.625rem;
+  /* Stone-50 base background */
+  --background: #fafaf9;
+  --foreground: #0c0a09;
+  /* White for cards */
+  --card: #ffffff;
+  --card-foreground: #0c0a09;
+  /* White for popovers */
+  --popover: #ffffff;
+  --popover-foreground: #0c0a09;
+  /* Amber-600 as primary */
+  --primary: #d97706;
+  --primary-foreground: #ffffff;
+  /* Stone-100 for secondary */
+  --secondary: #f5f5f4;
+  --secondary-foreground: #1c1917;
+  /* Stone-100 for muted */
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;
+  /* Stone-100 for accent */
+  --accent: #f5f5f4;
+  --accent-foreground: #1c1917;
+  /* Red for destructive */
+  --destructive: #dc2626;
+  /* Stone-200 for borders */
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  /* Amber-500 for ring/focus */
+  --ring: #f59e0b;
+  /* Chart colors */
+  --chart-1: #d97706;
+  --chart-2: #059669;
+  --chart-3: #2563eb;
+  --chart-4: #7c3aed;
+  --chart-5: #dc2626;
+  /* Sidebar - light theme */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0c0a09;
+  --sidebar-primary: #d97706;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f4;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #e7e5e4;
+  --sidebar-ring: #f59e0b;
+  /* Scrollbar - light theme */
+  --scrollbar-track: #f5f5f4;
+  --scrollbar-thumb: #d6d3d1;
+  --scrollbar-thumb-hover: #a8a29e;
+}
+
+/* Dark theme - stone color palette with amber accents */
+.dark {
   /* Stone-950 base background */
   --background: #0c0a09;
   --foreground: #fafaf9;
@@ -238,7 +289,7 @@ html {
   --chart-3: #3b82f6;
   --chart-4: #8b5cf6;
   --chart-5: #ef4444;
-  /* Sidebar */
+  /* Sidebar - dark theme */
   --sidebar: #1c1917;
   --sidebar-foreground: #fafaf9;
   --sidebar-primary: #d97706;
@@ -247,6 +298,10 @@ html {
   --sidebar-accent-foreground: #fafaf9;
   --sidebar-border: #292524;
   --sidebar-ring: #f59e0b;
+  /* Scrollbar - dark theme */
+  --scrollbar-track: #1c1917;
+  --scrollbar-thumb: #44403c;
+  --scrollbar-thumb-hover: #57534e;
 }
 
 @layer base {
@@ -256,15 +311,4 @@ html {
   body {
     @apply bg-background text-foreground;
   }
-}
-
-.dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
