@@ -50,6 +50,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { NavUser } from "@/components/NavUser";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import {
   CreateListDialog,
   EditListDialog,
@@ -396,8 +397,11 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
           )}
         </SidebarContent>
 
-        {/* Footer - User Profile */}
+        {/* Footer - Theme Toggle and User Profile */}
         <SidebarFooter>
+          <div className="flex items-center justify-between px-2">
+            <ThemeSwitcher />
+          </div>
           <NavUser user={user} />
         </SidebarFooter>
       </Sidebar>
