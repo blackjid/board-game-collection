@@ -90,7 +90,6 @@ interface GameDetailClientProps {
 export function GameDetailClient({ game, currentUser, lists, plays: initialPlays }: GameDetailClientProps) {
   const router = useRouter();
   const [plays, setPlays] = useSyncedState(initialPlays);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showCreateListDialog, setShowCreateListDialog] = useState(false);
   const [showLogPlayDialog, setShowLogPlayDialog] = useState(false);
   const [editingPlay, setEditingPlay] = useState<GamePlayData | null>(null);
@@ -111,14 +110,6 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
 
   // Use selectedThumbnail if available, otherwise fall back to image/thumbnail
   const mainImage = game.selectedThumbnail || game.image || game.thumbnail || null;
-  const galleryImages = game.availableImages || [];
-  const componentImages = game.componentImages || [];
-
-  // All images for the gallery picker (main + available)
-  const allImages = mainImage
-    ? [mainImage, ...galleryImages.filter(img => img !== mainImage)]
-    : galleryImages;
-  const displayImage = selectedImage || mainImage;
 
   const playerCount =
     game.minPlayers && game.maxPlayers
@@ -325,10 +316,10 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
       {/* Hero Section with Background */}
       <div className="relative">
         {/* Blurred background */}
-        {displayImage && (
+        {mainImage && (
           <div className="absolute inset-0 overflow-hidden">
             <Image
-              src={displayImage}
+              src={mainImage}
               alt=""
               fill
               sizes="100vw"
@@ -346,9 +337,9 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
             <div className="lg:w-2/5 flex-shrink-0">
               {/* Main Image */}
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-border bg-muted aspect-square sm:aspect-[3/4]">
-                {displayImage ? (
+                {mainImage ? (
                   <Image
-                    src={displayImage}
+                    src={mainImage}
                     alt={game.name}
                     fill
                     sizes="(max-width: 1024px) 100vw, 40vw"
@@ -378,25 +369,6 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                 )}
               </div>
 
-              {/* Thumbnail Gallery */}
-              {allImages.length > 1 && (
-                <div className="flex gap-2 sm:gap-3 mt-3 sm:mt-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-                  {allImages.map((img: string, i: number) => (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedImage(img)}
-                      className={cn(
-                        "w-14 h-14 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all relative",
-                        (selectedImage || mainImage) === img
-                          ? "border-primary ring-2 ring-primary/30"
-                          : "border-border hover:border-muted-foreground"
-                      )}
-                    >
-                      <Image src={img} alt="" fill sizes="80px" className="object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Right: Game Info */}
@@ -604,24 +576,6 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                         </div>
                         <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Component Images */}
-              {componentImages.length > 0 && (
-                <div className="mb-6 sm:mb-8">
-                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3">Game Components</h2>
-                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    {componentImages.map((img: string, i: number) => (
-                      <button
-                        key={i}
-                        onClick={() => setSelectedImage(img)}
-                        className="aspect-square rounded-lg overflow-hidden border border-border hover:border-muted-foreground transition-all relative"
-                      >
-                        <Image src={img} alt="" fill sizes="33vw" className="object-cover" />
-                      </button>
                     ))}
                   </div>
                 </div>

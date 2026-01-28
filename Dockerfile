@@ -14,9 +14,6 @@ COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
 
-# Skip Playwright browser download - we'll use system Chromium in runner
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-
 # Install all dependencies with npm cache mount
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
@@ -31,9 +28,6 @@ RUN npx prisma generate
 # Stage 2: Builder
 FROM node:22-slim AS builder
 WORKDIR /app
-
-# Skip Playwright browser download
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 # Copy dependencies from deps stage (includes generated Prisma client)
 COPY --from=deps /app/node_modules ./node_modules
@@ -76,26 +70,27 @@ RUN --mount=type=cache,target=/root/.npm \
 # Regenerate Prisma client after pruning (since @prisma/client was kept)
 RUN npx prisma generate
 
-# Stage 3: Runner (using Playwright base image with pre-installed Chromium)
-FROM mcr.microsoft.com/playwright:v1.57.0-noble AS runner
+# Stage 3: Runner (lightweight Node.js image)
+FROM node:22-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Tell Playwright to use the pre-installed browsers
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-# Playwright image stores browsers in /ms-playwright - Playwright will find them automatically
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+# Install openssl for Prisma
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd --gid 1001 nodejs && useradd --uid 1001 --gid nodejs --shell /bin/bash --create-home nextjs
 
 # Copy public assets
 COPY --from=builder /app/public ./public
 
 # Copy Next.js build output (not standalone - we use custom server)
-COPY --from=builder --chown=pwuser:pwuser /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 
 # Copy compiled custom server
-COPY --from=builder --chown=pwuser:pwuser /app/dist ./dist
+COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 
 # Copy Prisma schema and migrations
 COPY --from=builder /app/prisma ./prisma
@@ -117,10 +112,9 @@ COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
 # Create data directory for SQLite database
-# Playwright image uses pwuser (uid 1000)
-RUN mkdir -p /data && chown -R pwuser:pwuser /data
+RUN mkdir -p /data && chown -R nextjs:nodejs /data
 
-USER pwuser
+USER nextjs
 
 EXPOSE 3000
 

@@ -165,12 +165,10 @@ function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
   const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(
     game.selectedThumbnail
   );
-  const [componentImages, setComponentImages] = useState<string[]>(
-    game.componentImages || []
-  );
   const [saving, setSaving] = useState(false);
 
-  const allImages = [
+  // Cover images for thumbnail selection (from versions=1 / official box art)
+  const coverImages = [
     ...(game.image ? [game.image] : []),
     ...game.availableImages,
   ].filter((img, index, self) => self.indexOf(img) === index);
@@ -179,21 +177,13 @@ function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
     setSelectedThumbnail(url === selectedThumbnail ? null : url);
   };
 
-  const handleComponentToggle = (url: string) => {
-    if (componentImages.includes(url)) {
-      setComponentImages(componentImages.filter((img) => img !== url));
-    } else {
-      setComponentImages([...componentImages, url]);
-    }
-  };
-
   const handleSave = async () => {
     setSaving(true);
     try {
       await fetch(`/api/games/${game.id}/preferences`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedThumbnail, componentImages }),
+        body: JSON.stringify({ selectedThumbnail }),
       });
       onSave();
       onClose();
@@ -215,74 +205,42 @@ function ImageEditor({ game, onClose, onSave }: ImageEditorProps) {
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-6 py-4">
-          {allImages.length === 0 ? (
+          {coverImages.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p>No images available. Scrape this game first to fetch images.</p>
             </div>
           ) : (
-            <>
-              <div>
-                <h3 className="text-base font-semibold text-foreground mb-3">
-                  Thumbnail
-                  <span className="text-muted-foreground font-normal ml-2 text-sm">
-                    (Click to select)
-                  </span>
-                </h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                  {allImages.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleThumbnailSelect(img)}
-                      className={cn(
-                        "aspect-square rounded-lg overflow-hidden border-2 transition-all relative",
-                        selectedThumbnail === img
-                          ? "border-primary ring-2 ring-primary/50"
-                          : img === game.image && !selectedThumbnail
-                          ? "border-blue-500/50"
-                          : "border-border hover:border-muted-foreground"
-                      )}
-                    >
-                      <Image src={img} alt="" fill sizes="100px" className="object-cover" />
-                      {selectedThumbnail === img && (
-                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                          <Badge>THUMB</Badge>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
+            <div>
+              <h3 className="text-base font-semibold text-foreground mb-3">
+                Cover Images
+                <span className="text-muted-foreground font-normal ml-2 text-sm">
+                  (Select as thumbnail)
+                </span>
+              </h3>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {coverImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleThumbnailSelect(img)}
+                    className={cn(
+                      "aspect-square rounded-lg overflow-hidden border-2 transition-all relative",
+                      selectedThumbnail === img
+                        ? "border-primary ring-2 ring-primary/50"
+                        : img === game.image && !selectedThumbnail
+                        ? "border-blue-500/50"
+                        : "border-border hover:border-muted-foreground"
+                    )}
+                  >
+                    <Image src={img} alt="" fill sizes="100px" className="object-cover" />
+                    {selectedThumbnail === img && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <Badge>THUMB</Badge>
+                      </div>
+                    )}
+                  </button>
+                ))}
               </div>
-
-              <div>
-                <h3 className="text-base font-semibold text-foreground mb-3">
-                  Component Images
-                  <span className="text-muted-foreground font-normal ml-2 text-sm">
-                    (Click to toggle)
-                  </span>
-                </h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                  {allImages.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleComponentToggle(img)}
-                      className={cn(
-                        "aspect-square rounded-lg overflow-hidden border-2 transition-all relative",
-                        componentImages.includes(img)
-                          ? "border-emerald-500 ring-2 ring-emerald-500/50"
-                          : "border-border hover:border-muted-foreground"
-                      )}
-                    >
-                      <Image src={img} alt="" fill sizes="100px" className="object-cover" />
-                      {componentImages.includes(img) && (
-                        <div className="absolute top-1 right-1 bg-emerald-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                          {componentImages.indexOf(img) + 1}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
+            </div>
           )}
         </div>
 

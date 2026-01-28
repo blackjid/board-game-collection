@@ -38,7 +38,7 @@ When proposing AGENTS.md updates, add to the relevant section or create a new se
 | Testing | Vitest + Testing Library |
 | Real-time | Socket.IO |
 | Auth | Cookie-based sessions (bcrypt) |
-| Scraping | Playwright (Chromium) |
+| BGG API | Official XML API v2 (requires BGG_TOKEN) |
 
 ### Architecture Pattern
 
@@ -917,6 +917,86 @@ socket.on("session-update", (data) => { ... });
 
 ---
 
+## BGG Client Architecture
+
+The project uses an abstraction layer to interact with BoardGameGeek APIs, supporting two implementations:
+
+### Client Types
+
+The application uses the official BoardGameGeek XML API v2 for all BGG data:
+
+| Client | API | Authentication |
+|--------|-----|----------------|
+| `XmlApi2Client` | Official XML API v2 | Bearer token (BGG_TOKEN required) |
+
+### Client Selection
+
+The client is automatically selected based on environment configuration:
+
+```tsx
+import { getBggClient } from "@/lib/bgg";
+
+// Returns XmlApi2Client (requires BGG_TOKEN to be set)
+const client = getBggClient();
+
+// Use the client interface
+const games = await client.getCollection("username");
+const details = await client.getGameDetails("174430");
+const searchResults = await client.search("Gloomhaven");
+```
+
+### BggClient Interface
+
+All clients implement the same interface:
+
+```tsx
+interface BggClient {
+  clientType: "xmlapi2";
+  getGameDetails(gameId: string): Promise<BggGameDetails | null>;
+  getGamesDetails(gameIds: string[]): Promise<BggGameDetails[]>;
+  getCollection(username: string): Promise<BggCollectionItem[]>;
+  getGalleryImages(gameId: string): Promise<string[]>;  // Edition box art
+  search(query: string, limit?: number): Promise<BggSearchResult[]>;
+  getHotGames(): Promise<BggHotItem[]>;
+}
+```
+
+### Image Sources
+
+`getGalleryImages()` returns edition box art images for thumbnail selection:
+
+`getGalleryImages()` uses XML API `versions=1` to fetch official edition cover images (different language editions, printing runs). These are stored in `availableImages` and used for thumbnail selection in the image editor.
+
+### Setting Up XML API v2
+
+1. Register your application at https://boardgamegeek.com/applications
+2. Create a token after approval (may take a week)
+3. Add the token to your environment:
+
+```bash
+# .env.local
+BGG_TOKEN=your-bearer-token-here
+```
+
+### Benefits of XML API v2
+
+- **Official support**: Stable API, less likely to break unexpectedly
+- **Rate limiting handled**: Client implements 5-second delay between requests
+- **Smaller Docker image**: No Playwright/Chromium dependencies
+- **Structured data**: No HTML scraping required
+
+### File Structure
+
+```
+lib/bgg/
+├── types.ts           # BggClient interface and shared types
+├── client.ts          # getBggClient() factory function
+├── xmlapi2-client.ts  # Official XML API v2 implementation
+└── index.ts           # Public exports
+```
+
+---
+
 ## Quality Checks (Always Do)
 
 AI agents **MUST** perform these checks after making code changes:
@@ -1065,7 +1145,7 @@ Before committing any code changes:
 | `DATA_PATH` | `/data` | Data directory (Docker) |
 | `PORT` | `3000` | Server port |
 | `NEXT_PUBLIC_BASE_URL` | (auto) | Base URL for QR codes/share links |
-| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | - | Custom Chromium path (Docker) |
+| `BGG_TOKEN` | **required** | BGG XML API v2 bearer token |
 
 ---
 
@@ -1074,8 +1154,7 @@ Before committing any code changes:
 Multi-stage Dockerfile with:
 1. **deps** - Install all dependencies, generate Prisma client
 2. **builder** - Build Next.js, compile TypeScript server
-3. **prod-deps** - Production dependencies only
-4. **runner** - Minimal runtime with Chromium for scraping
+3. **runner** - Minimal Node.js runtime
 
 Entrypoint runs migrations before starting:
 ```bash
