@@ -1400,7 +1400,7 @@ export function HomeClient({
               alt="Powered by BoardGameGeek"
               width={200}
               height={40}
-              className="h-10 w-auto opacity-80 group-hover:opacity-100 transition-opacity"
+              className="h-10 w-auto opacity-80 group-hover:opacity-100 transition-opacity invert dark:invert-0"
             />
           </a>
           <div className="flex items-center gap-3 text-muted-foreground text-xs">

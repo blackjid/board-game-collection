@@ -732,7 +732,7 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                     alt="Powered by BoardGameGeek"
                     width={120}
                     height={24}
-                    className="h-5 sm:h-6 w-auto opacity-80 group-hover:opacity-100 transition-opacity"
+                    className="h-5 sm:h-6 w-auto opacity-80 group-hover:opacity-100 transition-opacity invert dark:invert-0"
                   />
                   <ExternalLink className="size-3 sm:size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </a>
