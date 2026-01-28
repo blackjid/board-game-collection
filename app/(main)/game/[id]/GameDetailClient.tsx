@@ -727,12 +727,21 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                   rel="noopener noreferrer"
                   className="group flex items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg bg-muted border border-border hover:border-primary/50 transition-all"
                 >
+                  {/* Light mode logo */}
+                  <Image
+                    src="/powered-by-bgg-rgb.svg"
+                    alt="Powered by BoardGameGeek"
+                    width={120}
+                    height={24}
+                    className="h-5 sm:h-6 w-auto opacity-80 group-hover:opacity-100 transition-opacity dark:hidden"
+                  />
+                  {/* Dark mode logo */}
                   <Image
                     src="/powered-by-bgg.svg"
                     alt="Powered by BoardGameGeek"
                     width={120}
                     height={24}
-                    className="h-5 sm:h-6 w-auto opacity-80 group-hover:opacity-100 transition-opacity invert dark:invert-0"
+                    className="h-5 sm:h-6 w-auto opacity-80 group-hover:opacity-100 transition-opacity hidden dark:block"
                   />
                   <ExternalLink className="size-3 sm:size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </a>

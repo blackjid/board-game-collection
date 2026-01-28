@@ -283,7 +283,7 @@ export function HomeClient({
   const isAutomaticList = selectedCollection?.type === "automatic";
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Grouped view state - shows expansions nested under base games
   const [isGroupedView, setIsGroupedView] = useState(false);
 
@@ -1167,7 +1167,7 @@ export function HomeClient({
                         <div className="flex items-center gap-2 text-amber-500">
                           <AlertTriangle className="size-4" />
                           <span className="text-sm font-medium">
-                            {group.missingRequirements.length > 0 
+                            {group.missingRequirements.length > 0
                               ? `Requires: ${group.missingRequirements.join(", ")}`
                               : "Expansion (base game not in collection)"}
                           </span>
@@ -1181,7 +1181,7 @@ export function HomeClient({
                         </div>
                       ) : null}
                     </div>
-                    
+
                     {/* Base game card */}
                     <div className="game-grid-custom grid gap-3 sm:gap-4 grid-cols-2 print:grid-cols-6 print:gap-2">
                       <div className="relative">
@@ -1269,7 +1269,7 @@ export function HomeClient({
                         <div className="flex items-center gap-2 text-amber-500 text-xs">
                           <AlertTriangle className="size-3" />
                           <span>
-                            {group.missingRequirements.length > 0 
+                            {group.missingRequirements.length > 0
                               ? `Requires: ${group.missingRequirements.slice(0, 2).join(", ")}${group.missingRequirements.length > 2 ? "..." : ""}`
                               : "Base game not in collection"}
                           </span>
@@ -1282,7 +1282,7 @@ export function HomeClient({
                       )}
                     </div>
                   )}
-                  
+
                   {/* Base game */}
                   <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
                     <GameRowItem
@@ -1395,12 +1395,21 @@ export function HomeClient({
             rel="noopener noreferrer"
             className="group px-4 py-2 rounded-lg hover:bg-muted/50 transition-all"
           >
+            {/* Light mode logo */}
+            <Image
+              src="/powered-by-bgg-rgb.svg"
+              alt="Powered by BoardGameGeek"
+              width={200}
+              height={40}
+              className="h-10 w-auto opacity-80 group-hover:opacity-100 transition-opacity dark:hidden"
+            />
+            {/* Dark mode logo */}
             <Image
               src="/powered-by-bgg.svg"
               alt="Powered by BoardGameGeek"
               width={200}
               height={40}
-              className="h-10 w-auto opacity-80 group-hover:opacity-100 transition-opacity invert dark:invert-0"
+              className="h-10 w-auto opacity-80 group-hover:opacity-100 transition-opacity hidden dark:block"
             />
           </a>
           <div className="flex items-center gap-3 text-muted-foreground text-xs">
