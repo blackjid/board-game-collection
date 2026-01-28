@@ -13,7 +13,7 @@ import {
   getCollectionWithGames,
   groupGamesByBaseGame,
 } from "./games";
-import type { GameData, GameRelationshipRef } from "./games";
+import type { GameData } from "./games";
 
 // Mock Prisma
 vi.mock("@/lib/prisma", () => ({

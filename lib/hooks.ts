@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 
 /**
  * A hook that syncs local state with a prop value while still allowing local mutations.
