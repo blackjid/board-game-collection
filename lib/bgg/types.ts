@@ -108,7 +108,7 @@ export interface BggClientConfig {
   token?: string;
 
   /**
-   * Rate limit delay in milliseconds (default: 5000 for XML API v2)
+   * Rate limit delay in milliseconds (default: 500 for XML API v2 - 2 requests per second)
    */
   rateLimitMs?: number;
 }

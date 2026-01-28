@@ -11,9 +11,22 @@ interface BggSearchResultWithCollection {
   isExpansion: boolean;
 }
 
+interface GeekdoSearchItem {
+  objectid: string;
+  name: string;
+  yearpublished?: string;
+  subtype?: string;
+  thumbnail?: string;
+}
+
+interface GeekdoSearchResponse {
+  items?: GeekdoSearchItem[];
+}
+
 /**
  * GET /api/bgg/search?q=<query>
- * Search BoardGameGeek for games by name using the BGG client
+ * Search BoardGameGeek for games by name
+ * Uses Geekdo JSON API for better search accuracy, falls back to XML API v2
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -28,24 +41,52 @@ export async function GET(request: NextRequest) {
 
   try {
     const client = getBggClient();
+    let searchResults: Array<{
+      id: string;
+      name: string;
+      yearPublished: number | null;
+      thumbnail: string | null;
+      isExpansion: boolean;
+    }> = [];
 
-    // Search BGG for games
-    let searchResults = await client.search(query, 15);
+    // Try Geekdo autocomplete API first (more accurate search)
+    try {
+      const geekdoUrl = `https://boardgamegeek.com/search/boardgame?q=${encodeURIComponent(query)}&showcount=15`;
+      const geekdoResponse = await fetch(geekdoUrl, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
-    // If no results from search, try hotness as fallback
+      if (geekdoResponse.ok) {
+        const data: GeekdoSearchResponse = await geekdoResponse.json();
+        const items = data.items || [];
+        
+        if (items.length > 0) {
+          // Get game IDs and fetch full details from XML API for thumbnails
+          const gameIds = items.map((item) => item.objectid);
+          const details = await client.getGamesDetails(gameIds);
+          const detailsMap = new Map(details.map((d) => [d.id, d]));
+
+          searchResults = items.map((item) => {
+            const detail = detailsMap.get(item.objectid);
+            return {
+              id: item.objectid,
+              name: item.name,
+              yearPublished: item.yearpublished ? parseInt(item.yearpublished, 10) : null,
+              thumbnail: detail?.thumbnail || item.thumbnail || null,
+              isExpansion: item.subtype === "boardgameexpansion",
+            };
+          });
+        }
+      }
+    } catch (error) {
+      console.log("[Search] Geekdo API failed, falling back to XML API:", error);
+    }
+
+    // Fallback to XML API v2 search if Geekdo API fails or returns no results
     if (searchResults.length === 0) {
-      const hotGames = await client.getHotGames();
-      const queryLower = query.toLowerCase();
-      searchResults = hotGames
-        .filter((game) => game.name.toLowerCase().includes(queryLower))
-        .slice(0, 15)
-        .map((game) => ({
-          id: game.id,
-          name: game.name,
-          yearPublished: game.yearPublished,
-          thumbnail: game.thumbnail,
-          isExpansion: false, // Hotness typically only includes base games
-        }));
+      searchResults = await client.search(query, 15);
     }
 
     // If still no results, return games from our own database that match
