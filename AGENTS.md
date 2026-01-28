@@ -1022,6 +1022,30 @@ lib/bgg/
 
 ---
 
+## Commit Messages & Pull Requests
+
+Keep commit messages and PR descriptions concise:
+
+- **Commit subject**: One line, imperative mood (e.g., "feat: add theme support")
+- **Commit body**: Optional. Only add if the "why" isn't obvious from the subject
+- **PR description**: Brief summary (1-3 bullets max). Skip lengthy explanations
+
+```bash
+# Good - simple and clear
+feat: add light/dark theme support
+
+# Avoid - overly detailed
+feat: add light/dark theme support with next-themes
+
+- Add ThemeProvider wrapper using next-themes for SSR-safe theme switching
+- Add ThemeSwitcher component in sidebar footer with Light/Dark/System options
+- Split CSS variables into light (:root) and dark (.dark) themes
+- Update scrollbar and focus styles to use CSS variables
+- Update AGENTS.md with theming documentation
+```
+
+---
+
 ## Quality Checks (Always Do)
 
 AI agents **MUST** perform these checks after making code changes:
