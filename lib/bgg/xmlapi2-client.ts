@@ -12,7 +12,7 @@ import type {
 // ============================================================================
 
 const BGG_API_BASE = "https://boardgamegeek.com/xmlapi2";
-const DEFAULT_RATE_LIMIT_MS = 5000; // BGG recommends 5 second delay between requests
+const DEFAULT_RATE_LIMIT_MS = 500; // 2 requests per second (500ms delay between requests)
 const MAX_THINGS_PER_REQUEST = 20; // BGG limits to 20 items per thing request
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
