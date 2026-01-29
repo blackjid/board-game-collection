@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Dice6, AlertTriangle } from "lucide-react";
+import { Dice6, AlertTriangle, Brain } from "lucide-react";
 import type { GameData } from "@/lib/games";
 
 import { Card } from "@/components/ui/card";
@@ -61,6 +61,17 @@ export function GameCard({ game }: GameCardProps) {
   // Get rating color
   const ratingColor = game.rating ? getRatingColor(game.rating) : undefined;
 
+  // Format weight/complexity (1-5 scale)
+  const weightDisplay = game.weight ? game.weight.toFixed(1) : null;
+
+  // Weight color (light to dark based on complexity)
+  const getWeightColor = (weight: number): string => {
+    if (weight <= 2) return "bg-emerald-600"; // Light games
+    if (weight <= 3) return "bg-blue-600";     // Medium games
+    if (weight <= 4) return "bg-amber-600";    // Medium-heavy games
+    return "bg-red-600";                        // Heavy games
+  };
+
   return (
     <Link href={`/game/${game.id}`} className="block">
       <Card className={cn(
@@ -109,7 +120,7 @@ export function GameCard({ game }: GameCardProps) {
 
           {/* Warning for expansions without any base game in collection */}
           {game.isExpansion && game.expandsGames.length > 0 && !game.expandsGames.some(g => g.inCollection) && (
-            <div 
+            <div
               className="absolute bottom-2 left-2 z-20 print:hidden"
               title={`Works with: ${game.expandsGames.map(g => g.name).join(", ")}`}
             >
@@ -147,6 +158,18 @@ export function GameCard({ game }: GameCardProps) {
                 style={{ backgroundColor: ratingColor }}
               >
                 {game.rating.toFixed(1)}
+              </Badge>
+            )}
+            {weightDisplay && (
+              <Badge
+                className={cn(
+                  "text-white font-bold px-1.5 py-0.5 text-[10px] print:text-[6px] print:px-1 print:py-0 border-0 gap-0.5",
+                  getWeightColor(game.weight!)
+                )}
+                title={`Complexity: ${weightDisplay}/5`}
+              >
+                <Brain className="size-2.5" />
+                {weightDisplay}
               </Badge>
             )}
             {playerCount && (

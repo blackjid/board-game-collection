@@ -229,11 +229,42 @@ export class XmlApi2Client implements BggClient {
       const image = item.image || null;
       const thumbnail = item.thumbnail || null;
 
-      // Get rating from statistics
+      // Get rating and extended statistics
       let rating: number | null = null;
-      const average = item.statistics?.ratings?.average?.["@_value"];
-      if (average) {
-        rating = Math.round(parseFloat(average) * 10) / 10;
+      let numRatings: number | null = null;
+      let bggRank: number | null = null;
+      let weight: number | null = null;
+
+      const ratings = item.statistics?.ratings;
+      if (ratings) {
+        // Average rating
+        const average = ratings.average?.["@_value"];
+        if (average) {
+          rating = Math.round(parseFloat(average) * 10) / 10;
+        }
+
+        // Number of ratings
+        const usersRated = ratings.usersrated?.["@_value"];
+        if (usersRated) {
+          numRatings = parseInt(usersRated, 10);
+        }
+
+        // BGG Rank (get the first/best rank)
+        const ranks = ratings.ranks?.rank;
+        if (ranks) {
+          const ranksArray = Array.isArray(ranks) ? ranks : [ranks];
+          // Find the "boardgame" rank (overall rank)
+          const boardgameRank = ranksArray.find((r) => r["@_name"] === "boardgame");
+          if (boardgameRank?.["@_value"] && boardgameRank["@_value"] !== "Not Ranked") {
+            bggRank = parseInt(boardgameRank["@_value"], 10);
+          }
+        }
+
+        // Weight/Complexity (averageweight)
+        const avgWeight = ratings.averageweight?.["@_value"];
+        if (avgWeight) {
+          weight = Math.round(parseFloat(avgWeight) * 10) / 10;
+        }
       }
 
       // Get player counts
@@ -257,7 +288,7 @@ export class XmlApi2Client implements BggClient {
         ? parseInt(item.minage["@_value"], 10)
         : null;
 
-      // Get categories, mechanics, and expansion relationships from links
+      // Get categories, mechanics, designers, and relationships from links
       const links = Array.isArray(item.link) ? item.link : item.link ? [item.link] : [];
 
       const categories = links
@@ -266,6 +297,10 @@ export class XmlApi2Client implements BggClient {
 
       const mechanics = links
         .filter((l) => l["@_type"] === "boardgamemechanic")
+        .map((l) => l["@_value"]);
+
+      const designers = links
+        .filter((l) => l["@_type"] === "boardgamedesigner")
         .map((l) => l["@_value"]);
 
       const baseGameIds = links
@@ -296,6 +331,12 @@ export class XmlApi2Client implements BggClient {
         isExpansion,
         baseGameIds,
         expansionIds,
+        // Extended statistics
+        numRatings,
+        bggRank,
+        weight,
+        // Credits
+        designers,
       };
     } catch (error) {
       console.error("[XmlApi2Client] Error parsing thing item:", error);
@@ -597,6 +638,11 @@ interface ThingItem {
   statistics?: {
     ratings?: {
       average?: { "@_value": string };
+      usersrated?: { "@_value": string };
+      averageweight?: { "@_value": string };
+      ranks?: {
+        rank?: RankItem[] | RankItem;
+      };
     };
   };
 }
@@ -633,4 +679,12 @@ interface VersionItem {
   "@_id": string;
   image?: string;
   thumbnail?: string;
+}
+
+interface RankItem {
+  "@_id": string;
+  "@_name": string;
+  "@_friendlyname": string;
+  "@_value": string;
+  "@_bayesaverage": string;
 }

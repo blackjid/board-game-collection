@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Game" ADD COLUMN "bggRank" INTEGER;
+ALTER TABLE "Game" ADD COLUMN "designers" TEXT;
+ALTER TABLE "Game" ADD COLUMN "numRatings" INTEGER;
+ALTER TABLE "Game" ADD COLUMN "weight" REAL;

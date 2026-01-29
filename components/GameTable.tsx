@@ -68,7 +68,7 @@ function getRatingColor(rating: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-export type SortField = "name" | "year" | "rating" | "players" | "playtime";
+export type SortField = "name" | "year" | "rating" | "players" | "playtime" | "weight" | "rank";
 export type SortDirection = "asc" | "desc";
 
 export interface GameTableProps {
@@ -335,9 +335,9 @@ export function GameTable({
                 onSort={onSort}
               />
             </TableHead>
-            <TableHead className="w-14 px-2">
+            <TableHead className="w-20 px-2">
               <SortableHeader
-                label="★"
+                label="BGG Rating"
                 field="rating"
                 currentField={sortField}
                 direction={sortDirection}
@@ -357,6 +357,24 @@ export function GameTable({
               <SortableHeader
                 label="Time"
                 field="playtime"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+              />
+            </TableHead>
+            <TableHead className="w-16 px-2">
+              <SortableHeader
+                label="Weight"
+                field="weight"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+              />
+            </TableHead>
+            <TableHead className="w-20 px-2">
+              <SortableHeader
+                label="BGG Rank"
+                field="rank"
                 currentField={sortField}
                 direction={sortDirection}
                 onSort={onSort}
@@ -442,7 +460,7 @@ export function GameTable({
                   )}
                   {/* Warning for expansions without any base game in collection */}
                   {game.isExpansion && game.expandsGames.length > 0 && !game.expandsGames.some(g => g.inCollection) && (
-                    <div 
+                    <div
                       className="flex-shrink-0"
                       title={`Works with: ${game.expandsGames.map(g => g.name).join(", ")}`}
                     >
@@ -471,6 +489,21 @@ export function GameTable({
               </TableCell>
               <TableCell className="px-2 py-1 text-xs text-muted-foreground">
                 {playtime ? `${playtime}m` : "-"}
+              </TableCell>
+              <TableCell className="px-2 py-1 text-xs text-muted-foreground">
+                {game.weight ? (
+                  <span
+                    className="text-xs font-medium px-1.5 py-0.5 rounded bg-muted"
+                    title={`Complexity: ${game.weight.toFixed(1)}/5`}
+                  >
+                    {game.weight.toFixed(1)}
+                  </span>
+                ) : (
+                  <span>-</span>
+                )}
+              </TableCell>
+              <TableCell className="px-2 py-1 text-xs text-muted-foreground">
+                {game.bggRank ? `#${game.bggRank.toLocaleString()}` : "-"}
               </TableCell>
               {isAdmin && showInCollectionColumn && (
                 <TableCell className="px-2 py-1">

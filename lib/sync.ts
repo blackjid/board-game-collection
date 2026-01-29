@@ -340,6 +340,11 @@ export async function scrapeGame(gameId: string): Promise<boolean> {
         isExpansion: gameDetails.isExpansion,
         availableImages: JSON.stringify(galleryImages),
         lastScraped: new Date(),
+        // Extended BGG statistics
+        numRatings: gameDetails.numRatings,
+        bggRank: gameDetails.bggRank,
+        weight: gameDetails.weight,
+        designers: JSON.stringify(gameDetails.designers),
       },
     });
 

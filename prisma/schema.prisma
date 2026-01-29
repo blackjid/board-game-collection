@@ -31,6 +31,12 @@ model Game {
   mechanics       String?  // JSON string array
   isExpansion     Boolean  @default(false)
 
+  // Extended BGG statistics
+  numRatings      Int?     // Number of ratings on BGG
+  bggRank         Int?     // Overall BGG rank
+  weight          Float?   // Complexity (1-5 scale)
+  designers       String?  // JSON string array
+
   // All available images from BGG gallery
   availableImages String?  // JSON string array
 

@@ -440,6 +440,14 @@ export function HomeClient({
             if (a.maxPlaytime === null) return 1;
             if (b.maxPlaytime === null) return -1;
             return (a.maxPlaytime - b.maxPlaytime) * dir;
+          case "weight":
+            if (a.weight === null) return 1;
+            if (b.weight === null) return -1;
+            return (a.weight - b.weight) * dir;
+          case "rank":
+            if (a.bggRank === null) return 1;
+            if (b.bggRank === null) return -1;
+            return (a.bggRank - b.bggRank) * dir;
           default:
             return 0;
         }

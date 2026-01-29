@@ -23,6 +23,12 @@ export interface BggGameDetails {
   isExpansion: boolean;
   baseGameIds: string[];
   expansionIds: string[];
+  // Extended statistics
+  numRatings: number | null;
+  bggRank: number | null;
+  weight: number | null; // Complexity (1-5 scale)
+  // Credits
+  designers: string[];
 }
 
 /**
