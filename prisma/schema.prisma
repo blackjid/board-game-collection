@@ -235,12 +235,17 @@ model CollectionGame {
   addedBy      String   @default("manual")  // "sync" | "manual"
   addedAt      DateTime @default(now())
 
+  // Who contributed this game to the list (null = me/owner)
+  contributorId String?
+  contributor   Player?  @relation(fields: [contributorId], references: [id], onDelete: SetNull)
+
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   game         Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@unique([collectionId, gameId])
   @@index([collectionId])
   @@index([gameId])
+  @@index([contributorId])
 }
 
 // Player - tracks game participants with additional details
@@ -252,7 +257,8 @@ model Player {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  gamePlays   GamePlayPlayer[]
+  gamePlays     GamePlayPlayer[]
+  contributions CollectionGame[]  // Games this player contributed to lists
 
   @@index([displayName])
 }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Dice6, AlertTriangle, Brain } from "lucide-react";
+import { Dice6, AlertTriangle, Brain, User, Library } from "lucide-react";
 import type { GameData } from "@/lib/games";
 
 import { Card } from "@/components/ui/card";
@@ -151,7 +151,7 @@ export function GameCard({ game }: GameCardProps) {
             </p>
           )}
 
-          <div className="flex items-center justify-start gap-1.5 print:gap-1 text-xs print:text-[7px] text-muted-foreground mt-auto pt-1.5 print:pt-0.5">
+          <div className="flex items-center justify-start gap-1.5 print:gap-1 text-xs print:text-[7px] text-muted-foreground mt-auto pt-1.5 print:pt-0.5 flex-wrap">
             {game.rating && (
               <Badge
                 className="text-white font-bold px-1.5 py-0.5 text-[10px] print:text-[6px] print:px-1 print:py-0 border-0"
@@ -181,7 +181,28 @@ export function GameCard({ game }: GameCardProps) {
                 <span>{playtime}</span>
               </>
             )}
+            {/* Ownership indicator - show when game is in primary collection */}
+            {game.isInPrimaryCollection && (
+              <span
+                title="In your collection"
+                className="text-emerald-400"
+              >
+                <Library className="size-3" />
+              </span>
+            )}
           </div>
+          {/* Contributor badge - only show when someone else contributed */}
+          {game.contributor && (
+            <div className="mt-1">
+              <Badge
+                variant="outline"
+                className="text-[10px] gap-1 border-blue-500/30 text-blue-400"
+              >
+                <User className="size-2.5" />
+                {game.contributor.displayName}
+              </Badge>
+            </div>
+          )}
         </div>
       </Card>
     </Link>

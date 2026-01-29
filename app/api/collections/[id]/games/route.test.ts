@@ -168,9 +168,11 @@ describe("/api/collections/[id]/games", () => {
         data: {
           collectionId: listId,
           gameId: gameId,
+          contributorId: null,
         },
         include: {
           game: true,
+          contributor: true,
         },
       });
 
@@ -330,9 +332,11 @@ describe("/api/collections/[id]/games", () => {
         data: {
           collectionId: listId,
           gameId: gameId,
+          contributorId: null,
         },
         include: {
           game: true,
+          contributor: true,
         },
       });
     });

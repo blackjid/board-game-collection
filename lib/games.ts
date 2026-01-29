@@ -69,6 +69,10 @@ export interface GameData {
   requiredGames: GameRelationshipRef[];   // Games required to play this
   expansions: GameRelationshipRef[];      // Expansions for this base game
   requiredBy: GameRelationshipRef[];      // Games that require this
+  // List-specific fields (only present when viewing a list)
+  contributorId?: string | null;
+  contributor?: { id: string; displayName: string } | null;
+  isInPrimaryCollection?: boolean;
 }
 
 function parseJsonArray(json: string | null): string[] {

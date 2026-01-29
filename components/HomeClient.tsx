@@ -68,6 +68,8 @@ import { GameRowItem } from "@/components/GameRowItem";
 import { GameTable, SortField, SortDirection } from "@/components/GameTable";
 import { EditListDialog, DeleteListDialog, DuplicateListDialog, ShareListDialog } from "@/components/ListDialogs";
 import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
+import { EditContributorDialog } from "@/components/EditContributorDialog";
+import type { Contributor } from "@/components/ContributorSelector";
 import type { GameData, GameGroup } from "@/lib/games";
 import { groupGamesByBaseGame } from "@/lib/games";
 import { saveUIPreference } from "@/lib/cookies";
@@ -305,6 +307,7 @@ export function HomeClient({
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showAddGamesDialog, setShowAddGamesDialog] = useState(false);
+  const [gameForContributorEdit, setGameForContributorEdit] = useState<GameData | null>(null);
 
   // Bulk selection state
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
@@ -574,6 +577,20 @@ export function HomeClient({
     } catch (error) {
       console.error("Failed to remove game:", error);
     }
+  };
+
+  // Update contributor for a game in a list
+  const handleUpdateContributor = async (contributor: Contributor | null) => {
+    if (!selectedCollection || !gameForContributorEdit) return;
+    await fetch(`/api/collections/${selectedCollection.id}/games`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        gameId: gameForContributorEdit.id,
+        contributorId: contributor?.id ?? null,
+      }),
+    });
+    router.refresh();
   };
 
 
@@ -1327,6 +1344,7 @@ export function HomeClient({
                       onEditImages={setSelectedGameForImages}
                       onAddToList={(id) => openAddToListDialog([id])}
                       onRemoveFromList={handleRemoveFromList}
+                      onEditContributor={setGameForContributorEdit}
                       isScraping={scrapingIds.has(group.baseGame.id)}
                       isInQueue={queuedIds.has(group.baseGame.id)}
                       isPending={queueStatus?.recentJobs.some(
@@ -1334,6 +1352,7 @@ export function HomeClient({
                       )}
                       showRemoveFromList={!!isViewingList}
                       hasManualLists={hasManualLists}
+                      showContributorEdit={!!isViewingList}
                     />
                   </div>
 
@@ -1353,6 +1372,7 @@ export function HomeClient({
                             onEditImages={setSelectedGameForImages}
                             onAddToList={(id) => openAddToListDialog([id])}
                             onRemoveFromList={handleRemoveFromList}
+                            onEditContributor={setGameForContributorEdit}
                             isScraping={scrapingIds.has(expansion.id)}
                             isInQueue={queuedIds.has(expansion.id)}
                             isPending={queueStatus?.recentJobs.some(
@@ -1360,6 +1380,7 @@ export function HomeClient({
                             )}
                             showRemoveFromList={!!isViewingList}
                             hasManualLists={hasManualLists}
+                            showContributorEdit={!!isViewingList}
                           />
                         ))}
                       </div>
@@ -1383,6 +1404,7 @@ export function HomeClient({
                   onEditImages={setSelectedGameForImages}
                   onAddToList={(id) => openAddToListDialog([id])}
                   onRemoveFromList={handleRemoveFromList}
+                  onEditContributor={setGameForContributorEdit}
                   isScraping={scrapingIds.has(game.id)}
                   isInQueue={queuedIds.has(game.id)}
                   isPending={queueStatus?.recentJobs.some(
@@ -1390,6 +1412,7 @@ export function HomeClient({
                   )}
                   showRemoveFromList={!!isViewingList}
                   hasManualLists={hasManualLists}
+                  showContributorEdit={!!isViewingList}
                 />
               ))}
             </div>
@@ -1520,6 +1543,7 @@ export function HomeClient({
             listId={selectedCollection.id}
             listName={selectedCollection.name}
             existingGameIds={existingGameIds}
+            showContributor={isViewingList}
             onGamesAdded={() => router.refresh()}
           />
         </>
@@ -1531,6 +1555,17 @@ export function HomeClient({
           game={selectedGameForImages}
           onClose={() => setSelectedGameForImages(null)}
           onSave={() => router.refresh()}
+        />
+      )}
+
+      {/* Edit Contributor Dialog */}
+      {gameForContributorEdit && (
+        <EditContributorDialog
+          open={!!gameForContributorEdit}
+          onOpenChange={(open) => !open && setGameForContributorEdit(null)}
+          gameName={gameForContributorEdit.name}
+          currentContributor={gameForContributorEdit.contributor ?? null}
+          onSave={handleUpdateContributor}
         />
       )}
 

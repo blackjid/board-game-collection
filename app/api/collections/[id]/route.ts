@@ -32,11 +32,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         games: {
           include: {
             game: true,
+            contributor: true,
           },
           orderBy: { addedAt: "desc" },
         },
       },
     });
+
+    // Get primary collection's game IDs for ownership indicator
+    // (only needed for non-primary collections)
+    let primaryGameIds: Set<string> = new Set();
+    if (collection && !collection.isPrimary) {
+      const primaryCollection = await prisma.collection.findFirst({
+        where: { isPrimary: true },
+        select: {
+          games: {
+            select: { gameId: true },
+          },
+        },
+      });
+      if (primaryCollection) {
+        primaryGameIds = new Set(primaryCollection.games.map((g) => g.gameId));
+      }
+    }
 
     if (!collection) {
       return NextResponse.json(
@@ -86,6 +104,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       componentImages: parseJsonArray(cg.game.componentImages),
       availableImages: parseJsonArray(cg.game.availableImages),
       addedAt: cg.addedAt,
+      // Contributor info (who brought this game to the list)
+      contributorId: cg.contributorId,
+      contributor: cg.contributor
+        ? {
+            id: cg.contributor.id,
+            displayName: cg.contributor.displayName,
+          }
+        : null,
+      // Ownership indicator (is this game in the primary collection?)
+      isInPrimaryCollection: collection.isPrimary
+        ? true
+        : primaryGameIds.has(cg.game.id),
     }));
 
     return NextResponse.json({
@@ -93,6 +123,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         id: collection.id,
         name: collection.name,
         description: collection.description,
+        type: collection.type,
+        isPrimary: collection.isPrimary,
         isPublic: collection.isPublic,
         shareToken: sessionId ? collection.shareToken : undefined, // Only expose token to authenticated users
         createdAt: collection.createdAt,

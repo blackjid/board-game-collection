@@ -12,6 +12,8 @@ interface AddGameBody {
   name?: string;
   yearPublished?: number | null;
   isExpansion?: boolean;
+  // Optional: who contributed this game to the list (null = me/owner)
+  contributorId?: string | null;
 }
 
 /**
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   try {
     const body: AddGameBody = await request.json();
-    const { gameId, name, yearPublished, isExpansion } = body;
+    const { gameId, name, yearPublished, isExpansion, contributorId } = body;
 
     if (!gameId) {
       return NextResponse.json(
@@ -89,9 +91,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       data: {
         collectionId,
         gameId,
+        contributorId: contributorId ?? null,
       },
       include: {
         game: true,
+        contributor: true,
       },
     });
 
@@ -115,12 +119,104 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           collectionGame.game.image,
         lastScraped: collectionGame.game.lastScraped,
         addedAt: collectionGame.addedAt,
+        contributorId: collectionGame.contributorId,
+        contributor: collectionGame.contributor
+          ? {
+              id: collectionGame.contributor.id,
+              displayName: collectionGame.contributor.displayName,
+            }
+          : null,
       },
     });
   } catch (error) {
     console.error("Failed to add game to collection:", error);
     return NextResponse.json(
       { error: "Failed to add game to collection" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/collections/[id]/games
+ * Update a game's metadata in a collection (e.g., contributor)
+ */
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  const { id: collectionId } = await params;
+
+  try {
+    const body = await request.json();
+    const { gameId, contributorId } = body;
+
+    if (!gameId) {
+      return NextResponse.json(
+        { error: "gameId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check collection exists
+    const collection = await prisma.collection.findUnique({
+      where: { id: collectionId },
+    });
+    if (!collection) {
+      return NextResponse.json(
+        { error: "Collection not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if game is in this collection
+    const existingLink = await prisma.collectionGame.findUnique({
+      where: {
+        collectionId_gameId: { collectionId, gameId },
+      },
+    });
+    if (!existingLink) {
+      return NextResponse.json(
+        { error: "Game is not in this collection" },
+        { status: 404 }
+      );
+    }
+
+    // Update the contributor
+    const updatedCollectionGame = await prisma.collectionGame.update({
+      where: {
+        collectionId_gameId: { collectionId, gameId },
+      },
+      data: {
+        contributorId: contributorId ?? null,
+      },
+      include: {
+        game: true,
+        contributor: true,
+      },
+    });
+
+    // Update collection's updatedAt
+    await prisma.collection.update({
+      where: { id: collectionId },
+      data: { updatedAt: new Date() },
+    });
+
+    return NextResponse.json({
+      success: true,
+      game: {
+        id: updatedCollectionGame.game.id,
+        name: updatedCollectionGame.game.name,
+        contributorId: updatedCollectionGame.contributorId,
+        contributor: updatedCollectionGame.contributor
+          ? {
+              id: updatedCollectionGame.contributor.id,
+              displayName: updatedCollectionGame.contributor.displayName,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to update game in collection:", error);
+    return NextResponse.json(
+      { error: "Failed to update game in collection" },
       { status: 500 }
     );
   }
