@@ -134,7 +134,7 @@ describe("GameTable", () => {
 
       expect(screen.getByRole("button", { name: /name/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /year/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /★/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /bgg rating/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /players/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /time/i })).toBeInTheDocument();
     });

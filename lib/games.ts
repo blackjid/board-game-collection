@@ -57,6 +57,11 @@ export interface GameData {
   availableImages: string[];
   componentImages: string[];
   lastScraped: string | null;
+  // Extended BGG statistics
+  numRatings: number | null;
+  bggRank: number | null;
+  weight: number | null; // Complexity (1-5 scale)
+  designers: string[];
   // Collections this game belongs to
   collections?: { id: string; name: string; type: string }[];
   // Game relationships (many-to-many)
@@ -98,6 +103,11 @@ function transformGame(game: Awaited<ReturnType<typeof prisma.game.findFirst>>):
     availableImages: parseJsonArray(game.availableImages),
     componentImages: parseJsonArray(game.componentImages),
     lastScraped: game.lastScraped?.toISOString() ?? null,
+    // Extended BGG statistics
+    numRatings: game.numRatings,
+    bggRank: game.bggRank,
+    weight: game.weight,
+    designers: parseJsonArray(game.designers),
     // Relationships are populated separately when needed
     expandsGames: [],
     requiredGames: [],
@@ -236,10 +246,10 @@ export async function getActiveGames(): Promise<GameData[]> {
 
   // Convert to array and sort by name
   const result = Array.from(gameMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  
+
   // Populate relationships for grouping
   await populateGameRelationships(result);
-  
+
   return result;
 }
 
@@ -415,7 +425,7 @@ export function groupGamesByBaseGame(games: GameData[]): GameGroup[] {
   // First pass: categorize games and build lookup map
   for (const game of games) {
     gameMap.set(game.id, game);
-    
+
     if (game.isExpansion) {
       expansions.push(game);
     } else {
@@ -428,10 +438,10 @@ export function groupGamesByBaseGame(games: GameData[]): GameGroup[] {
   // not under other expansions. This keeps the view flat without deep nesting.
   const baseGameExpansionsMap = new Map<string, GameData[]>();
   const orphanedExpansions: GameData[] = [];
-  
+
   // Create a set of base game IDs for efficient lookup
   const baseGameIds = new Set(baseGames.map((g) => g.id));
-  
+
   for (const expansion of expansions) {
     // Find which BASE GAMES (not expansions) this expansion works with that are in the collection
     const baseGamesInCollection = expansion.expandsGames.filter(

@@ -22,6 +22,9 @@ import {
   Puzzle,
   ChevronRight,
   Package,
+  Brain,
+  Award,
+  Star,
 } from "lucide-react";
 import type { GameData, ManualListSummary } from "@/lib/games";
 import type { GamePlayData } from "@/types/play";
@@ -416,7 +419,56 @@ export function GameDetailClient({ game, currentUser, lists, plays: initialPlays
                     </span>
                   </div>
                 )}
+                {game.weight && (
+                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-muted rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-border">
+                    <span className="text-muted-foreground block text-[10px] sm:text-xs mb-0.5 sm:mb-1">Complexity</span>
+                    <span className="text-foreground flex items-center gap-1.5">
+                      <Brain className="size-4" />
+                      {game.weight.toFixed(1)}/5
+                    </span>
+                  </div>
+                )}
+                {game.bggRank && (
+                  <div className="px-3 sm:px-5 py-2 sm:py-3 bg-muted rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium backdrop-blur-sm border border-border">
+                    <span className="text-muted-foreground block text-[10px] sm:text-xs mb-0.5 sm:mb-1">BGG Rank</span>
+                    <span className="text-foreground flex items-center gap-1.5">
+                      <Award className="size-4" />
+                      #{game.bggRank.toLocaleString()}
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* BGG Stats Row - Rating breakdown */}
+              {(game.rating && game.numRatings) && (
+                <div className="mb-6 sm:mb-8 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Star className="size-4 text-primary" />
+                  <span>
+                    <span className="text-primary font-semibold">{game.rating.toFixed(1)}</span> average rating from{" "}
+                    <span className="font-medium">{game.numRatings.toLocaleString()}</span> {game.numRatings === 1 ? "rating" : "ratings"}
+                  </span>
+                </div>
+              )}
+
+              {/* Designers */}
+              {game.designers && game.designers.length > 0 && (
+                <div className="mb-4 sm:mb-6">
+                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground mb-2 sm:mb-3">
+                    {game.designers.length === 1 ? "Designer" : "Designers"}
+                  </h2>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {game.designers.map((designer: string, i: number) => (
+                      <Badge
+                        key={i}
+                        variant="outline"
+                        className="bg-primary/10 text-primary border-primary/30 text-xs sm:text-sm"
+                      >
+                        {designer}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Description */}
               {game.description && (
