@@ -119,8 +119,16 @@ model ScrapeJob {
   startedAt   DateTime?
   completedAt DateTime?
 
+  // Retry tracking
+  retryCount  Int       @default(0)
+  maxRetries  Int       @default(3)
+
+  // Batch tracking - groups jobs from same scrape operation
+  batchId     String?
+
   @@index([status])
   @@index([gameId])
+  @@index([batchId])
 }
 
 // Pick Session Models - stores both solo and collaborative sessions

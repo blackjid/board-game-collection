@@ -46,6 +46,48 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Log rate limit headers from response for debugging
+ */
+function logRateLimitInfo(response: Response, context: string): void {
+  const headers = {
+    limit: response.headers.get("X-RateLimit-Limit"),
+    remaining: response.headers.get("X-RateLimit-Remaining"),
+    reset: response.headers.get("X-RateLimit-Reset"),
+    retryAfter: response.headers.get("Retry-After"),
+  };
+  // Only log if any rate limit headers are present
+  if (Object.values(headers).some(Boolean)) {
+    console.log(`[XmlApi2Client] Rate limit info for ${context}:`, headers);
+  }
+}
+
+/**
+ * Parse Retry-After header value
+ * Can be either seconds (integer) or HTTP-date
+ * Returns delay in milliseconds
+ */
+function parseRetryAfter(retryAfter: string | null, fallbackMs: number): number {
+  if (!retryAfter) {
+    return fallbackMs;
+  }
+
+  // Try parsing as seconds (most common)
+  const seconds = parseInt(retryAfter, 10);
+  if (!isNaN(seconds)) {
+    return seconds * 1000;
+  }
+
+  // Try parsing as HTTP-date
+  const date = new Date(retryAfter);
+  if (!isNaN(date.getTime())) {
+    const delayMs = date.getTime() - Date.now();
+    return Math.max(delayMs, 1000); // At least 1 second
+  }
+
+  return fallbackMs;
+}
+
 // ============================================================================
 // XmlApi2Client - Uses BGG's official XML API v2
 // ============================================================================
@@ -90,36 +132,52 @@ export class XmlApi2Client implements BggClient {
   }
 
   /**
-   * Fetch with retry logic for 202 (queued) and 5xx responses
+   * Fetch with retry logic for 202 (queued), 429 (rate limit), and 5xx responses
    */
   private async fetchWithRetry(url: string): Promise<string | null> {
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const response = await this.rateLimitedFetch(url);
+
+      // Log rate limit headers for debugging (if present)
+      logRateLimitInfo(response, url);
 
       if (response.status === 200) {
         return response.text();
       }
 
       if (response.status === 202) {
-        // BGG is processing the request, need to retry
+        // BGG is processing the request, need to retry with exponential backoff
+        const delay = Math.round(RETRY_DELAY_MS * Math.pow(1.5, attempt)); // 2s, 3s, 4.5s
         console.log(
-          `[XmlApi2Client] Request queued (202), retrying in ${RETRY_DELAY_MS}ms...`
-        );
-        await sleep(RETRY_DELAY_MS);
-        continue;
-      }
-
-      if (response.status >= 500) {
-        // Server error, retry with backoff
-        const delay = RETRY_DELAY_MS * Math.pow(2, attempt);
-        console.log(
-          `[XmlApi2Client] Server error (${response.status}), retrying in ${delay}ms...`
+          `[XmlApi2Client] Request queued (202), attempt ${attempt + 1}/${MAX_RETRIES}, retrying in ${delay}ms...`
         );
         await sleep(delay);
         continue;
       }
 
-      // Client error or other issue
+      if (response.status === 429) {
+        // Rate limited - check Retry-After header
+        const retryAfter = response.headers.get("Retry-After");
+        const fallbackDelay = RETRY_DELAY_MS * Math.pow(2, attempt); // 2s, 4s, 8s
+        const delay = parseRetryAfter(retryAfter, fallbackDelay);
+        console.log(
+          `[XmlApi2Client] Rate limited (429), attempt ${attempt + 1}/${MAX_RETRIES}, retrying in ${delay}ms...`
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      if (response.status >= 500) {
+        // Server error, retry with exponential backoff
+        const delay = RETRY_DELAY_MS * Math.pow(2, attempt); // 2s, 4s, 8s
+        console.log(
+          `[XmlApi2Client] Server error (${response.status}), attempt ${attempt + 1}/${MAX_RETRIES}, retrying in ${delay}ms...`
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      // Client error or other issue (4xx except 429)
       console.error(
         `[XmlApi2Client] Request failed with status ${response.status}: ${url}`
       );

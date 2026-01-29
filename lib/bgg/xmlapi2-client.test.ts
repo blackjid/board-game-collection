@@ -1,6 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { XmlApi2Client } from "./xmlapi2-client";
 
+/**
+ * Create a mock Response with proper headers
+ */
+function createMockResponse(
+  status: number,
+  body: string,
+  headers: Record<string, string> = {}
+): Response {
+  return {
+    status,
+    ok: status >= 200 && status < 300,
+    text: () => Promise.resolve(body),
+    headers: {
+      get: (name: string) => headers[name] ?? null,
+    },
+  } as unknown as Response;
+}
+
 describe("lib/bgg/xmlapi2-client", () => {
   let client: XmlApi2Client;
   const mockToken = "test-bearer-token";
@@ -55,11 +73,7 @@ describe("lib/bgg/xmlapi2-client", () => {
           </item>
         </items>`;
 
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 200,
-        ok: true,
-        text: () => Promise.resolve(xmlResponse),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, xmlResponse));
 
       const result = await client.getGameDetails("174430");
 
@@ -89,11 +103,7 @@ describe("lib/bgg/xmlapi2-client", () => {
     });
 
     it("should return null when API returns error", async () => {
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 404,
-        ok: false,
-        text: () => Promise.resolve("Not Found"),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(404, "Not Found"));
 
       const result = await client.getGameDetails("invalid-id");
 
@@ -110,16 +120,8 @@ describe("lib/bgg/xmlapi2-client", () => {
 
       // First call returns 202, second returns 200
       vi.mocked(global.fetch)
-        .mockResolvedValueOnce({
-          status: 202,
-          ok: false,
-          text: () => Promise.resolve("Queued"),
-        } as Response)
-        .mockResolvedValueOnce({
-          status: 200,
-          ok: true,
-          text: () => Promise.resolve(xmlResponse),
-        } as Response);
+        .mockResolvedValueOnce(createMockResponse(202, "Queued"))
+        .mockResolvedValueOnce(createMockResponse(200, xmlResponse));
 
       const result = await client.getGameDetails("1");
 
@@ -137,11 +139,7 @@ describe("lib/bgg/xmlapi2-client", () => {
           </item>
         </items>`;
 
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 200,
-        ok: true,
-        text: () => Promise.resolve(xmlResponse),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, xmlResponse));
 
       const result = await client.getGameDetails("12345");
 
@@ -165,16 +163,8 @@ describe("lib/bgg/xmlapi2-client", () => {
       const gameIds = Array.from({ length: 25 }, (_, i) => String(i + 1));
 
       vi.mocked(global.fetch)
-        .mockResolvedValueOnce({
-          status: 200,
-          ok: true,
-          text: () => Promise.resolve(createXmlResponse(gameIds.slice(0, 20))),
-        } as Response)
-        .mockResolvedValueOnce({
-          status: 200,
-          ok: true,
-          text: () => Promise.resolve(createXmlResponse(gameIds.slice(20))),
-        } as Response);
+        .mockResolvedValueOnce(createMockResponse(200, createXmlResponse(gameIds.slice(0, 20))))
+        .mockResolvedValueOnce(createMockResponse(200, createXmlResponse(gameIds.slice(20))));
 
       const results = await client.getGamesDetails(gameIds);
 
@@ -201,11 +191,7 @@ describe("lib/bgg/xmlapi2-client", () => {
           </item>
         </items>`;
 
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 200,
-        ok: true,
-        text: () => Promise.resolve(xmlResponse),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, xmlResponse));
 
       const result = await client.getCollection("testuser");
 
@@ -225,11 +211,7 @@ describe("lib/bgg/xmlapi2-client", () => {
     it("should return empty array when collection is empty", async () => {
       const xmlResponse = `<?xml version="1.0" encoding="utf-8"?><items></items>`;
 
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 200,
-        ok: true,
-        text: () => Promise.resolve(xmlResponse),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, xmlResponse));
 
       const result = await client.getCollection("emptyuser");
 
@@ -258,11 +240,7 @@ describe("lib/bgg/xmlapi2-client", () => {
           </item>
         </items>`;
 
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 200,
-        ok: true,
-        text: () => Promise.resolve(xmlResponse),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, xmlResponse));
 
       const result = await client.getGalleryImages("174430");
 
@@ -293,11 +271,7 @@ describe("lib/bgg/xmlapi2-client", () => {
           </item>
         </items>`;
 
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 200,
-        ok: true,
-        text: () => Promise.resolve(xmlResponse),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, xmlResponse));
 
       const result = await client.getGalleryImages("174430");
 
@@ -313,11 +287,7 @@ describe("lib/bgg/xmlapi2-client", () => {
           </item>
         </items>`;
 
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 200,
-        ok: true,
-        text: () => Promise.resolve(xmlResponse),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, xmlResponse));
 
       const result = await client.getGalleryImages("174430");
 
@@ -348,16 +318,8 @@ describe("lib/bgg/xmlapi2-client", () => {
         </items>`;
 
       vi.mocked(global.fetch)
-        .mockResolvedValueOnce({
-          status: 200,
-          ok: true,
-          text: () => Promise.resolve(searchXml),
-        } as Response)
-        .mockResolvedValueOnce({
-          status: 200,
-          ok: true,
-          text: () => Promise.resolve(thingXml),
-        } as Response);
+        .mockResolvedValueOnce(createMockResponse(200, searchXml))
+        .mockResolvedValueOnce(createMockResponse(200, thingXml));
 
       const result = await client.search("Gloomhaven", 15);
 
@@ -390,11 +352,7 @@ describe("lib/bgg/xmlapi2-client", () => {
           </item>
         </items>`;
 
-      vi.mocked(global.fetch).mockResolvedValue({
-        status: 200,
-        ok: true,
-        text: () => Promise.resolve(xmlResponse),
-      } as Response);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, xmlResponse));
 
       const result = await client.getHotGames();
 

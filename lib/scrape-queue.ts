@@ -20,6 +20,18 @@ export interface ScrapeJob {
   createdAt: Date;
   startedAt?: Date | null;
   completedAt?: Date | null;
+  retryCount: number;
+  maxRetries: number;
+  batchId?: string | null;
+}
+
+export interface BatchStats {
+  id: string;
+  total: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  processing: number;
 }
 
 export interface QueueStatus {
@@ -31,20 +43,43 @@ export interface QueueStatus {
   failedCount: number;
   cancelledCount: number;
   recentJobs: ScrapeJob[];
+  // Batch-specific stats for active batch
+  currentBatch: BatchStats | null;
 }
 
 // Worker state (in-memory, but jobs are in DB)
 let isProcessing = false;
 let currentJobId: string | null = null;
 let stopRequested = false;
+let currentBatchId: string | null = null;
 
 // How many days to keep completed jobs
 const JOB_RETENTION_DAYS = 7;
 
+// Default max retries for failed jobs
+const DEFAULT_MAX_RETRIES = 3;
+
+// Delay between retries (exponential backoff base)
+const RETRY_DELAY_BASE_MS = 2000;
+
+/**
+ * Generate a unique batch ID
+ */
+function generateBatchId(): string {
+  return `batch_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+}
+
 /**
  * Add a game to the scrape queue
+ * @param gameId - The BGG game ID
+ * @param gameName - The game name for display
+ * @param batchId - Optional batch ID to group jobs together
  */
-export async function enqueueScrape(gameId: string, gameName: string): Promise<ScrapeJob> {
+export async function enqueueScrape(
+  gameId: string,
+  gameName: string,
+  batchId?: string
+): Promise<ScrapeJob> {
   // Check if already in queue (pending or processing)
   const existing = await prisma.scrapeJob.findFirst({
     where: {
@@ -57,12 +92,17 @@ export async function enqueueScrape(gameId: string, gameName: string): Promise<S
     return existing as ScrapeJob;
   }
 
+  // Use provided batch ID, current active batch, or generate new one
+  const effectiveBatchId = batchId ?? currentBatchId ?? generateBatchId();
+
   // Create new job
   const job = await prisma.scrapeJob.create({
     data: {
       gameId,
       gameName,
       status: "pending",
+      batchId: effectiveBatchId,
+      maxRetries: DEFAULT_MAX_RETRIES,
     },
   });
 
@@ -77,12 +117,17 @@ export async function enqueueScrape(gameId: string, gameName: string): Promise<S
 
 /**
  * Add multiple games to the scrape queue
+ * All jobs in a batch share the same batchId for tracking
  */
 export async function enqueueScrapeMany(games: Array<{ id: string; name: string }>): Promise<ScrapeJob[]> {
+  // Generate a new batch ID for this group of jobs
+  const batchId = generateBatchId();
+  currentBatchId = batchId;
+
   const jobs: ScrapeJob[] = [];
 
   for (const game of games) {
-    const job = await enqueueScrape(game.id, game.name);
+    const job = await enqueueScrape(game.id, game.name, batchId);
     jobs.push(job);
   }
 
@@ -100,9 +145,45 @@ export async function getJob(jobId: string): Promise<ScrapeJob | null> {
 }
 
 /**
- * Get current queue status
+ * Get current queue status with batch-aware statistics
  */
 export async function getQueueStatus(): Promise<QueueStatus> {
+  // Find the active batch (has pending or processing jobs)
+  const activeBatchJob = await prisma.scrapeJob.findFirst({
+    where: { status: { in: ["pending", "processing"] } },
+    select: { batchId: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const activeBatchId = activeBatchJob?.batchId ?? currentBatchId;
+
+  // Get batch-specific stats if we have an active batch
+  let currentBatch: BatchStats | null = null;
+  if (activeBatchId) {
+    const batchJobs = await prisma.scrapeJob.groupBy({
+      by: ["status"],
+      where: { batchId: activeBatchId },
+      _count: true,
+    });
+
+    const statusCounts: Record<string, number> = {};
+    let total = 0;
+    for (const group of batchJobs) {
+      statusCounts[group.status] = group._count;
+      total += group._count;
+    }
+
+    currentBatch = {
+      id: activeBatchId,
+      total,
+      completed: statusCounts["completed"] ?? 0,
+      failed: statusCounts["failed"] ?? 0,
+      pending: statusCounts["pending"] ?? 0,
+      processing: statusCounts["processing"] ?? 0,
+    };
+  }
+
+  // Get global counts and recent jobs
   const [pendingCount, completedCount, failedCount, cancelledCount, recentJobs, currentJob] = await Promise.all([
     prisma.scrapeJob.count({ where: { status: "pending" } }),
     prisma.scrapeJob.count({ where: { status: "completed" } }),
@@ -126,6 +207,7 @@ export async function getQueueStatus(): Promise<QueueStatus> {
     failedCount,
     cancelledCount,
     recentJobs: recentJobs as ScrapeJob[],
+    currentBatch,
   };
 }
 
@@ -234,6 +316,54 @@ export async function resumeInterruptedJobs(): Promise<void> {
 }
 
 /**
+ * Handle a failed job - either retry or mark as permanently failed
+ */
+async function handleJobFailure(
+  jobId: string,
+  gameName: string,
+  errorMessage: string,
+  currentRetryCount: number,
+  maxRetries: number
+): Promise<void> {
+  if (currentRetryCount < maxRetries) {
+    // Schedule for retry - increment retry count and reset to pending
+    const newRetryCount = currentRetryCount + 1;
+    const retryDelay = RETRY_DELAY_BASE_MS * Math.pow(2, currentRetryCount); // 2s, 4s, 8s...
+
+    await prisma.scrapeJob.update({
+      where: { id: jobId },
+      data: {
+        status: "pending",
+        retryCount: newRetryCount,
+        error: `Attempt ${currentRetryCount + 1} failed: ${errorMessage}`,
+        startedAt: null,
+      },
+    });
+
+    console.log(
+      `[ScrapeQueue] Will retry ${gameName} (attempt ${newRetryCount + 1}/${maxRetries + 1}) after ${retryDelay}ms`
+    );
+
+    // Add delay before retry
+    await new Promise((resolve) => setTimeout(resolve, retryDelay));
+  } else {
+    // Max retries exceeded - mark as permanently failed
+    await prisma.scrapeJob.update({
+      where: { id: jobId },
+      data: {
+        status: "failed",
+        error: `Failed after ${maxRetries + 1} attempts: ${errorMessage}`,
+        completedAt: new Date(),
+      },
+    });
+
+    console.log(
+      `[ScrapeQueue] Permanently failed: ${gameName} (exhausted ${maxRetries + 1} attempts)`
+    );
+  }
+}
+
+/**
  * Process the queue (runs in background)
  */
 async function processQueue(): Promise<void> {
@@ -263,6 +393,7 @@ async function processQueue(): Promise<void> {
       }
 
       currentJobId = job.id;
+      currentBatchId = job.batchId;
 
       // Mark as processing
       await prisma.scrapeJob.update({
@@ -273,7 +404,8 @@ async function processQueue(): Promise<void> {
         },
       });
 
-      console.log(`[ScrapeQueue] Processing: ${job.gameName} (${job.gameId})`);
+      const retryInfo = job.retryCount > 0 ? ` (retry ${job.retryCount}/${job.maxRetries})` : "";
+      console.log(`[ScrapeQueue] Processing: ${job.gameName} (${job.gameId})${retryInfo}`);
 
       try {
         const success = await scrapeGame(job.gameId);
@@ -284,30 +416,32 @@ async function processQueue(): Promise<void> {
             data: {
               status: "completed",
               completedAt: new Date(),
+              error: null, // Clear any previous error
             },
           });
           console.log(`[ScrapeQueue] Completed: ${job.gameName}`);
         } else {
-          await prisma.scrapeJob.update({
-            where: { id: job.id },
-            data: {
-              status: "failed",
-              error: "Scrape returned false",
-              completedAt: new Date(),
-            },
-          });
-          console.log(`[ScrapeQueue] Failed: ${job.gameName}`);
+          // Scrape returned false - handle as failure with possible retry
+          await handleJobFailure(
+            job.id,
+            job.gameName,
+            "Scrape returned false",
+            job.retryCount,
+            job.maxRetries
+          );
         }
       } catch (error) {
-        await prisma.scrapeJob.update({
-          where: { id: job.id },
-          data: {
-            status: "failed",
-            error: error instanceof Error ? error.message : String(error),
-            completedAt: new Date(),
-          },
-        });
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`[ScrapeQueue] Error scraping ${job.gameName}:`, error);
+
+        // Handle failure with possible retry
+        await handleJobFailure(
+          job.id,
+          job.gameName,
+          errorMessage,
+          job.retryCount,
+          job.maxRetries
+        );
       }
 
       currentJobId = null;
@@ -318,6 +452,7 @@ async function processQueue(): Promise<void> {
   } finally {
     isProcessing = false;
     currentJobId = null;
+    currentBatchId = null;
     stopRequested = false;
     console.log("[ScrapeQueue] Worker idle.");
   }
