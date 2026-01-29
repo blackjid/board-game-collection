@@ -457,22 +457,86 @@ export function CollectionSection() {
               </div>
             )}
 
+            {/* Show batch-specific stats if available, otherwise global stats */}
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Clock className="size-3" />
-                {queueStatus.pendingCount} pending
-              </span>
-              <span className="flex items-center gap-1">
-                <CheckCircle className="size-3 text-emerald-500" />
-                {queueStatus.completedCount} completed
-              </span>
-              {queueStatus.failedCount > 0 && (
-                <span className="flex items-center gap-1">
-                  <XCircle className="size-3 text-red-500" />
-                  {queueStatus.failedCount} failed
-                </span>
+              {queueStatus.currentBatch ? (
+                <>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="size-3 text-emerald-500" />
+                    {queueStatus.currentBatch.completed}/{queueStatus.currentBatch.total} completed
+                  </span>
+                  {queueStatus.currentBatch.pending > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="size-3" />
+                      {queueStatus.currentBatch.pending} pending
+                    </span>
+                  )}
+                  {queueStatus.currentBatch.failed > 0 && (
+                    <span className="flex items-center gap-1">
+                      <XCircle className="size-3 text-red-500" />
+                      {queueStatus.currentBatch.failed} failed
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="flex items-center gap-1">
+                    <Clock className="size-3" />
+                    {queueStatus.pendingCount} pending
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="size-3 text-emerald-500" />
+                    {queueStatus.completedCount} completed
+                  </span>
+                  {queueStatus.failedCount > 0 && (
+                    <span className="flex items-center gap-1">
+                      <XCircle className="size-3 text-red-500" />
+                      {queueStatus.failedCount} failed
+                    </span>
+                  )}
+                </>
               )}
             </div>
+
+            {/* Show failed jobs with errors */}
+            {(() => {
+              const failedJobs = queueStatus.recentJobs.filter(
+                (job) => job.status === "failed" && job.batchId === queueStatus.currentBatch?.id
+              );
+              if (failedJobs.length === 0) return null;
+              return (
+                <div className="mt-4 pt-3 border-t border-border/50">
+                  <div className="text-xs font-medium text-red-400 mb-2">
+                    Failed jobs:
+                  </div>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                    {failedJobs.slice(0, 5).map((job) => (
+                      <div
+                        key={job.id}
+                        className="text-xs bg-red-500/10 rounded px-2 py-1.5 flex items-start gap-2"
+                      >
+                        <XCircle className="size-3 text-red-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-red-300">
+                            {job.gameName}
+                          </span>
+                          {job.error && (
+                            <span className="text-red-400/70 ml-1">
+                              — {job.error.length > 60 ? job.error.substring(0, 60) + "..." : job.error}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {failedJobs.length > 5 && (
+                      <div className="text-xs text-muted-foreground pl-5">
+                        +{failedJobs.length - 5} more failed
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       )}

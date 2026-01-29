@@ -789,20 +789,44 @@ export function HomeClient({
                   </span>
                 )}
               </span>
+              {/* Show batch-specific stats if available, otherwise global stats */}
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Clock className="size-3" />
-                  {queueStatus.pendingCount} pending
-                </span>
-                <span className="flex items-center gap-1">
-                  <CheckCircle className="size-3 text-emerald-500" />
-                  {queueStatus.completedCount}
-                </span>
-                {queueStatus.failedCount > 0 && (
-                  <span className="flex items-center gap-1">
-                    <XCircle className="size-3 text-red-500" />
-                    {queueStatus.failedCount}
-                  </span>
+                {queueStatus.currentBatch ? (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <CheckCircle className="size-3 text-emerald-500" />
+                      {queueStatus.currentBatch.completed}/{queueStatus.currentBatch.total}
+                    </span>
+                    {queueStatus.currentBatch.pending > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="size-3" />
+                        {queueStatus.currentBatch.pending} pending
+                      </span>
+                    )}
+                    {queueStatus.currentBatch.failed > 0 && (
+                      <span className="flex items-center gap-1">
+                        <XCircle className="size-3 text-red-500" />
+                        {queueStatus.currentBatch.failed} failed
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <Clock className="size-3" />
+                      {queueStatus.pendingCount} pending
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <CheckCircle className="size-3 text-emerald-500" />
+                      {queueStatus.completedCount}
+                    </span>
+                    {queueStatus.failedCount > 0 && (
+                      <span className="flex items-center gap-1">
+                        <XCircle className="size-3 text-red-500" />
+                        {queueStatus.failedCount}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
