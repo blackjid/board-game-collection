@@ -315,7 +315,6 @@ export function HomeClient({
   // Bulk selection state
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
   const [removingGames, setRemovingGames] = useState(false);
-  const [updatingContributors, setUpdatingContributors] = useState(false);
 
 
   // Admin game management state
@@ -608,27 +607,27 @@ export function HomeClient({
   // Update contributors for multiple selected games
   const handleBulkUpdateContributor = async (contributor: Contributor | null) => {
     if (!selectedCollection || selectedGameIds.size === 0) return;
-    setUpdatingContributors(true);
 
-    try {
-      const promises = Array.from(selectedGameIds).map((gameId) =>
-        fetch(`/api/collections/${selectedCollection.id}/games`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            gameId,
-            contributorId: contributor?.id ?? null,
-          }),
-        })
-      );
-      await Promise.all(promises);
-      setSelectedGameIds(new Set());
-      router.refresh();
-    } catch (error) {
-      console.error("Failed to update contributors:", error);
-    } finally {
-      setUpdatingContributors(false);
-    }
+    const promises = Array.from(selectedGameIds).map((gameId) =>
+      fetch(`/api/collections/${selectedCollection.id}/games`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gameId,
+          contributorId: contributor?.id ?? null,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Failed to update contributor for game ${gameId}`);
+        }
+        return res;
+      })
+    );
+    
+    await Promise.all(promises);
+    setSelectedGameIds(new Set());
+    router.refresh();
   };
 
 
@@ -1614,7 +1613,7 @@ export function HomeClient({
       )}
 
       {/* Bulk Edit Contributor Dialog */}
-      {isViewingList && (
+      {isViewingList && showBulkContributorDialog && (
         <BulkEditContributorDialog
           open={showBulkContributorDialog}
           onOpenChange={setShowBulkContributorDialog}

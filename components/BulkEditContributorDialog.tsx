@@ -39,21 +39,25 @@ export function BulkEditContributorDialog({
 }: BulkEditContributorDialogProps) {
   const [contributor, setContributor] = useState<Contributor | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
       setContributor(null);
+      setError(null);
     }
   }, [open]);
 
   const handleSave = async () => {
     setIsSaving(true);
+    setError(null);
     try {
       await onSave(contributor);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to save contributors:", error);
+      setError(error instanceof Error ? error.message : "Failed to update contributors. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -70,6 +74,11 @@ export function BulkEditContributorDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
+              {error}
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Contributor</Label>
             <ContributorSelector
