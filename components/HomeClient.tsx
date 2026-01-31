@@ -31,6 +31,7 @@ import {
   Layers,
   Puzzle,
   AlertTriangle,
+  User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,7 @@ import { GameTable, SortField, SortDirection } from "@/components/GameTable";
 import { EditListDialog, DeleteListDialog, DuplicateListDialog, ShareListDialog } from "@/components/ListDialogs";
 import { AddGamesToListDialog } from "@/components/AddGamesToListDialog";
 import { EditContributorDialog } from "@/components/EditContributorDialog";
+import { BulkEditContributorDialog } from "@/components/BulkEditContributorDialog";
 import type { Contributor } from "@/components/ContributorSelector";
 import type { GameData, GameGroup } from "@/lib/games";
 import { groupGamesByBaseGame } from "@/lib/games";
@@ -308,10 +310,12 @@ export function HomeClient({
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showAddGamesDialog, setShowAddGamesDialog] = useState(false);
   const [gameForContributorEdit, setGameForContributorEdit] = useState<GameData | null>(null);
+  const [showBulkContributorDialog, setShowBulkContributorDialog] = useState(false);
 
   // Bulk selection state
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
   const [removingGames, setRemovingGames] = useState(false);
+  const [updatingContributors, setUpdatingContributors] = useState(false);
 
 
   // Admin game management state
@@ -599,6 +603,32 @@ export function HomeClient({
       }),
     });
     router.refresh();
+  };
+
+  // Update contributors for multiple selected games
+  const handleBulkUpdateContributor = async (contributor: Contributor | null) => {
+    if (!selectedCollection || selectedGameIds.size === 0) return;
+    setUpdatingContributors(true);
+
+    try {
+      const promises = Array.from(selectedGameIds).map((gameId) =>
+        fetch(`/api/collections/${selectedCollection.id}/games`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            gameId,
+            contributorId: contributor?.id ?? null,
+          }),
+        })
+      );
+      await Promise.all(promises);
+      setSelectedGameIds(new Set());
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to update contributors:", error);
+    } finally {
+      setUpdatingContributors(false);
+    }
   };
 
 
@@ -975,6 +1005,10 @@ export function HomeClient({
                       {isViewingList && (
                         <>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setShowBulkContributorDialog(true)}>
+                            <User className="size-4" />
+                            Change Contributor
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={handleRemoveSelected}
                             disabled={removingGames}
@@ -1576,6 +1610,16 @@ export function HomeClient({
           gameName={gameForContributorEdit.name}
           currentContributor={gameForContributorEdit.contributor ?? null}
           onSave={handleUpdateContributor}
+        />
+      )}
+
+      {/* Bulk Edit Contributor Dialog */}
+      {isViewingList && (
+        <BulkEditContributorDialog
+          open={showBulkContributorDialog}
+          onOpenChange={setShowBulkContributorDialog}
+          gameCount={selectedGameIds.size}
+          onSave={handleBulkUpdateContributor}
         />
       )}
 
