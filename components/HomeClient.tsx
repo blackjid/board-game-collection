@@ -451,6 +451,14 @@ export function HomeClient({
             if (a.bggRank === null) return 1;
             if (b.bggRank === null) return -1;
             return (a.bggRank - b.bggRank) * dir;
+          case "contributor":
+            const aContrib = a.contributor?.displayName || "";
+            const bContrib = b.contributor?.displayName || "";
+            return aContrib.localeCompare(bContrib) * dir;
+          case "inCollection":
+            const aInColl = a.isInPrimaryCollection ? 1 : 0;
+            const bInColl = b.isInPrimaryCollection ? 1 : 0;
+            return (aInColl - bInColl) * dir;
           default:
             return 0;
         }
@@ -1432,11 +1440,13 @@ export function HomeClient({
               onEditImages={setSelectedGameForImages}
               onAddToList={(id) => openAddToListDialog([id])}
               onRemoveFromList={handleRemoveFromList}
+              onEditContributor={setGameForContributorEdit}
               scrapingIds={scrapingIds}
               queuedIds={queuedIds}
               showRemoveFromList={!!isViewingList}
               hasManualLists={hasManualLists}
               showInCollectionColumn={!!selectedCollection && !selectedCollection.isPrimary}
+              showContributorEdit={!!isViewingList}
             />
         )}
       </main>

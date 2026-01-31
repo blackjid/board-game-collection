@@ -16,6 +16,7 @@ import {
   ArrowUp,
   ArrowDown,
   AlertTriangle,
+  UserPen,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ function getRatingColor(rating: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-export type SortField = "name" | "year" | "rating" | "players" | "playtime" | "weight" | "rank";
+export type SortField = "name" | "year" | "rating" | "players" | "playtime" | "weight" | "rank" | "contributor" | "inCollection";
 export type SortDirection = "asc" | "desc";
 
 export interface GameTableProps {
@@ -84,11 +85,13 @@ export interface GameTableProps {
   onEditImages?: (game: GameData) => void;
   onAddToList?: (gameId: string) => void;
   onRemoveFromList?: (gameId: string) => void;
+  onEditContributor?: (game: GameData) => void;
   scrapingIds?: Set<string>;
   queuedIds?: Set<string>;
   showRemoveFromList?: boolean;
   hasManualLists?: boolean;
   showInCollectionColumn?: boolean; // Show "In Collection" column for list views
+  showContributorEdit?: boolean; // Show "Change Contributor" menu item
 }
 
 function SortableHeader({
@@ -142,11 +145,13 @@ export function GameTable({
   onEditImages,
   onAddToList,
   onRemoveFromList,
+  onEditContributor,
   scrapingIds = new Set(),
   queuedIds = new Set(),
   showRemoveFromList = false,
   hasManualLists = false,
   showInCollectionColumn = false,
+  showContributorEdit = false,
 }: GameTableProps) {
   const router = useRouter();
 
@@ -200,6 +205,13 @@ export function GameTable({
           <DropdownMenuItem onClick={() => onAddToList(game.id)} className="gap-2">
             <FolderPlus className="size-4" />
             Add to List
+          </DropdownMenuItem>
+        )}
+
+        {showContributorEdit && onEditContributor && (
+          <DropdownMenuItem onClick={() => onEditContributor(game)} className="gap-2">
+            <UserPen className="size-4" />
+            Change Contributor
           </DropdownMenuItem>
         )}
 
@@ -279,6 +291,13 @@ export function GameTable({
           <ContextMenuItem onClick={() => onAddToList(game.id)} className="gap-2">
             <FolderPlus className="size-4" />
             Add to List
+          </ContextMenuItem>
+        )}
+
+        {showContributorEdit && onEditContributor && (
+          <ContextMenuItem onClick={() => onEditContributor(game)} className="gap-2">
+            <UserPen className="size-4" />
+            Change Contributor
           </ContextMenuItem>
         )}
 
@@ -380,8 +399,27 @@ export function GameTable({
                 onSort={onSort}
               />
             </TableHead>
+            {showContributorEdit && (
+              <TableHead className="w-24 px-2">
+                <SortableHeader
+                  label="Contributor"
+                  field="contributor"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={onSort}
+                />
+              </TableHead>
+            )}
             {isAdmin && showInCollectionColumn && (
-              <TableHead className="w-20 px-2">In Collection</TableHead>
+              <TableHead className="w-24 px-2">
+                <SortableHeader
+                  label="In Collection"
+                  field="inCollection"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={onSort}
+                />
+              </TableHead>
             )}
             {isAdmin && <TableHead className="w-8 px-1"></TableHead>}
           </TableRow>
@@ -390,7 +428,7 @@ export function GameTable({
         {games.map((game) => {
           const imageUrl = game.selectedThumbnail || game.thumbnail || game.image || null;
           // Check if game is in primary collection (for "In Collection" column)
-          const isInPrimaryCollection = game.collections?.some(c => c.type === "bgg_sync") ?? false;
+          const isInPrimaryCollection = game.isInPrimaryCollection ?? false;
           const isSelected = selectedIds.has(game.id);
           const ratingColor = game.rating ? getRatingColor(game.rating) : undefined;
 
@@ -505,6 +543,11 @@ export function GameTable({
               <TableCell className="px-2 py-1 text-xs text-muted-foreground">
                 {game.bggRank ? `#${game.bggRank.toLocaleString()}` : "-"}
               </TableCell>
+              {showContributorEdit && (
+                <TableCell className="px-2 py-1 text-xs text-muted-foreground">
+                  {game.contributor ? game.contributor.displayName : "-"}
+                </TableCell>
+              )}
               {isAdmin && showInCollectionColumn && (
                 <TableCell className="px-2 py-1">
                   <span

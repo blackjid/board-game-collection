@@ -31,7 +31,7 @@ export interface Contributor {
 }
 
 interface ContributorSelectorProps {
-  /** Selected contributor (null = "Me") */
+  /** Selected contributor (null = not specified) */
   value: Contributor | null;
   /** Callback when contributor changes */
   onChange: (contributor: Contributor | null) => void;
@@ -109,8 +109,8 @@ export function ContributorSelector({
     }
   }, [open]);
 
-  // Handle selecting "Me" (no contributor)
-  const handleSelectMe = () => {
+  // Handle selecting "Not specified" (no contributor)
+  const handleSelectNotSpecified = () => {
     onChange(null);
     setOpen(false);
   };
@@ -154,7 +154,7 @@ export function ContributorSelector({
   };
 
   // Display text for the button
-  const displayText = value ? value.displayName : "Me";
+  const displayText = value ? value.displayName : "Not specified";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -181,9 +181,9 @@ export function ContributorSelector({
             onValueChange={setSearchValue}
           />
           <CommandList>
-            {/* "Me" option - always visible */}
+            {/* "Not specified" option - always visible */}
             <CommandGroup>
-              <CommandItem onSelect={handleSelectMe}>
+              <CommandItem onSelect={handleSelectNotSpecified}>
                 <Check
                   className={cn(
                     "mr-2 size-4",
@@ -191,7 +191,7 @@ export function ContributorSelector({
                   )}
                 />
                 <User className="mr-2 size-4" />
-                Me
+                Not specified
               </CommandItem>
             </CommandGroup>
 
