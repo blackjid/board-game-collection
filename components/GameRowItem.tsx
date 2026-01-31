@@ -14,6 +14,8 @@ import {
   ExternalLink,
   CheckCircle,
   AlertTriangle,
+  User,
+  Library,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -68,11 +70,14 @@ export interface GameRowItemProps {
   onEditImages?: (game: GameData) => void;
   onAddToList?: (gameId: string) => void;
   onRemoveFromList?: (gameId: string) => void;
+  onEditContributor?: (game: GameData) => void;
   isScraping?: boolean;
   isInQueue?: boolean;
   isPending?: boolean;
   showRemoveFromList?: boolean;
   hasManualLists?: boolean;
+  /** Whether to show contributor editing option (for manual lists only) */
+  showContributorEdit?: boolean;
 }
 
 export function GameRowItem({
@@ -85,11 +90,13 @@ export function GameRowItem({
   onEditImages,
   onAddToList,
   onRemoveFromList,
+  onEditContributor,
   isScraping = false,
   isInQueue = false,
   isPending = false,
   showRemoveFromList = false,
   hasManualLists = false,
+  showContributorEdit = false,
 }: GameRowItemProps) {
   const imageUrl = game.selectedThumbnail || game.thumbnail || game.image || null;
   const ratingColor = game.rating ? getRatingColor(game.rating) : undefined;
@@ -142,6 +149,13 @@ export function GameRowItem({
         <DropdownMenuItem onClick={() => onAddToList(game.id)} className="gap-2">
           <FolderPlus className="size-4" />
           Add to List
+        </DropdownMenuItem>
+      )}
+
+      {showContributorEdit && onEditContributor && (
+        <DropdownMenuItem onClick={() => onEditContributor(game)} className="gap-2">
+          <User className="size-4" />
+          Change Contributor
         </DropdownMenuItem>
       )}
 
@@ -215,6 +229,13 @@ export function GameRowItem({
         <ContextMenuItem onClick={() => onAddToList(game.id)} className="gap-2">
           <FolderPlus className="size-4" />
           Add to List
+        </ContextMenuItem>
+      )}
+
+      {showContributorEdit && onEditContributor && (
+        <ContextMenuItem onClick={() => onEditContributor(game)} className="gap-2">
+          <User className="size-4" />
+          Change Contributor
         </ContextMenuItem>
       )}
 
@@ -300,7 +321,7 @@ export function GameRowItem({
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
+        <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 flex-wrap">
           {game.yearPublished && <span>{game.yearPublished}</span>}
           {game.lastScraped && (
             <span title="Scraped">
@@ -314,6 +335,25 @@ export function GameRowItem({
             >
               ★ {game.rating.toFixed(1)}
             </Badge>
+          )}
+          {/* Contributor badge - only show when someone else contributed */}
+          {game.contributor && (
+            <Badge
+              variant="outline"
+              className="text-[10px] sm:text-xs gap-1 border-blue-500/30 text-blue-400"
+            >
+              <User className="size-3" />
+              {game.contributor.displayName}
+            </Badge>
+          )}
+          {/* Ownership indicator - show when game is in primary collection */}
+          {game.isInPrimaryCollection && (
+            <span
+              title="In your collection"
+              className="text-emerald-400"
+            >
+              <Library className="size-3" />
+            </span>
           )}
         </div>
       </div>

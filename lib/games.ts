@@ -7,6 +7,7 @@ import type { Collection, CollectionGame, Game } from "@prisma/client";
 
 type CollectionGameWithGame = CollectionGame & {
   game: Game;
+  contributor?: { id: string; displayName: string } | null;
 };
 
 type CollectionGameWithCollection = CollectionGame & {
@@ -69,6 +70,10 @@ export interface GameData {
   requiredGames: GameRelationshipRef[];   // Games required to play this
   expansions: GameRelationshipRef[];      // Expansions for this base game
   requiredBy: GameRelationshipRef[];      // Games that require this
+  // List-specific fields (only present when viewing a list)
+  contributorId?: string | null;
+  contributor?: { id: string; displayName: string } | null;
+  isInPrimaryCollection?: boolean;
 }
 
 function parseJsonArray(json: string | null): string[] {
@@ -865,6 +870,7 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
       games: {
         include: {
           game: true,
+          contributor: true,
         },
         orderBy: { addedAt: "desc" },
       },
@@ -944,38 +950,42 @@ export async function getCollectionWithGames(collectionId: string): Promise<Coll
   }
 
   // Filter to only include games that have been scraped (have full data)
-  const games = collection.games
-    .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null)
-    .map((cg: CollectionGameWithGame) => transformGame(cg.game))
-    .filter((g: GameData | null): g is GameData => g !== null);
+  const scrapedGamesById = collection.games
+    .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null);
 
-  // Efficiently check which games are in the primary collection
-  const gameIds = games.map(g => g.id);
-  if (gameIds.length > 0 && primaryCollection) {
-    // Only fetch memberships for the primary collection (much more efficient)
+  // Get primary collection memberships
+  const gameIdsById = scrapedGamesById.map((cg: CollectionGameWithGame) => cg.game.id);
+  let gamesInPrimaryById = new Set<string>();
+  
+  if (gameIdsById.length > 0 && primaryCollection) {
     const primaryMemberships = await prisma.collectionGame.findMany({
       where: {
         collectionId: primaryCollection.id,
-        gameId: { in: gameIds },
+        gameId: { in: gameIdsById },
       },
       select: { gameId: true },
     });
+    gamesInPrimaryById = new Set(primaryMemberships.map(m => m.gameId));
+  }
 
-    // Create a Set for O(1) lookup
-    const gamesInPrimaryCollection = new Set(primaryMemberships.map(m => m.gameId));
-
-    // Attach minimal collection info - only primary collection membership
-    games.forEach(game => {
-      game.collections = gamesInPrimaryCollection.has(game.id)
+  // Transform games with contributor + isInPrimaryCollection
+  const games = scrapedGamesById
+    .map((cg: CollectionGameWithGame) => {
+      const game = transformGame(cg.game);
+      if (!game) return null;
+      
+      game.contributorId = cg.contributorId;
+      game.contributor = cg.contributor
+        ? { id: cg.contributor.id, displayName: cg.contributor.displayName }
+        : null;
+      game.isInPrimaryCollection = gamesInPrimaryById.has(game.id);
+      game.collections = gamesInPrimaryById.has(game.id) && primaryCollection
         ? [{ id: primaryCollection.id, name: primaryCollection.name, type: primaryCollection.type }]
         : [];
-    });
-  } else {
-    // No primary collection or no games, mark all as not in collection
-    games.forEach(game => {
-      game.collections = [];
-    });
-  }
+      
+      return game;
+    })
+    .filter((g: GameData | null): g is GameData => g !== null);
 
   // Populate relationships for grouping
   await populateGameRelationships(games);
@@ -1015,6 +1025,7 @@ export async function getCollectionBySlug(
       games: {
         include: {
           game: true,
+          contributor: true,
         },
         orderBy: { addedAt: "desc" },
       },
@@ -1094,38 +1105,42 @@ export async function getCollectionBySlug(
   }
 
   // Filter to only include games that have been scraped (have full data)
-  const games = collection.games
-    .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null)
-    .map((cg: CollectionGameWithGame) => transformGame(cg.game))
-    .filter((g: GameData | null): g is GameData => g !== null);
+  const scrapedGamesBySlug = collection.games
+    .filter((cg: CollectionGameWithGame) => cg.game.lastScraped !== null);
 
-  // Efficiently check which games are in the primary collection
-  const gameIds = games.map(g => g.id);
-  if (gameIds.length > 0 && primaryCollection) {
-    // Only fetch memberships for the primary collection (much more efficient)
+  // Get primary collection memberships
+  const gameIdsBySlug = scrapedGamesBySlug.map((cg: CollectionGameWithGame) => cg.game.id);
+  let gamesInPrimaryBySlug = new Set<string>();
+  
+  if (gameIdsBySlug.length > 0 && primaryCollection) {
     const primaryMemberships = await prisma.collectionGame.findMany({
       where: {
         collectionId: primaryCollection.id,
-        gameId: { in: gameIds },
+        gameId: { in: gameIdsBySlug },
       },
       select: { gameId: true },
     });
+    gamesInPrimaryBySlug = new Set(primaryMemberships.map(m => m.gameId));
+  }
 
-    // Create a Set for O(1) lookup
-    const gamesInPrimaryCollection = new Set(primaryMemberships.map(m => m.gameId));
-
-    // Attach minimal collection info - only primary collection membership
-    games.forEach(game => {
-      game.collections = gamesInPrimaryCollection.has(game.id)
+  // Transform games with contributor + isInPrimaryCollection
+  const games = scrapedGamesBySlug
+    .map((cg: CollectionGameWithGame) => {
+      const game = transformGame(cg.game);
+      if (!game) return null;
+      
+      game.contributorId = cg.contributorId;
+      game.contributor = cg.contributor
+        ? { id: cg.contributor.id, displayName: cg.contributor.displayName }
+        : null;
+      game.isInPrimaryCollection = gamesInPrimaryBySlug.has(game.id);
+      game.collections = gamesInPrimaryBySlug.has(game.id) && primaryCollection
         ? [{ id: primaryCollection.id, name: primaryCollection.name, type: primaryCollection.type }]
         : [];
-    });
-  } else {
-    // No primary collection or no games, mark all as not in collection
-    games.forEach(game => {
-      game.collections = [];
-    });
-  }
+      
+      return game;
+    })
+    .filter((g: GameData | null): g is GameData => g !== null);
 
   // Populate relationships for grouping
   await populateGameRelationships(games);

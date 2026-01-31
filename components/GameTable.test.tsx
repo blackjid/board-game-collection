@@ -40,6 +40,7 @@ const createMockGame = (overrides: Partial<GameData> = {}): GameData => ({
   componentImages: [],
   lastScraped: "2024-01-01T00:00:00Z",
   collections: [{ id: "col-1", name: "Primary", type: "bgg_sync" }],
+  isInPrimaryCollection: true,
   expandsGames: [],
   requiredGames: [],
   expansions: [],
@@ -154,33 +155,26 @@ describe("GameTable", () => {
       const games = [createMockGame()];
       render(<GameTable games={games} isAdmin={true} />);
 
-      expect(screen.queryByText("In Collection")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /in collection/i })).not.toBeInTheDocument();
     });
 
     it("should show In Collection column when enabled", () => {
-      const games = [createMockGame()];
+      const games = [createMockGame({ isInPrimaryCollection: true })];
       render(<GameTable games={games} isAdmin={true} showInCollectionColumn={true} />);
 
-      expect(screen.getByText("In Collection")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /in collection/i })).toBeInTheDocument();
       expect(screen.getByText("Yes")).toBeInTheDocument();
     });
 
     it("should show Yes for games in primary collection", () => {
-      const games = [createMockGame({ collections: [{ id: "col-1", name: "Primary", type: "bgg_sync" }] })];
+      const games = [createMockGame({ isInPrimaryCollection: true })];
       render(<GameTable games={games} isAdmin={true} showInCollectionColumn={true} />);
 
       expect(screen.getByText("Yes")).toBeInTheDocument();
     });
 
     it("should show No for games not in primary collection", () => {
-      const games = [createMockGame({ collections: [] })];
-      render(<GameTable games={games} isAdmin={true} showInCollectionColumn={true} />);
-
-      expect(screen.getByText("No")).toBeInTheDocument();
-    });
-
-    it("should show No for games in manual collection only", () => {
-      const games = [createMockGame({ collections: [{ id: "col-2", name: "Manual", type: "manual" }] })];
+      const games = [createMockGame({ isInPrimaryCollection: false })];
       render(<GameTable games={games} isAdmin={true} showInCollectionColumn={true} />);
 
       expect(screen.getByText("No")).toBeInTheDocument();
