@@ -25,7 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { cn, normalizeForSearch } from "@/lib/utils";
 
 // ============================================================================
 // Types
@@ -137,12 +137,12 @@ export function GameSelectorDialog({
     }
   };
 
-  // Filter collection games
+  // Filter collection games (accent-insensitive)
   const filteredCollectionGames = useMemo(() => {
     if (!collectionFilter.trim()) return collectionGames;
-    const query = collectionFilter.toLowerCase();
+    const query = normalizeForSearch(collectionFilter);
     return collectionGames.filter((game) =>
-      game.name.toLowerCase().includes(query)
+      normalizeForSearch(game.name).includes(query)
     );
   }, [collectionGames, collectionFilter]);
 

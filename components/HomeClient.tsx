@@ -61,7 +61,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, normalizeForSearch } from "@/lib/utils";
 
 import { SiteHeader } from "@/components/SiteHeader";
 import { GameCard } from "@/components/GameCard";
@@ -415,11 +415,11 @@ export function HomeClient({
   const filteredAndSortedGames = useMemo(() => {
     let result = [...games];
 
-    // Filter by search query
+    // Filter by search query (accent-insensitive)
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+      const query = normalizeForSearch(searchQuery);
       result = result.filter(game =>
-        game.name.toLowerCase().includes(query)
+        normalizeForSearch(game.name).includes(query)
       );
     }
 
@@ -624,7 +624,7 @@ export function HomeClient({
         return res;
       })
     );
-    
+
     await Promise.all(promises);
     setSelectedGameIds(new Set());
     router.refresh();
