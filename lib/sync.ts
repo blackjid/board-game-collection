@@ -323,9 +323,11 @@ export async function scrapeGame(gameId: string): Promise<boolean> {
     }
 
     // Update the game with scraped data
+    // Also update name to fix any HTML entities (name is already decoded by BGG client)
     await prisma.game.update({
       where: { id: gameId },
       data: {
+        name: gameDetails.name, // Update name to fix HTML entities
         image: gameDetails.image,
         thumbnail: gameDetails.thumbnail || gameDetails.image,
         rating: gameDetails.rating,

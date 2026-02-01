@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { XmlApi2Client } from "./xmlapi2-client";
+import { XmlApi2Client, decodeHtmlEntities } from "./xmlapi2-client";
 
 /**
  * Create a mock Response with proper headers
@@ -366,6 +366,45 @@ describe("lib/bgg/xmlapi2-client", () => {
       expect(result[0].name).toBe("Gloomhaven");
       expect(result[0].yearPublished).toBe(2017);
       expect(result[0].thumbnail).toBe("https://example.com/thumb.jpg");
+    });
+  });
+
+  // ============================================================================
+  // decodeHtmlEntities
+  // ============================================================================
+
+  describe("decodeHtmlEntities", () => {
+    it("should decode numeric HTML entities", () => {
+      expect(decodeHtmlEntities("That&#039;s Not a Hat")).toBe("That's Not a Hat");
+      expect(decodeHtmlEntities("Test &#39; quote")).toBe("Test ' quote");
+      expect(decodeHtmlEntities("A&#x27;B")).toBe("A'B");
+    });
+
+    it("should decode named HTML entities", () => {
+      expect(decodeHtmlEntities("&apos;Quote&apos;")).toBe("'Quote'");
+      expect(decodeHtmlEntities("&quot;Double quote&quot;")).toBe('"Double quote"');
+      expect(decodeHtmlEntities("A&amp;B")).toBe("A&B");
+      expect(decodeHtmlEntities("&lt;tag&gt;")).toBe("<tag>");
+      // &nbsp; decodes to non-breaking space (U+00A0), not regular space
+      expect(decodeHtmlEntities("Space&nbsp;here")).toBe("Space\u00A0here");
+    });
+
+    it("should handle mixed entities", () => {
+      expect(decodeHtmlEntities("That&#039;s Not a Hat: Pop Culture")).toBe(
+        "That's Not a Hat: Pop Culture"
+      );
+      expect(decodeHtmlEntities("&quot;Title&#039;s&quot; &amp; More")).toBe(
+        '"Title\'s" & More'
+      );
+    });
+
+    it("should return empty string for empty input", () => {
+      expect(decodeHtmlEntities("")).toBe("");
+    });
+
+    it("should return unchanged text when no entities present", () => {
+      expect(decodeHtmlEntities("Plain text")).toBe("Plain text");
+      expect(decodeHtmlEntities("No entities here")).toBe("No entities here");
     });
   });
 });
