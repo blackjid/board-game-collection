@@ -2,20 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Library,
   FolderHeart,
   Plus,
   Star,
-  RefreshCw,
-  Users,
-  Gamepad2,
-  Info,
   Settings,
   X,
   History,
-  UsersRound,
   Pencil,
   Trash2,
   Globe,
@@ -23,7 +18,6 @@ import {
   Link as LinkIcon,
   TrendingUp,
   Sparkles,
-  MapPin,
 } from "lucide-react";
 
 import {
@@ -39,7 +33,6 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -78,26 +71,11 @@ export interface AppSidebarProps {
 }
 
 // ============================================================================
-// Admin Settings Menu Items
-// ============================================================================
-
-const ADMIN_SECTIONS = [
-  { id: "general", label: "General", Icon: Settings, href: "/settings" },
-  { id: "collection", label: "Collection Sync", Icon: RefreshCw, href: "/settings?section=collection" },
-  { id: "sessions", label: "Sessions", Icon: Gamepad2, href: "/settings?section=sessions" },
-  { id: "users", label: "Users", Icon: Users, href: "/settings?section=users" },
-  { id: "players", label: "Players", Icon: UsersRound, href: "/settings?section=players" },
-  { id: "locations", label: "Locations", Icon: MapPin, href: "/settings?section=locations" },
-  { id: "about", label: "About", Icon: Info, href: "/settings?section=about" },
-] as const;
-
-// ============================================================================
 // Main AppSidebar Component
 // ============================================================================
 
 export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -118,8 +96,6 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
   const isHomeActive = pathname === "/";
   const currentListSlug = pathname.startsWith("/lists/") ? pathname.split("/")[2] : null;
   const isPlaysActive = pathname === "/plays";
-  const isSettingsActive = pathname.startsWith("/settings");
-  const currentSettingsSection = searchParams.get("section") || "general";
 
   const handleItemClick = () => {
     setOpenMobile(false);
@@ -360,48 +336,31 @@ export function AppSidebar({ collections, allGamesCount, user }: AppSidebarProps
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* Admin Section - Only visible to admins */}
-          {isAdmin && (
-            <>
-              <SidebarSeparator />
-              <SidebarGroup>
-                <SidebarGroupLabel>Admin</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {ADMIN_SECTIONS.map((section) => {
-                      const isActive =
-                        isSettingsActive &&
-                        (section.id === "general"
-                          ? currentSettingsSection === "general"
-                          : currentSettingsSection === section.id);
-
-                      return (
-                        <SidebarMenuItem key={section.id}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={isActive}
-                            tooltip={section.label}
-                          >
-                            <Link href={section.href} onClick={handleItemClick}>
-                              <section.Icon className="size-4" />
-                              <span>{section.label}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </>
-          )}
         </SidebarContent>
 
-        {/* Footer - Theme Toggle and User Profile */}
+        {/* Footer - Settings/Theme and User Profile */}
         <SidebarFooter>
-          <div className="flex items-center justify-between px-2">
-            <ThemeSwitcher />
-          </div>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <div className="flex items-center justify-between w-full">
+                {isAdmin && (
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Settings"
+                    className="flex-1"
+                  >
+                    <Link href="/settings" onClick={handleItemClick}>
+                      <Settings className="size-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </SidebarMenuButton>
+                )}
+                <div className={isAdmin ? "ml-auto" : "ml-auto w-full flex justify-end"}>
+                  <ThemeSwitcher />
+                </div>
+              </div>
+            </SidebarMenuItem>
+          </SidebarMenu>
           <NavUser user={user} />
         </SidebarFooter>
       </Sidebar>
