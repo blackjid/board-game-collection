@@ -1,4 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
+import { decode } from "html-entities";
 import type {
   BggClient,
   BggGameDetails,
@@ -44,6 +45,16 @@ function sleep(ms: number): Promise<void> {
  */
 function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Decode HTML entities in text using the 'he' library
+ * Handles all HTML entities (named, decimal, and hex numeric)
+ * Exported for use in other modules (e.g., fixing existing database records)
+ */
+export function decodeHtmlEntities(text: string): string {
+  if (!text) return text;
+  return decode(text);
 }
 
 /**
@@ -266,7 +277,8 @@ export class XmlApi2Client implements BggClient {
       // Get primary name
       const names = Array.isArray(item.name) ? item.name : item.name ? [item.name] : [];
       const primaryName = names.find((n) => n["@_type"] === "primary");
-      const name = primaryName?.["@_value"] || names[0]?.["@_value"] || "";
+      const rawName = primaryName?.["@_value"] || names[0]?.["@_value"] || "";
+      const name = decodeHtmlEntities(rawName);
 
       // Get year published
       const yearPublished = item.yearpublished?.["@_value"]
@@ -439,13 +451,14 @@ export class XmlApi2Client implements BggClient {
           // - Array: [{ "#text": "Gloomhaven" }] or ["Gloomhaven"]
           // - Simple text: "Gloomhaven"
           // - Object with text: { "#text": "Gloomhaven", "@_sortindex": "1" }
-          let name = "";
+          let rawName = "";
           const nameValue = Array.isArray(item.name) ? item.name[0] : item.name;
           if (typeof nameValue === "string") {
-            name = nameValue;
+            rawName = nameValue;
           } else if (nameValue && typeof nameValue === "object") {
-            name = nameValue["#text"] || nameValue["@_value"] || "";
+            rawName = nameValue["#text"] || nameValue["@_value"] || "";
           }
+          const name = decodeHtmlEntities(rawName);
 
           // Handle yearpublished as array, number, string, or object
           let yearPublished: number | null = null;
@@ -578,7 +591,8 @@ export class XmlApi2Client implements BggClient {
           // Get name from name element
           const names = Array.isArray(item.name) ? item.name : item.name ? [item.name] : [];
           const primaryName = names.find((n) => n["@_type"] === "primary");
-          const name = primaryName?.["@_value"] || names[0]?.["@_value"] || "";
+          const rawName = primaryName?.["@_value"] || names[0]?.["@_value"] || "";
+          const name = decodeHtmlEntities(rawName);
 
           const yearPublished = item.yearpublished?.["@_value"]
             ? parseInt(item.yearpublished["@_value"], 10)
@@ -635,12 +649,13 @@ export class XmlApi2Client implements BggClient {
           }
 
           // Handle name as array (from isArray config) or single object
-          let name = "";
+          let rawName = "";
           if (Array.isArray(item.name)) {
-            name = item.name[0]?.["@_value"] || "";
+            rawName = item.name[0]?.["@_value"] || "";
           } else if (item.name) {
-            name = item.name["@_value"] || "";
+            rawName = item.name["@_value"] || "";
           }
+          const name = decodeHtmlEntities(rawName);
 
           // Handle yearpublished as array or single object
           let yearPublished: number | null = null;
