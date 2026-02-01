@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Home, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -58,25 +58,19 @@ export function SiteHeader({ breadcrumbs = [], actions, showSidebarTrigger = tru
       {/* Breadcrumbs */}
       <Breadcrumb className="flex-1">
         <BreadcrumbList>
-          {/* Home icon (always shown) */}
-          <BreadcrumbItem className="hidden sm:block">
-            <BreadcrumbLink asChild>
-              <Link href="/" className="flex items-center">
-                <Home className="size-4" />
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-
           {/* Breadcrumb items with separators */}
           {breadcrumbs.map((item, index) => {
             const isLast = index === breadcrumbs.length - 1;
+            const isFirst = index === 0;
 
             return (
               <span key={index} className="contents">
-                {/* Separator before each item (after home) */}
-                <BreadcrumbSeparator className="hidden sm:block">
-                  <ChevronRight className="size-3.5" />
-                </BreadcrumbSeparator>
+                {/* Separator between items */}
+                {!isFirst && (
+                  <BreadcrumbSeparator>
+                    <ChevronRight className="size-3.5" />
+                  </BreadcrumbSeparator>
+                )}
 
                 <BreadcrumbItem>
                   {isLast ? (

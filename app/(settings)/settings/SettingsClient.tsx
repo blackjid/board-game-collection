@@ -73,16 +73,13 @@ function SettingsContent() {
   const currentSection = (searchParams.get("section") as SectionId) || "general";
   const SectionComponent = SECTION_COMPONENTS[currentSection] || GeneralSection;
 
-  // Get the section label for breadcrumbs
+  // Get the section label for the header
   const sectionLabel = SECTIONS.find((s) => s.id === currentSection)?.label || "General";
 
   return (
     <>
       <SiteHeader
-        breadcrumbs={[
-          { label: "Settings", href: "/settings" },
-          { label: sectionLabel },
-        ]}
+        breadcrumbs={[{ label: sectionLabel }]}
       />
       <div className="p-4 sm:p-6 lg:p-8 max-w-full">
         <SectionComponent />
