@@ -3,6 +3,30 @@ import type { PlayerData, CreatePlayerInput, UpdatePlayerInput, PlayerSearchResu
 import type { Player } from "@prisma/client";
 
 /**
+ * Normalize a string for accent-insensitive search.
+ * Removes diacritics (accents) and converts to lowercase.
+ */
+function normalizeForSearch(str: string | null): string {
+  if (!str) return "";
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+/**
+ * Check if a player matches the search query (accent-insensitive)
+ */
+function playerMatchesQuery(player: { displayName: string; firstName: string | null; lastName: string | null }, query: string): boolean {
+  const normalizedQuery = normalizeForSearch(query);
+  return (
+    normalizeForSearch(player.displayName).includes(normalizedQuery) ||
+    normalizeForSearch(player.firstName).includes(normalizedQuery) ||
+    normalizeForSearch(player.lastName).includes(normalizedQuery)
+  );
+}
+
+/**
  * Transform Prisma Player to external PlayerData interface
  */
 function transformPlayer(player: Player, playCount?: number): PlayerData {
@@ -52,20 +76,18 @@ export async function getPlayerById(playerId: string): Promise<PlayerData | null
 
 /**
  * List all players with optional search and stats
+ * Search is accent-insensitive (e.g., "Maria" matches "María")
  */
 export async function listPlayers(search?: string): Promise<PlayerData[]> {
-  const players = await prisma.player.findMany({
-    where: search
-      ? {
-          OR: [
-            { displayName: { contains: search } },
-            { firstName: { contains: search } },
-            { lastName: { contains: search } },
-          ],
-        }
-      : undefined,
+  // Fetch all players and filter in memory for accent-insensitive search
+  const allPlayers = await prisma.player.findMany({
     orderBy: { displayName: "asc" },
   });
+
+  // Filter by search query if provided (accent-insensitive)
+  const players = search
+    ? allPlayers.filter((player) => playerMatchesQuery(player, search))
+    : allPlayers;
 
   // Get play counts for all players
   const playerIds = players.map((p) => p.id);
@@ -86,16 +108,11 @@ export async function listPlayers(search?: string): Promise<PlayerData[]> {
 
 /**
  * Search players for autocomplete (lightweight)
+ * Search is accent-insensitive (e.g., "Maria" matches "María")
  */
 export async function searchPlayers(query: string): Promise<PlayerSearchResult[]> {
-  const players = await prisma.player.findMany({
-    where: {
-      OR: [
-        { displayName: { contains: query } },
-        { firstName: { contains: query } },
-        { lastName: { contains: query } },
-      ],
-    },
+  // Fetch all players and filter in memory for accent-insensitive search
+  const allPlayers = await prisma.player.findMany({
     select: {
       id: true,
       displayName: true,
@@ -103,10 +120,12 @@ export async function searchPlayers(query: string): Promise<PlayerSearchResult[]
       lastName: true,
     },
     orderBy: { displayName: "asc" },
-    take: 10,
   });
 
-  return players;
+  // Filter by query (accent-insensitive) and limit to 10 results
+  return allPlayers
+    .filter((player) => playerMatchesQuery(player, query))
+    .slice(0, 10);
 }
 
 /**
