@@ -387,6 +387,9 @@ describe("lib/bgg/xmlapi2-client", () => {
       expect(decodeHtmlEntities("&lt;tag&gt;")).toBe("<tag>");
       // &nbsp; decodes to non-breaking space (U+00A0), not regular space
       expect(decodeHtmlEntities("Space&nbsp;here")).toBe("Space\u00A0here");
+      // Curly quotes (left/right double quotation marks)
+      expect(decodeHtmlEntities("&ldquo;apple&rdquo;")).toBe("\u201Capple\u201D");
+      expect(decodeHtmlEntities("&lsquo;single&rsquo;")).toBe("\u2018single\u2019");
     });
 
     it("should handle mixed entities", () => {

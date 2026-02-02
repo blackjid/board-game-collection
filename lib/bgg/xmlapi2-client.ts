@@ -285,10 +285,10 @@ export class XmlApi2Client implements BggClient {
         ? parseInt(item.yearpublished["@_value"], 10)
         : null;
 
-      // Get description (strip HTML)
+      // Get description (strip HTML and decode entities)
       let description: string | null = null;
       if (item.description) {
-        let desc = stripHtml(item.description);
+        let desc = decodeHtmlEntities(stripHtml(item.description));
         if (desc.length > 500) {
           desc = desc.substring(0, 500).replace(/\s+\S*$/, "") + "...";
         }
