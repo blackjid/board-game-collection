@@ -167,8 +167,8 @@ export function LocationInput({
       },
       {
         enableHighAccuracy: false, // Use cached/quick location for auto-detect
-        timeout: 5000,
-        maximumAge: 60000, // Accept cached location up to 1 minute old
+        timeout: 10000,
+        maximumAge: 300000, // Accept cached location up to 5 minutes old
       }
     );
   }, [locations, autoDetectAttempted, savedLocationId, value, autoSelectLocation]);
@@ -216,10 +216,17 @@ export function LocationInput({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setPendingCoords({
+        const coords = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-        });
+        };
+        const nearbyLocation = findNearbyLocation(coords, locations, NEARBY_RADIUS_METERS);
+        if (nearbyLocation) {
+          onChange(nearbyLocation.name, nearbyLocation.id);
+          setGettingLocation(false);
+          return;
+        }
+        setPendingCoords(coords);
         setNewLocationName("");
         setShowSaveDialog(true);
         setGettingLocation(false);
