@@ -22,16 +22,16 @@ vi.mock("@/lib/auth", () => ({
   hashPassword: vi.fn(),
   createSession: vi.fn(),
   isFirstUser: vi.fn(),
-  SESSION_COOKIE_OPTIONS: {
+  getSessionCookieOptions: vi.fn().mockResolvedValue({
     httpOnly: true,
     secure: false,
     sameSite: "lax" as const,
     path: "/",
     maxAge: 30 * 24 * 60 * 60,
-  },
+  }),
 }));
 
-import { hashPassword, createSession, isFirstUser } from "@/lib/auth";
+import { hashPassword, createSession, isFirstUser, getSessionCookieOptions } from "@/lib/auth";
 
 describe("Register API Route", () => {
   beforeEach(() => {
@@ -164,6 +164,7 @@ describe("Register API Route", () => {
           role: "admin",
         },
       });
+      expect(getSessionCookieOptions).toHaveBeenCalled();
       // Verify session cookie was set
       expect(response.cookies.get("session_id")?.value).toBe("session-id-123");
     });

@@ -4,7 +4,7 @@ import {
   hashPassword,
   createSession,
   isFirstUser,
-  SESSION_COOKIE_OPTIONS,
+  getSessionCookieOptions,
 } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    response.cookies.set("session_id", sessionId, SESSION_COOKIE_OPTIONS);
+    response.cookies.set("session_id", sessionId, await getSessionCookieOptions());
 
     return response;
   } catch (error) {

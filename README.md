@@ -91,6 +91,7 @@ This will:
 | `DATABASE_URL` | `file:/data/games.db` | SQLite database connection string |
 | `PORT` | `3000` | Port the server listens on |
 | `NEXT_PUBLIC_BASE_URL` | (auto-detected) | Base URL for share links and QR codes (e.g., `https://games.example.com`). Required for collaborative sessions when testing on other devices. |
+| `SESSION_EXPIRY_DAYS` | `30` | Auth session lifetime in days. Uses sliding expiration — sessions renew automatically on activity. |
 
 ### Build-time Configuration (Docker)
 

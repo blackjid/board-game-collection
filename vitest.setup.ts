@@ -75,5 +75,19 @@ vi.mock("@/lib/prisma", () => ({
       create: vi.fn(),
       deleteMany: vi.fn(),
     },
+    session: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
   },
 }));
