@@ -19,16 +19,16 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/auth", () => ({
   verifyPassword: vi.fn(),
   createSession: vi.fn(),
-  SESSION_COOKIE_OPTIONS: {
+  getSessionCookieOptions: vi.fn().mockResolvedValue({
     httpOnly: true,
     secure: false,
     sameSite: "lax" as const,
     path: "/",
     maxAge: 30 * 24 * 60 * 60,
-  },
+  }),
 }));
 
-import { verifyPassword, createSession } from "@/lib/auth";
+import { verifyPassword, createSession, getSessionCookieOptions } from "@/lib/auth";
 
 describe("Login API Route", () => {
   beforeEach(() => {
@@ -138,6 +138,7 @@ describe("Login API Route", () => {
         role: "admin",
       });
       expect(createSession).toHaveBeenCalledWith("user-1");
+      expect(getSessionCookieOptions).toHaveBeenCalled();
       // Verify session cookie was set
       expect(response.cookies.get("session_id")?.value).toBe("session-id-123");
     });

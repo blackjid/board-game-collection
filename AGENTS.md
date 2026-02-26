@@ -1195,6 +1195,7 @@ Before committing any code changes:
 | `PORT` | `3000` | Server port |
 | `NEXT_PUBLIC_BASE_URL` | (auto) | Base URL for QR codes/share links |
 | `BGG_TOKEN` | **required** | BGG XML API v2 bearer token |
+| `SESSION_EXPIRY_DAYS` | `30` | Auth session lifetime in days. Uses sliding expiration. |
 
 ---
 

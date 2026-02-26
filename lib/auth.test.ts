@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import bcrypt from "bcryptjs";
 
 // Mock bcryptjs
@@ -19,6 +19,7 @@ vi.mock("@/lib/prisma", () => ({
       create: vi.fn(),
       delete: vi.fn(),
       findUnique: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -47,7 +48,7 @@ import {
   requireAdmin,
   setSessionCookie,
   clearSessionCookie,
-  SESSION_COOKIE_OPTIONS,
+  getSessionCookieOptions,
 } from "./auth";
 
 describe("lib/auth", () => {
@@ -120,7 +121,7 @@ describe("lib/auth", () => {
       expect(result).toBe("session-123");
     });
 
-    it("should set session expiry to 7 days from now", async () => {
+    it("should set session expiry to SESSION_EXPIRY_DAYS from now", async () => {
       const now = new Date("2024-01-01T12:00:00Z");
       vi.setSystemTime(now);
 
@@ -134,9 +135,11 @@ describe("lib/auth", () => {
 
       const createCall = vi.mocked(prisma.session.create).mock.calls[0][0];
       const expiresAt = createCall.data.expiresAt as Date;
+      const days = parseInt(process.env.SESSION_EXPIRY_DAYS || "30", 10);
+      const expectedExpiry = new Date(now);
+      expectedExpiry.setDate(expectedExpiry.getDate() + days);
 
-      // Should be 7 days from now
-      expect(expiresAt.getTime()).toBeGreaterThan(now.getTime());
+      expect(expiresAt.getTime()).toBe(expectedExpiry.getTime());
 
       vi.useRealTimers();
     });
@@ -391,15 +394,80 @@ describe("lib/auth", () => {
     });
   });
 
-  describe("SESSION_COOKIE_OPTIONS", () => {
-    it("should have correct default options", () => {
-      expect(SESSION_COOKIE_OPTIONS).toEqual({
+  describe("getSessionCookieOptions", () => {
+    it("should return correct default options with 30-day maxAge", async () => {
+      const days = parseInt(process.env.SESSION_EXPIRY_DAYS || "30", 10);
+      const options = await getSessionCookieOptions();
+      expect(options).toEqual({
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+        maxAge: days * 24 * 60 * 60,
       });
+    });
+  });
+
+  // ============================================================================
+  // Sliding Expiration
+  // ============================================================================
+
+  describe("getSessionFromCookie - sliding expiration", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("extends session and refreshes cookie when time remaining < half window", async () => {
+      const days = parseInt(process.env.SESSION_EXPIRY_DAYS || "30", 10);
+      const now = new Date("2026-01-15T12:00:00Z");
+      vi.setSystemTime(now);
+
+      // 5 days remaining — less than half of 30 days (15 days)
+      const fiveDaysFromNow = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+      mockCookieStore.get.mockReturnValue({ value: "session-slide" });
+      vi.mocked(prisma.session.findUnique).mockResolvedValue({
+        id: "session-slide",
+        userId: "user-1",
+        expiresAt: fiveDaysFromNow,
+        createdAt: now,
+        user: { id: "user-1", email: "test@example.com", name: "Test", role: "user" },
+      } as never);
+      vi.mocked(prisma.session.update).mockResolvedValue({} as never);
+
+      await getSessionFromCookie();
+
+      const expectedExpiry = new Date(now);
+      expectedExpiry.setDate(expectedExpiry.getDate() + days);
+      expect(prisma.session.update).toHaveBeenCalledWith({
+        where: { id: "session-slide" },
+        data: { expiresAt: expectedExpiry },
+      });
+      expect(mockCookieStore.set).toHaveBeenCalledWith(
+        "session_id",
+        "session-slide",
+        expect.objectContaining({ maxAge: days * 24 * 60 * 60 })
+      );
+    });
+
+    it("does NOT extend session when time remaining >= half window", async () => {
+      const now = new Date("2026-01-15T12:00:00Z");
+      vi.setSystemTime(now);
+
+      // 25 days remaining — more than half of 30 days (15 days)
+      const twentyFiveDaysFromNow = new Date(now.getTime() + 25 * 24 * 60 * 60 * 1000);
+      mockCookieStore.get.mockReturnValue({ value: "session-fresh" });
+      vi.mocked(prisma.session.findUnique).mockResolvedValue({
+        id: "session-fresh",
+        userId: "user-1",
+        expiresAt: twentyFiveDaysFromNow,
+        createdAt: now,
+        user: { id: "user-1", email: "test@example.com", name: "Test", role: "user" },
+      } as never);
+
+      await getSessionFromCookie();
+
+      expect(prisma.session.update).not.toHaveBeenCalled();
+      expect(mockCookieStore.set).not.toHaveBeenCalled();
     });
   });
 });

@@ -3,16 +3,17 @@ import { cookies } from "next/headers";
 import prisma from "./prisma";
 
 const SESSION_COOKIE_NAME = "session_id";
-const SESSION_EXPIRY_DAYS = 7;
+const SESSION_EXPIRY_DAYS = parseInt(process.env.SESSION_EXPIRY_DAYS || "30", 10);
 
-// Cookie options for session - exported for use in API routes
-export const SESSION_COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-  maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,
-};
+export async function getSessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,
+  };
+}
 
 // Password utilities
 export async function hashPassword(password: string): Promise<string> {
@@ -72,6 +73,22 @@ export async function getSessionFromCookie() {
     return null;
   }
 
+  // Sliding expiration: only extend when less than half the window remains
+  const halfWindowMs = (SESSION_EXPIRY_DAYS / 2) * 24 * 60 * 60 * 1000;
+  const timeRemainingMs = session.expiresAt.getTime() - Date.now();
+
+  if (timeRemainingMs < halfWindowMs) {
+    const newExpiresAt = new Date();
+    newExpiresAt.setDate(newExpiresAt.getDate() + SESSION_EXPIRY_DAYS);
+
+    await prisma.session.update({
+      where: { id: sessionId },
+      data: { expiresAt: newExpiresAt },
+    });
+
+    cookieStore.set(SESSION_COOKIE_NAME, sessionId, await getSessionCookieOptions());
+  }
+
   return session;
 }
 
@@ -99,13 +116,7 @@ export async function requireAdmin() {
 // Cookie utilities
 export async function setSessionCookie(sessionId: string) {
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, sessionId, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,
-  });
+  cookieStore.set(SESSION_COOKIE_NAME, sessionId, await getSessionCookieOptions());
 }
 
 export async function clearSessionCookie() {
